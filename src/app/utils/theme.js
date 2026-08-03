@@ -1,0 +1,88 @@
+export const lightTheme = {
+  colors: {
+    primary: "#01514b",
+    primaryLight: "#017a71",
+    primaryDark: "#013d38",
+    primary50: "#f0faf9",
+    primary100: "#d0f0ed",
+    black: "#0f1117",
+    white: "#ffffff",
+    gray: "#4b5563",
+    grayLight: "#9ca3af",
+    bg: "#f5f7fa",
+    surface: "#ffffff",
+    border: "#e8ecf0",
+    success: "#10b981",
+    warning: "#f59e0b",
+    error: "#ef4444",
+    info: "#3b82f6",
+    text: "#0f1117",
+    textMuted: "#4b5563",
+    themeChange: "#4b5563",
+  },
+  shadows: {
+    xs: "0 1px 2px rgba(0,0,0,0.04)",
+    sm: "0 2px 8px rgba(0,0,0,0.06)",
+    md: "0 4px 16px rgba(0,0,0,0.08)",
+    lg: "0 8px 32px rgba(0,0,0,0.10)",
+    xl: "0 16px 48px rgba(0,0,0,0.12)",
+  },
+  radii: {
+    sm: "6px",
+    md: "10px",
+    lg: "14px",
+    xl: "20px",
+    "2xl": "28px",
+    full: "9999px",
+  },
+  fonts: {
+    sans: "'Inter', 'Plus Jakarta Sans', -apple-system, sans-serif",
+    display: "'Plus Jakarta Sans', 'Inter', sans-serif",
+  },
+};
+
+export const darkTheme = {
+  colors: {
+    primary: "#01514b",
+    primaryLight: "#017a71",
+    primaryDark: "#013d38",
+    primary50: "#0d2926",
+    primary100: "#1a3d39",
+    black: "#f1f5f9",
+    white: "#0f172a",
+    gray: "#94a3b8",
+    grayLight: "#64748b",
+    bg: "#0f172a",
+    surface: "#1e293b",
+    border: "#334155",
+    success: "#10b981",
+    warning: "#f59e0b",
+    error: "#ef4444",
+    info: "#3b82f6",
+    text: "#f1f5f9",
+    textMuted: "#94a3b8",
+    themeChange: "#f1f5f9",
+  },
+  shadows: {
+    xs: "0 1px 2px rgba(0,0,0,0.20)",
+    sm: "0 2px 8px rgba(0,0,0,0.30)",
+    md: "0 4px 16px rgba(0,0,0,0.40)",
+    lg: "0 8px 32px rgba(0,0,0,0.50)",
+    xl: "0 16px 48px rgba(0,0,0,0.60)",
+  },
+  radii: {
+    sm: "6px",
+    md: "10px",
+    lg: "14px",
+    xl: "20px",
+    "2xl": "28px",
+    full: "9999px",
+  },
+  fonts: {
+    sans: "'Inter', 'Plus Jakarta Sans', -apple-system, sans-serif",
+    display: "'Plus Jakarta Sans', 'Inter', sans-serif",
+  },
+};
+
+// Backward-compatible alias
+export const theme = lightTheme;
