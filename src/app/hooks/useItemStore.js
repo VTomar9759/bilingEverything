@@ -8,14 +8,15 @@ const useItemStore = () => {
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(false);
   const items = useSelector((state) => state?.itemSlice);
-  const { userId } = useSelector((state) => state?.authSlice);
+  const { org_id, userId } = useSelector((state) => state?.authSlice || {});
+  const activeOrgId = org_id || userId;
 
   useEffect(() => {
     const fetchCatalog = async () => {
-      if (!userId) return;
+      if (!activeOrgId) return;
       setLoading(true);
       try {
-        const data = await getItems(userId);
+        const data = await getItems(activeOrgId);
         dispatch(setItems(data || []));
         const categories = [
           ...new Set(
@@ -30,10 +31,10 @@ const useItemStore = () => {
       }
     };
 
-    if (userId && items?.length === 0) {
+    if (activeOrgId && items?.length === 0) {
       fetchCatalog();
     }
-  }, [userId, items?.length, dispatch]);
+  }, [activeOrgId, items?.length, dispatch]);
 
   return [items, loading];
 };

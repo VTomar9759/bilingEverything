@@ -160,7 +160,7 @@ const HeaderBox = styled.div`
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  gap: 16px;
+  gap: 10px;
   flex-wrap: wrap;
   animation: ${fadeIn} 0.3s ease;
 `;
@@ -168,22 +168,22 @@ const HeaderBox = styled.div`
 const HeadActions = styled.div`
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   flex-shrink: 0;
   flex-wrap: wrap;
 `;
 
 const CardGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
   animation: ${fadeIn} 0.35s ease;
 `;
 
 const SkeletonGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
 `;
 
 const EmptyState = styled.div`
@@ -191,12 +191,12 @@ const EmptyState = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 60px 30px;
+  padding: 32px 20px;
   background: var(--color-surface);
   border-radius: var(--radius-2xl);
   border: 2px dashed var(--color-border);
   text-align: center;
-  gap: 10px;
+  gap: 8px;
   animation: ${fadeIn} 0.4s ease;
 
   &:hover { border-color: var(--color-primary-100); }

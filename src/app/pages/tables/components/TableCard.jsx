@@ -79,20 +79,20 @@ const CardContainer = styled.div`
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-xl);
-  padding: 10px;
+  padding: 8px;
   cursor: pointer;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: 6px;
   box-shadow: var(--shadow-sm);
   transition: all var(--transition-base);
   position: relative;
-  min-height: 120px;
+  min-height: 100px;
 
   &:hover {
-    transform: translateY(-4px);
+    transform: translateY(-2px);
     box-shadow: var(--shadow-md);
     border-color: ${({ $activeColor }) => $activeColor};
   }

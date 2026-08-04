@@ -1,3 +1,4 @@
+import { Navigate } from "react-router-dom";
 import {
   PATH_LOGIN,
   PATH_FORGOT_PASSWORD,
@@ -5,6 +6,7 @@ import {
   PATH_ITEMS,
   PATH_ADD_ITEM,
   PATH_EDIT_ITEM,
+  PATH_CATEGORIES,
   PATH_DASHBOARD,
   PATH_ORDERS,
   PATH_ORDER_COMPOSER,
@@ -15,7 +17,10 @@ import {
   PATH_INVENTORY,
   PATH_REPORTS,
   PATH_SETTINGS,
+  PATH_SETTINGS_PROFILE,
   PATH_DYNAMIC,
+  PATH_CHANGE_PASSWORD,
+  PATH_SETTINGS_BUSINESS,
 } from "./pathname";
 
 import Login from "../auth/Login";
@@ -24,6 +29,7 @@ import SignUp from "../auth/SignUp";
 import ItemListing from "../pages/items/ItemListing";
 import AddItem from "../pages/items/AddItem";
 import EditItem from "../pages/items/EditItem";
+import CategoriesListing from "../pages/categories/Cateogies";
 
 // Dashboard Modules (unchanged)
 import DashboardOverview from "../pages/dashboard/DashboardOverview";
@@ -38,7 +44,12 @@ import PosOrderComposer from "../pages/orders/PosOrderComposer";
 import TablesListing from "../pages/tables/TablesListing";
 import StaffListing from "../pages/staff/StaffListing";
 import InventoryListing from "../pages/inventory/InventoryListing";
-import SettingsPanel from "../pages/settings/SettingsPanel";
+
+import SettingsLayout from "../pages/settings/Settings";
+import ProfileUpdate from "../pages/settings/componests/ProfileUpdate";
+import ChangePassword from "../pages/settings/componests/changePassword";
+import BusinessDetails from "../pages/settings/componests/BusinessDetails";
+
 
 export const publicChildren = [
   {
@@ -52,7 +63,7 @@ export const publicChildren = [
   {
     path: PATH_SIGNUP,
     element: <SignUp />,
-  }
+  },
 ];
 
 export const privateChildren = [
@@ -67,6 +78,10 @@ export const privateChildren = [
   {
     path: PATH_EDIT_ITEM,
     element: <EditItem />,
+  },
+  {
+    path: PATH_CATEGORIES,
+    element: <CategoriesListing />,
   },
   {
     path: PATH_DASHBOARD,
@@ -93,10 +108,7 @@ export const privateChildren = [
     path: PATH_INVENTORY,
     element: <InventoryListing />,
   },
-  {
-    path: PATH_SETTINGS,
-    element: <SettingsPanel />,
-  },
+
   // ── Unchanged routes ──
   {
     path: PATH_BILLING,
@@ -114,4 +126,27 @@ export const privateChildren = [
     path: PATH_DYNAMIC,
     element: <DynamicManager />,
   },
+  {
+    path: PATH_SETTINGS,
+    element: <SettingsLayout />,
+    children: [
+      {
+        path: "",
+        element: <Navigate to={PATH_SETTINGS_PROFILE} replace />,
+      },
+      {
+        path: PATH_SETTINGS_PROFILE,
+        element: <ProfileUpdate />,
+      },
+      {
+        path: PATH_CHANGE_PASSWORD,
+        element: <ChangePassword />,
+      },
+      {
+        path: PATH_SETTINGS_BUSINESS,
+        element: <BusinessDetails />,
+      },
+    ],
+  },
 ];
+

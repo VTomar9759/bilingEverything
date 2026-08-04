@@ -98,16 +98,16 @@ const CardWrapper = styled.div`
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-xl);
-  padding: 14px 16px;
+  padding: 10px 12px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   box-shadow: var(--shadow-sm);
   transition: all var(--transition-base);
   animation: ${fadeUp} 0.3s ease;
 
   &:hover {
-    transform: translateY(-3px);
+    transform: translateY(-2px);
     box-shadow: var(--shadow-md);
     border-color: var(--color-primary-100);
   }
@@ -116,18 +116,18 @@ const CardWrapper = styled.div`
 const CardTop = styled.div`
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 `;
 
 const AvatarCircle = styled.div`
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   background: ${({ $bg }) => $bg};
-  border: 2px solid ${({ $border }) => $border};
+  border: 1.5px solid ${({ $border }) => $border};
   color: ${({ $color }) => $color};
   font-family: var(--font-display);
-  font-size: 13.5px;
+  font-size: 12px;
   font-weight: 800;
   display: flex;
   align-items: center;
@@ -141,7 +141,7 @@ const MetaBlock = styled.div`
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 3px;
 `;
 
 const StaffName = styled.div`

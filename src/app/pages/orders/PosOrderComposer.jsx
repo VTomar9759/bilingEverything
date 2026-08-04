@@ -459,10 +459,10 @@ const FilterRow = styled.div`
 
 const MenuGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(115px, 1fr));
   grid-auto-rows: max-content;
   align-content: start;
-  gap: 10px;
+  gap: 8px;
   overflow-y: auto;
   flex: 1;
   padding-right: 4px;
@@ -470,7 +470,7 @@ const MenuGrid = styled.div`
 
 const MenuItemCard = styled.div`
   position: relative;
-  height: 112px;
+  height: 100px;
   background: var(--color-bg);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
@@ -484,7 +484,7 @@ const MenuItemCard = styled.div`
 
 const MenuImg = styled.img`
   width: 100%;
-  height: 58px;
+  height: 50px;
   object-fit: cover;
   border-top-left-radius: var(--radius-lg);
   border-top-right-radius: var(--radius-lg);
@@ -492,7 +492,7 @@ const MenuImg = styled.img`
 
 const MenuAvatar = styled.div`
   width: 100%;
-  height: 58px;
+  height: 50px;
   background: linear-gradient(
     135deg,
     var(--color-primary) 0%,
@@ -502,15 +502,15 @@ const MenuAvatar = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 800;
 `;
 
 const MenuCardContent = styled.div`
-  padding: 6px;
+  padding: 5px 6px;
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 2px;
 `;
 
 const MenuName = styled.div`
@@ -529,7 +529,7 @@ const MenuMeta = styled.div`
 `;
 
 const MenuPrice = styled.strong`
-  font-size: 11px;
+  font-size: 10.5px;
   color: var(--color-text-primary);
 `;
 
@@ -537,7 +537,7 @@ const PosRightPanel = styled.div`
   background: var(--color-bg);
   border-radius: var(--radius-xl);
   border: 1px solid var(--color-border);
-  padding: 12px;
+  padding: 10px;
   display: flex;
   flex-direction: column;
   overflow: hidden;

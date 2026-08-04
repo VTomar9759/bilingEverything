@@ -11,7 +11,7 @@ const { TextArea } = Input;
 
 /* ── Page wrapper ── */
 export const StyledPageWrapper = styled(PageWrapper)`
-  gap: 19px;
+  gap: 10px;
   animation: pageIn 0.3s ease;
 
   @keyframes pageIn {
@@ -23,8 +23,8 @@ export const StyledPageWrapper = styled(PageWrapper)`
 /* ── Two-column layout ── */
 export const BoxSection = styled.div`
   display: grid;
-  grid-template-columns: 260px 1fr;
-  gap: 19px;
+  grid-template-columns: 240px 1fr;
+  gap: 12px;
   align-items: flex-start;
 
   @media (max-width: 1024px) {
@@ -41,21 +41,21 @@ export const SectionCard = styled(Card)`
 
   .ant-card-head {
     border-bottom: 1px solid var(--color-border-light) !important;
-    padding: 0 20px !important;
-    min-height: 42px !important;
+    padding: 0 14px !important;
+    min-height: 36px !important;
   }
 
   .ant-card-head-title {
-    font-size: 12.5px !important;
+    font-size: 12px !important;
     font-weight: 700 !important;
     color: var(--color-text-primary) !important;
     font-family: var(--font-display) !important;
     letter-spacing: -0.2px !important;
-    padding: 11px 0 !important;
+    padding: 8px 0 !important;
   }
 
   .ant-card-body {
-    padding: 16px 20px 20px !important;
+    padding: 12px 14px 14px !important;
   }
 `;
 
@@ -63,7 +63,7 @@ export const SectionCard = styled(Card)`
 export const FormColumn = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 10px;
 `;
 
 /* ── Styled form ── */
@@ -71,7 +71,7 @@ export const StyledForm = styled(Form)`
   .form-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 16px;
+    gap: 10px;
 
     @media (max-width: 600px) {
       grid-template-columns: 1fr;
@@ -80,7 +80,7 @@ export const StyledForm = styled(Form)`
   }
 
   .ant-form-item {
-    margin-bottom: 14px;
+    margin-bottom: 10px;
   }
 
   .ant-form-item:last-child {
@@ -88,7 +88,7 @@ export const StyledForm = styled(Form)`
   }
 
   .ant-form-item-label {
-    padding-bottom: 4px !important;
+    padding-bottom: 2px !important;
   }
 
   .ant-form-item-label > label {
@@ -298,8 +298,8 @@ export const FormFooter = styled.div`
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 12px 18px;
-  margin-top: 16px;
+  padding: 8px 14px;
+  margin-top: 10px;
   background: var(--color-surface);
   border-radius: var(--radius-xl);
   border: 1px solid var(--color-border-light);

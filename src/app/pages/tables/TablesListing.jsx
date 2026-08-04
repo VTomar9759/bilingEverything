@@ -475,7 +475,7 @@ const HeaderBox = styled.div`
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: 16px;
+  gap: 10px;
 `;
 
 const FilterBarContainer = styled.div`
@@ -483,7 +483,7 @@ const FilterBarContainer = styled.div`
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 8px;
   transition: all 0.3s ease;
   @media (max-width: 768px) {
     flex-direction: column;
@@ -494,14 +494,14 @@ const FilterBarContainer = styled.div`
 const FilterLeftArea = styled.div`
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
 `;
 
 const FilterRightArea = styled.div`
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
   margin-left: auto;
 
@@ -517,15 +517,15 @@ const FilterLabel = styled.span`
   font-weight: 800;
   color: var(--color-text-secondary);
   letter-spacing: 0.5px;
-  min-width: 100px;
+  min-width: 90px;
 `;
 
 const FloorGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-  gap: 18px;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 10px;
   width: 100%;
-  margin-top: 18px;
+  margin-top: 10px;
 `;
 
 const DetailBox = styled.div`

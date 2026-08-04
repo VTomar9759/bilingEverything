@@ -5,7 +5,7 @@ import { supabase } from "../../lib/supabaseClients";
 const useImageUpload = () => {
   const [uploading, setUploading] = useState(false);
 
-  const { userId } = useSelector((state) => state?.authSlice);
+  const { org_id } = useSelector((state) => state?.authSlice);
 
   const handleUpload = async ({ file, onSuccess, onError }) => {
     try {
@@ -34,7 +34,7 @@ const useImageUpload = () => {
       const fileExt = file.name.split(".").pop();
 
       // Path
-      const filePath = `${userId}/${Date.now()}.${fileExt}`;
+      const filePath = `${org_id}/${Date.now()}.${fileExt}`;
 
       // Upload
       const { error: uploadError } = await supabase.storage

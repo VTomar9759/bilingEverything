@@ -151,22 +151,22 @@ const ChangePassword = ({ open, onClose }) => {
 export default ChangePassword;
 
 const ModalWapper = styled.div`
-  padding: 30px;
+  padding: 16px 20px;
 `;
 const HeaderContainer = styled.div`
   text-align: center;
-  margin-bottom: 32px;
+  margin-bottom: 14px;
 `;
 
 const Title = styled.h2`
   font-family: Collection/Primary;
   font-weight: 700;
   font-style: Bold;
-  font-size: 24px;
+  font-size: 18px;
   line-height: 120%;
   letter-spacing: 0%;
   text-align: center;
-  margin-bottom: 10px;
+  margin-bottom: 4px;
   color: #000000;
 `;
 
@@ -174,8 +174,8 @@ const Subtitle = styled.p`
   font-family: Collection/Primary;
   font-weight: 400;
   font-style: Regular;
-  font-size: 16px;
-  line-height: 150%;
+  font-size: 12px;
+  line-height: 140%;
   letter-spacing: 0%;
   text-align: center;
 
@@ -183,12 +183,13 @@ const Subtitle = styled.p`
 `;
 
 const StyledFormItem = styled(Form.Item)`
+  margin-bottom: 10px;
   .ant-input {
-    height: 48px;
+    height: 36px;
     border-radius: 8px;
     border: 1px solid #d9d9d9;
-    padding: 12px 16px;
-    font-size: 16px;
+    padding: 8px 12px;
+    font-size: 13px;
 
     &:focus,
     &:hover {
@@ -198,32 +199,33 @@ const StyledFormItem = styled(Form.Item)`
 
   & .ant-form-item-label > label {
     font-weight: 600;
-    font-size: 14px;
+    font-size: 11.5px;
     text-transform: uppercase;
     color: #818b9a;
   }
 
   & .ant-form-item-explain-error {
-    font-size: 14px;
+    font-size: 11.5px;
   }
 `;
 
 const SubmitFormItem = styled(Form.Item)`
   margin-bottom: 0;
+  margin-top: 10px;
 `;
 
 const SubmitButton = styled(Button)`
   background-color: ${({ theme }) => theme.colors.primary};
   border-color: ${({ theme }) => theme.colors.primary};
-  height: 48px;
-  font-size: 16px;
+  height: 36px;
+  font-size: 13px;
   font-weight: 500;
   border-radius: 8px;
 
   &:hover {
     background-color: ${({ theme }) => theme.colors.primary} !important;
     border-color: ${({ theme }) => theme.colors.primary} !important;
-    transform: scale(1.02);
+    transform: scale(1.01);
   }
   &:active,
   &:focus {

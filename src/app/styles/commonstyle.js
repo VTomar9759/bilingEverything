@@ -3,22 +3,22 @@ import styled from "styled-components";
 export const PageWrapper = styled.div`
   display: flex;
   flex-direction: column;
-  gap:6px;
+  gap: 5px;
 `;
 
 export const Label = styled.label`
   display: block;
   font-weight: 600;
-  font-size: 11.5px;
+  font-size: 11px;
   color: var(--color-text-primary);
-  margin-bottom: 5px;
+  margin-bottom: 3px;
   letter-spacing: 0.01em;
 `;
 
 export const StyledInput = styled.input`
   width: 100%;
-  padding: 8px 12px;
-  font-size: 12.5px;
+  padding: 6px 10px;
+  font-size: 12px;
   border: 1.5px solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-surface);
@@ -38,9 +38,9 @@ export const StyledInput = styled.input`
 `;
 
 export const TitleText = styled.p`
-  font-size: 11.5px;
+  font-size: 11px;
   color: var(--color-text-muted);
-  line-height: 1.5;
+  line-height: 1.4;
 `;
 
 export const Headerbox = styled.div`
@@ -53,7 +53,7 @@ export const Headerbox = styled.div`
 
 export const Headingtext = styled.p`
   font-weight: 600;
-  font-size: 13px;
+  font-size: 12.5px;
   color: var(--color-text-primary);
   line-height: 1.3;
 `;
@@ -64,14 +64,14 @@ export const SurfaceCard = styled.div`
   border-radius: var(--radius-xl);
   border: 1px solid var(--color-border-light);
   box-shadow: var(--shadow-sm);
-  padding: ${({ $padding }) => $padding || "18px"};
+  padding: ${({ $padding }) => $padding || "12px 14px"};
 `;
 
 /* ─── Stat card ─── */
 export const StatCard = styled(SurfaceCard)`
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 `;
 
 /* ─── Badge ─── */

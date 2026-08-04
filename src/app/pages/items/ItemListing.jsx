@@ -9,7 +9,6 @@ import { PageWrapper } from "../../styles/commonstyle";
 import ItemCard from "./components/ItemCard";
 import useItemStore from "../../hooks/useItemStore";
 import InputSearch from "../../../components/SearchInput";
-import { useSelector } from "react-redux";
 import CategorySelecter from "../../../components/CategorySelecter";
 
 const ItemListing = () => {
@@ -17,7 +16,6 @@ const ItemListing = () => {
   const [items, loading] = useItemStore({ search: "", filter: "" });
   const [data, setData] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("all");
-  const itemCategories = useSelector((state) => state?.itemsCategorySlices);
 
   const handleSearch = (searchValue) => {
     setSelectedCategory("all");
@@ -48,7 +46,9 @@ const ItemListing = () => {
       if (selectedCategory === "all") {
         setData(items);
       } else {
-        const filtered = items?.filter((item) => item.category === selectedCategory);
+        const filtered = items?.filter(
+          (item) => item.category === selectedCategory,
+        );
         setData(filtered);
       }
     }
@@ -80,7 +80,6 @@ const ItemListing = () => {
         </HeadActions>
       </PageHead>
       <CategorySelecter
-        options={itemCategories}
         onChange={handleCategoryFilter}
         value={selectedCategory}
       />
@@ -209,7 +208,7 @@ const AddButton = styled(Button)`
 const SkeletonGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-  gap: 16px;
+  gap: 12px;
 `;
 
 const SkeletonCard = styled.div`

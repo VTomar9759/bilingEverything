@@ -91,35 +91,35 @@ const ModalOverlay = styled.div`
 const ModalContainer = styled.div`
   background: var(--color-surface);
   border-radius: var(--radius-xl);
-  padding: 32px;
+  padding: 20px 24px;
   width: 100%;
-  max-width: 400px;
+  max-width: 380px;
   box-shadow: var(--shadow-xl), 0 0 0 1px rgba(0,0,0,0.04);
   animation: ${slideUp} 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  gap: 16px;
+  gap: 10px;
 `;
 
 const IconArea = styled.div`
-  width: 64px;
-  height: 64px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   background: ${({ $danger }) => ($danger ? "rgba(239,68,68,0.08)" : "rgba(1,81,75,0.08)")};
   color: ${({ $danger }) => ($danger ? "#ef4444" : "var(--color-primary)")};
-  border: 2px solid ${({ $danger }) => ($danger ? "rgba(239,68,68,0.15)" : "rgba(1,81,75,0.15)")};
+  border: 1.5px solid ${({ $danger }) => ($danger ? "rgba(239,68,68,0.15)" : "rgba(1,81,75,0.15)")};
 `;
 
 const ModalHeader = styled.div``;
 
 const ModalTitle = styled.h3`
   font-family: var(--font-display);
-  font-size: 18px;
+  font-size: 15px;
   font-weight: 700;
   color: var(--color-text-primary);
   margin: 0;
@@ -128,10 +128,10 @@ const ModalTitle = styled.h3`
 const ModalContent = styled.div``;
 
 const ModalMessage = styled.p`
-  font-size: 14px;
+  font-size: 12.5px;
   color: var(--color-text-secondary);
   margin: 0;
-  line-height: 1.6;
+  line-height: 1.45;
 `;
 
 const ModalFooter = styled.div`
@@ -143,12 +143,12 @@ const ModalFooter = styled.div`
 
 const CancelBtn = styled.button`
   flex: 1;
-  height: 40px;
+  height: 34px;
   border-radius: var(--radius-md);
   background: var(--color-bg);
   border: 1.5px solid var(--color-border);
   color: var(--color-text-secondary);
-  font-size: 14px;
+  font-size: 12.5px;
   font-weight: 600;
   cursor: pointer;
   transition: all var(--transition-fast);
@@ -167,9 +167,9 @@ const CancelBtn = styled.button`
 
 const ConfirmBtn = styled(Button)`
   flex: 1 !important;
-  height: 40px !important;
+  height: 34px !important;
   border-radius: var(--radius-md) !important;
-  font-size: 14px !important;
+  font-size: 12.5px !important;
   font-weight: 600 !important;
   border: none !important;
   background: ${({ $danger }) => ($danger ? "#ef4444" : "var(--color-primary)")} !important;
