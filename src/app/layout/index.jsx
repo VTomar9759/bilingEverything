@@ -40,8 +40,7 @@ const index = ({ type }) => {
               "Table Booking",
               "Kitchen Tracking",
               "Billing & GST",
-              "Inventory Management",
-              "Staff Analytics",
+              
             ].map((f) => (
               <Pill key={f}>{f}</Pill>
             ))}
