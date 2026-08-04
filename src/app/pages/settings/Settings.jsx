@@ -108,7 +108,7 @@ export default SettingsLayout;
 /* ─── Styled Components ─── */
 
 const LayoutWrapper = styled.div`
-  max-width: 1140px;
+  width:100%;
   margin: 0 auto;
   display: flex;
   flex-direction: column;

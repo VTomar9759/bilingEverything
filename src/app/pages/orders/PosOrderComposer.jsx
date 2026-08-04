@@ -19,7 +19,6 @@ import { PageWrapper } from "../../styles/commonstyle";
 import { TABLE_STATUS } from "../../utils/constant";
 import { PATH_ORDERS, PATH_BILLING } from "../../routes/pathname";
 import CategorySelecter from "../../../components/CategorySelecter";
-import { useSelector } from "react-redux";
 
 const { Option } = Select;
 
@@ -34,7 +33,6 @@ const PosOrderComposer = () => {
   const [selectedPosItems, setSelectedPosItems] = useState([]); // Array of { item, quantity }
   const [posSearchText, setPosSearchText] = useState("");
   const isPrintSubmitRef = useRef(false);
-  const itemCategories = useSelector((state) => state?.itemsCategorySlices);
   const [selectedCategory, setSelectedCategory] = useState("all");
   const handleCategoryFilter = (category) => {
     setSelectedCategory(category);
@@ -136,7 +134,7 @@ const PosOrderComposer = () => {
   const menuFilteredCatalog = catalogItems?.filter(
     (item) =>
       item.status === true &&
-      (selectedCategory === item.category || selectedCategory === "all") &&
+      (selectedCategory === item.category_id || selectedCategory === "all") &&
       (item.name?.toLowerCase().includes(posSearchText.toLowerCase()) ||
         item.code?.toLowerCase().includes(posSearchText.toLowerCase())),
   );
@@ -161,7 +159,7 @@ const PosOrderComposer = () => {
         </Button>
       </HeaderBox>
       <CategorySelecter
-        options={itemCategories}
+       
         onChange={handleCategoryFilter}
         value={selectedCategory}
       />
@@ -183,7 +181,7 @@ const PosOrderComposer = () => {
                 >
                   <Select
                     placeholder="Choose dining table"
-                    style={{ height: 38 }}
+                    style={{ height: 38, borderRadius: 8 }}
                     allowClear
                   >
                     <Option value="">Takeaway</Option>
@@ -198,7 +196,7 @@ const PosOrderComposer = () => {
                   </Select>
                 </Form.Item>
 
-                <SearchBox>
+                <Form.Item label="Filter Menu">
                   <Input
                     placeholder="Filter menu dishes..."
                     prefix={<SearchOutlined />}
@@ -206,7 +204,7 @@ const PosOrderComposer = () => {
                     onChange={(e) => setPosSearchText(e.target.value)}
                     style={{ height: 38, borderRadius: 8 }}
                   />
-                </SearchBox>
+                </Form.Item>
               </FilterRow>
 
               <MenuGrid>
@@ -387,6 +385,9 @@ const HeaderBox = styled.div`
   gap: 12px;
 `;
 
+
+
+
 const ComposerCard = styled.div`
   background: var(--color-surface);
   border-radius: var(--radius-xl);
@@ -431,16 +432,12 @@ const PosLeftPanel = styled.div`
   }
 `;
 
-const SearchBox = styled.div`
-  width: 100%;
-`;
+
 
 const FilterRow = styled.div`
   display: flex;
   gap: 12px;
-  align-items: flex-end;
   width: 100%;
-  margin-bottom: 3px;
 
   & > * {
     flex: 1;

@@ -15,10 +15,10 @@ const ItemListing = () => {
   const navigate = useNavigate();
   const [items, loading] = useItemStore({ search: "", filter: "" });
   const [data, setData] = useState([]);
-  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedCatId, setSelectedCatId] = useState("all");
 
   const handleSearch = (searchValue) => {
-    setSelectedCategory("all");
+    setSelectedCatId("all");
     if (!searchValue) {
       setData(items);
       return;
@@ -31,28 +31,28 @@ const ItemListing = () => {
     setData(filtered);
   };
 
-  const handleCategoryFilter = (category) => {
-    setSelectedCategory(category);
-    if (category === "all") {
+  const handleCategoryFilter = (catId) => {
+    setSelectedCatId(catId);
+    if (catId === "all") {
       setData(items);
     } else {
-      const filtered = items?.filter((item) => item.category === category);
+      const filtered = items?.filter((item) => item?.category_id === catId);
       setData(filtered);
     }
   };
 
   useEffect(() => {
     if (items) {
-      if (selectedCategory === "all") {
+      if (selectedCatId === "all") {
         setData(items);
       } else {
         const filtered = items?.filter(
-          (item) => item.category === selectedCategory,
+          (item) => item?.category_id === selectedCatId,
         );
         setData(filtered);
       }
     }
-  }, [items, selectedCategory]);
+  }, [items, selectedCatId]);
 
   return (
     <PageWrapper>
@@ -79,10 +79,7 @@ const ItemListing = () => {
           </AddButton>
         </HeadActions>
       </PageHead>
-      <CategorySelecter
-        onChange={handleCategoryFilter}
-        value={selectedCategory}
-      />
+      <CategorySelecter onChange={handleCategoryFilter} value={selectedCatId} />
 
       {/* Content */}
       <ContentArea>

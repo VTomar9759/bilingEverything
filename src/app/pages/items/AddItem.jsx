@@ -4,18 +4,23 @@ import {
   Form,
   Select,
   Upload,
+  Switch,
   message,
 } from "antd";
 import {
   ArrowLeftOutlined,
   SaveOutlined,
-  PlusOutlined,
   LoadingOutlined,
   DollarCircleOutlined,
   TagOutlined,
   AlignLeftOutlined,
   BarcodeOutlined,
   PictureOutlined,
+  PercentageOutlined,
+  AppstoreOutlined,
+  FileTextOutlined,
+  DeleteOutlined,
+  CheckCircleOutlined,
 } from "@ant-design/icons";
 
 import TabHeader from "../../../components/TabHeader";
@@ -26,6 +31,7 @@ import { clearItems } from "../../store/slices/itemSlice";
 
 import {
   StyledPageWrapper,
+  TopStatusBanner,
   BoxSection,
   SectionCard,
   FormColumn,
@@ -41,6 +47,7 @@ import {
   CancelButton,
   SubmitButton,
 } from "./components/FormStyles";
+import useCategories from "../../hooks/useCategories";
 
 const { Option } = Select;
 
@@ -51,7 +58,9 @@ const AddItem = () => {
   const navigate = useNavigate();
   const [form] = Form.useForm();
   const formValues = Form.useWatch([], form);
-  const { userId } = useSelector((state) => state?.authSlice);
+  const { userId, org_id } = useSelector((state) => state?.authSlice || {});
+  const activeOrgId = org_id || userId;
+  const { categories } = useCategories();
   const { handleUpload, beforeUpload, uploading } = useImageUpload();
 
   React.useEffect(() => {
@@ -86,14 +95,17 @@ const AddItem = () => {
       name: values.name,
       code: values.code,
       image: imageUrl,
-      category: values.category,
-      price: values.price,
+      category_id: values.category_id || values.category || null,
+      price: values.price !== undefined && values.price !== null ? String(values.price) : null,
       title: values.title,
       description: values.description,
+      gst_status: values.gst_status ?? true,
+      status: values.status ?? true,
+      org_id: activeOrgId,
     };
 
     try {
-      await addItem(userId, payload);
+      await addItem(activeOrgId, payload);
       dispatch(clearItems());
       message.success("Product added successfully");
       navigate(-1);
@@ -108,17 +120,19 @@ const AddItem = () => {
       <div className="upload-icon">
         {uploading ? <LoadingOutlined /> : <PictureOutlined />}
       </div>
-      <p>{uploading ? "Uploading..." : "Click to upload"}</p>
+      <p>{uploading ? "Uploading Image..." : "Click or Drag Image Here"}</p>
       <span>PNG, JPG up to 5MB</span>
     </UploadPlaceholder>
   );
+
+  const isGstActive = formValues?.gst_status ?? true;
 
   return (
     <StyledPageWrapper>
       <TabHeader
         breadcrumb={["Items", "Add New Item"]}
         title="Create New Product"
-        subtitle="Fill in the details below to add a product to your catalog."
+        subtitle="Fill in the details below to add a high-quality product to your catalog."
       />
 
       <StyledForm
@@ -126,11 +140,46 @@ const AddItem = () => {
         layout="vertical"
         onFinish={onFinish}
         autoComplete="off"
-        initialValues={{ category: "Electronics" }}
+        initialValues={{
+          gst_status: true,
+          status: true,
+        }}
       >
+        {/* Top GST & Product Status Settings Bar */}
+        <TopStatusBanner>
+          <div className="status-info">
+            <div className="status-icon-badge">
+              <PercentageOutlined />
+            </div>
+            <div className="status-text">
+              <span className="title">Tax & Status Configuration</span>
+              <span className="subtitle">Set tax applicability and product status before filling form details.</span>
+            </div>
+          </div>
+
+          <div className="status-action-row">
+            <div className="status-pill">
+              <span className="label">GST Status:</span>
+              <Form.Item name="gst_status" valuePropName="checked" noStyle>
+                <Switch checkedChildren="Active" unCheckedChildren="Exempt" />
+              </Form.Item>
+              <span className={`badge-tag ${isGstActive ? "active" : "inactive"}`}>
+                {isGstActive ? "GST Applicable" : "Non-GST / Exempt"}
+              </span>
+            </div>
+          </div>
+        </TopStatusBanner>
+
         <BoxSection>
-          {/* Media column */}
-          <SectionCard title="Product Image">
+          {/* Media Column */}
+          <SectionCard
+            title={
+              <>
+                <PictureOutlined />
+                <span>Product Image</span>
+              </>
+            }
+          >
             <Form.Item name="image" noStyle>
               <input type="hidden" />
             </Form.Item>
@@ -159,15 +208,22 @@ const AddItem = () => {
                     setPreviewUrl(null);
                   }}
                 >
-                  Remove image
+                  <DeleteOutlined /> Remove Image
                 </button>
               )}
             </UploadWrapper>
           </SectionCard>
 
-          {/* Form column */}
+          {/* Form Inputs Column */}
           <FormColumn>
-            <SectionCard title="Basic Information">
+            <SectionCard
+              title={
+                <>
+                  <AppstoreOutlined />
+                  <span>Basic Information</span>
+                </>
+              }
+            >
               <div className="form-row">
                 <Form.Item
                   label="Product Name"
@@ -188,20 +244,31 @@ const AddItem = () => {
 
               <Form.Item
                 label="Category"
-                name="category"
+                name="category_id"
                 rules={[{ required: true, message: "Category is required" }]}
               >
                 <StyledSelect placeholder="Select category">
-                  <Option value="Electronics">Electronics</Option>
-                  <Option value="Fashion">Fashion</Option>
-                  <Option value="Home">Home</Option>
-                  <Option value="Food">Food</Option>
-                  <Option value="Other">Other</Option>
+                  {categories?.length > 0 ? (
+                    categories?.map((cat) => (
+                      <Option key={cat.id} value={cat.id}>
+                        {cat.name}
+                      </Option>
+                    ))
+                  ) : (
+                    <Option value="">No Category Found</Option>
+                  )}
                 </StyledSelect>
               </Form.Item>
             </SectionCard>
 
-            <SectionCard title="Pricing & Details">
+            <SectionCard
+              title={
+                <>
+                  <DollarCircleOutlined />
+                  <span>Pricing & Product Details</span>
+                </>
+              }
+            >
               <div className="form-row">
                 <Form.Item
                   label="Price (Rs.)"
@@ -233,7 +300,7 @@ const AddItem = () => {
               >
                 <StyledTextArea
                   rows={4}
-                  placeholder="Describe your product's key features and benefits..."
+                  placeholder="Describe your product's key features and specifications..."
                 />
               </Form.Item>
             </SectionCard>

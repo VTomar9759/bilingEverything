@@ -17,6 +17,7 @@ import {
 const useCategories = () => {
   const dispatch = useDispatch();
   const categories = useSelector((state) => state?.itemsCategorySlices || []);
+
   const { org_id, userId } = useSelector((state) => state?.authSlice || {});
   const activeOrgId = org_id || userId;
 

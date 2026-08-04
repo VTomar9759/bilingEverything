@@ -1,22 +1,11 @@
-import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { AppstoreOutlined } from "@ant-design/icons";
 import useCategories from "../app/hooks/useCategories";
 
 const CategorySelecter = ({ onChange, value }) => {
-  const [activeCat, setActiveCat] = useState("all");
   const { categories } = useCategories();
 
-  useEffect(() => {
-    if (value !== undefined) {
-      setActiveCat(value || "all");
-    }
-  }, [value]);
-
   const handleCategoryFilter = (category) => {
-    if (value === undefined) {
-      setActiveCat(category);
-    }
     if (onChange) {
       onChange(category);
     }
@@ -25,24 +14,20 @@ const CategorySelecter = ({ onChange, value }) => {
   return (
     <Container>
       <ButtonCategory
-        $active={activeCat === "all"}
+        $active={value === "all"}
         onClick={() => handleCategoryFilter("all")}
       >
         <AppstoreOutlined style={{ fontSize: "12px" }} />
         All Items
       </ButtonCategory>
       {categories?.map((category, index) => {
-        const catName =
-          typeof category === "object" && category !== null
-            ? category.name
-            : category;
         return (
           <ButtonCategory
-            $active={activeCat === catName}
-            onClick={() => handleCategoryFilter(catName)}
+            $active={category?.id === value}
+            onClick={() => handleCategoryFilter(category?.id)}
             key={index}
           >
-            {catName}
+            {category?.name}
           </ButtonCategory>
         );
       })}

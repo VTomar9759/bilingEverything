@@ -23,7 +23,7 @@ const BillingSection = () => {
 
   const [loading, setLoading] = useState(true);
   const [orders, setOrders] = useState([]);
-  const { settings = {} } = useSettings();
+
   const isClearedRef = useRef(false);
 
   // Selected order

@@ -3,7 +3,6 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useLocation } from "react-router";
 import styled, { css, keyframes } from "styled-components";
 import { navItems } from "../app/routes/pathname";
-import Setting from "./Setting";
 import logo from "../assets/logo.png";
 import { SIDEBAR_CLOSED_WIDTH, SIDEBAR_OPEN_WIDTH } from "../app/layout";
 import { BrandTitle } from "../app/utils/commons_style";
