@@ -7,6 +7,7 @@ export const PATH_FORGOT_PASSWORD = "/forgot-password";
 export const PATH_ITEMS = "/items";
 export const PATH_ADD_ITEM = "/items/add";
 export const PATH_EDIT_ITEM = "/items/edit/:id";
+export const PATH_CATEGORIES = "/categories";
 
 // Dashboard paths
 export const PATH_DASHBOARD = "/dashboard";
@@ -18,7 +19,14 @@ export const PATH_KITCHEN = "/kitchen";
 export const PATH_STAFF = "/staff";
 export const PATH_INVENTORY = "/inventory";
 export const PATH_REPORTS = "/reports";
+
+
+// setting
 export const PATH_SETTINGS = "/settings";
+export const PATH_SETTINGS_PROFILE = "/settings/profile";
+export const PATH_SETTINGS_PASSWORD = "/settings/change-password";
+export const PATH_SETTINGS_BUSINESS = "/settings/business-details";
+export const PATH_CHANGE_PASSWORD = "/settings/change-password";
 export const PATH_DYNAMIC = "/database-admin";
 
 // Sidebar paths (navItems)
@@ -34,6 +42,12 @@ export const navItems = [
     icon: "Items",
     activePath: [PATH_ITEMS, PATH_ADD_ITEM, PATH_EDIT_ITEM],
     path: PATH_ITEMS,
+  },
+  {
+    label: "Categories",
+    icon: "Categories",
+    activePath: [PATH_CATEGORIES],
+    path: PATH_CATEGORIES,
   },
   {
     label: "Orders",
@@ -77,18 +91,24 @@ export const navItems = [
   //   icon: "Reports",
   //   activePath: [PATH_REPORTS],
   //   path: PATH_REPORTS,
-  // },
   // {
   //   label: "Database Admin",
   //   icon: "Database",
   //   activePath: [PATH_DYNAMIC],
   //   path: PATH_DYNAMIC,
   // },
-  // {
-  //   label: "Settings",
-  //   icon: "Settings",
-  //   activePath: [PATH_SETTINGS],
-  //   path: PATH_SETTINGS,
-  // },
+  {
+    label: "Settings",
+    icon: "Settings",
+    activePath: [
+      PATH_SETTINGS,
+      PATH_SETTINGS_PROFILE,
+      PATH_SETTINGS_PASSWORD,
+      PATH_SETTINGS_BUSINESS,
+    ],
+    path: PATH_SETTINGS_PROFILE,
+  },
 ];
+
+
 

@@ -269,19 +269,19 @@ const ChartHeader = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 15px;
+  margin-bottom: 10px;
 `;
 
 const ChartTitle = styled.h3`
   font-family: var(--font-display);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   color: var(--color-text-primary);
   margin: 0;
 `;
 
 const TooltipValue = styled.span`
-  font-size: 12px;
+  font-size: 11.5px;
   color: var(--color-text-secondary);
   strong { color: var(--color-primary); }
 `;
@@ -289,19 +289,19 @@ const TooltipValue = styled.span`
 const SvgWrapper = styled.div`
   width: 100%;
   height: 100%;
-  min-height: 150px;
+  min-height: 130px;
 `;
 
 const DonutContent = styled.div`
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: 14px;
   flex-wrap: wrap;
 
   @media (max-width: 480px) {
     justify-content: center;
     flex-direction: column;
-    gap: 16px;
+    gap: 12px;
   }
 `;
 
@@ -312,20 +312,20 @@ const DonutSvgWrapper = styled.div`
 const Legend = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 6px;
   flex: 1;
-  min-width: 150px;
+  min-width: 140px;
 `;
 
 const LegendItem = styled.div`
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 `;
 
 const ColorBadge = styled.div`
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   background: ${({ $color }) => $color};
   flex-shrink: 0;
@@ -335,7 +335,7 @@ const LegendText = styled.div`
   display: flex;
   justify-content: space-between;
   flex: 1;
-  font-size: 12px;
+  font-size: 11.5px;
 `;
 
 const CatName = styled.span`
@@ -353,9 +353,9 @@ const BarGrid = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  height: 150px;
-  padding: 10px 10px 0;
-  gap: 8px;
+  height: 130px;
+  padding: 6px 6px 0;
+  gap: 6px;
 `;
 
 const BarCol = styled.div`

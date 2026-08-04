@@ -3,11 +3,11 @@ import { supabase } from "../lib/supabaseClients";
 /**
  * Fetch all items belonging to a user
  */
-export const getItems = async (userId) => {
+export const getItems = async (org_id) => {
   const { data, error } = await supabase
     .from("items")
     .select("*")
-    .eq("user_id", userId);
+    .eq("org_id", org_id);
 
   if (error) {
     console.error("Error fetching items:", error.message);
@@ -38,9 +38,9 @@ export const getItemById = async (id) => {
 /**
  * Add a new item to the catalog
  */
-export const addItem = async (userId, itemData) => {
+export const addItem = async (org_id, itemData) => {
   const payload = {
-    user_id: userId,
+    org_id: org_id,
     ...itemData,
   };
 
@@ -59,9 +59,9 @@ export const addItem = async (userId, itemData) => {
 /**
  * Update an existing item in the catalog
  */
-export const updateItem = async (userId, id, updates) => {
+export const updateItem = async (org_id, id, updates) => {
   const payload = {
-    user_id: userId,
+    org_id: org_id,
     ...updates,
   };
 
@@ -94,7 +94,7 @@ export const updateItemStatus = async (id, status) => {
 /**
  * Delete an item from the catalog
  */
-export const deleteItem = async (userId, id) => {
+export const deleteItem = async (org_id, id) => {
   const { error } = await supabase
     .from("items")
     .delete()

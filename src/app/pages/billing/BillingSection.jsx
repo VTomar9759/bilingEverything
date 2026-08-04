@@ -23,7 +23,7 @@ const BillingSection = () => {
 
   const [loading, setLoading] = useState(true);
   const [orders, setOrders] = useState([]);
-  const { settings = {} } = useSettings();
+
   const isClearedRef = useRef(false);
 
   // Selected order
@@ -498,7 +498,7 @@ const EmptyCard = styled.div`
   background: var(--color-surface);
   border-radius: var(--radius-xl);
   border: 1px solid var(--color-border);
-  padding: 60px 30px;
+  padding: 32px 20px;
   height: 100%;
   text-align: center;
 `;
@@ -506,7 +506,7 @@ const EmptyCard = styled.div`
 const RegisterLayout = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  gap: 12px;
   width: 100%;
 
   @media (max-width: 860px) {
@@ -519,19 +519,19 @@ const POSControlCard = styled.div`
   border-radius: var(--radius-xl);
   border: 1px solid var(--color-border);
   box-shadow: var(--shadow-sm);
-  padding: 18px;
+  padding: 12px 14px;
   height: fit-content;
 `;
 
 const ComposerTitle = styled.h4`
   font-family: var(--font-display);
-  font-size: 12.5px;
+  font-size: 12px;
   font-weight: 700;
   color: var(--color-text-primary);
-  margin: 0 0 12px;
+  margin: 0 0 8px;
 
   border-bottom: 1.5px solid var(--color-border);
-  padding-bottom: 8px;
+  padding-bottom: 6px;
 `;
 
 const OrderOption = styled.div`

@@ -8,21 +8,15 @@ const useItemStore = () => {
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(false);
   const items = useSelector((state) => state?.itemSlice);
-  const { userId } = useSelector((state) => state?.authSlice);
+  const { org_id } = useSelector((state) => state?.authSlice || {});
 
   useEffect(() => {
     const fetchCatalog = async () => {
-      if (!userId) return;
+      if (!org_id) return;
       setLoading(true);
       try {
-        const data = await getItems(userId);
+        const data = await getItems(org_id);
         dispatch(setItems(data || []));
-        const categories = [
-          ...new Set(
-            data?.filter((item) => item.category).map((item) => item.category),
-          ),
-        ];
-        dispatch(setCategories(categories || []));
       } catch (err) {
         console.error("useItemStore error:", err);
       } finally {
@@ -30,10 +24,10 @@ const useItemStore = () => {
       }
     };
 
-    if (userId && items?.length === 0) {
+    if (org_id && items?.length === 0) {
       fetchCatalog();
     }
-  }, [userId, items?.length, dispatch]);
+  }, [org_id, items?.length, dispatch]);
 
   return [items, loading];
 };

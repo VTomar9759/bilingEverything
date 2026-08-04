@@ -4,7 +4,7 @@ import { emptyStore } from "../actions";
 const initialisation = {
   token: null,
   refreshToken: null,
-  userId: null,
+  org_id: null,
   userData: null,
 };
 
@@ -16,7 +16,7 @@ const authSlice = createSlice({
       state.userData = action?.payload?.userData;
       state.token = action?.payload.token;
       state.refreshToken = action?.payload?.refreshToken;
-      state.userId = action?.payload?.userId;
+      state.org_id = action?.payload?.org_id;
     },
     udpateProfile: (state, action) => {
       state.userData = {

@@ -9,18 +9,16 @@ import { PageWrapper } from "../../styles/commonstyle";
 import ItemCard from "./components/ItemCard";
 import useItemStore from "../../hooks/useItemStore";
 import InputSearch from "../../../components/SearchInput";
-import { useSelector } from "react-redux";
 import CategorySelecter from "../../../components/CategorySelecter";
 
 const ItemListing = () => {
   const navigate = useNavigate();
   const [items, loading] = useItemStore({ search: "", filter: "" });
   const [data, setData] = useState([]);
-  const [selectedCategory, setSelectedCategory] = useState("all");
-  const itemCategories = useSelector((state) => state?.itemsCategorySlices);
+  const [selectedCatId, setSelectedCatId] = useState("all");
 
   const handleSearch = (searchValue) => {
-    setSelectedCategory("all");
+    setSelectedCatId("all");
     if (!searchValue) {
       setData(items);
       return;
@@ -33,26 +31,28 @@ const ItemListing = () => {
     setData(filtered);
   };
 
-  const handleCategoryFilter = (category) => {
-    setSelectedCategory(category);
-    if (category === "all") {
+  const handleCategoryFilter = (catId) => {
+    setSelectedCatId(catId);
+    if (catId === "all") {
       setData(items);
     } else {
-      const filtered = items?.filter((item) => item.category === category);
+      const filtered = items?.filter((item) => item?.category_id === catId);
       setData(filtered);
     }
   };
 
   useEffect(() => {
     if (items) {
-      if (selectedCategory === "all") {
+      if (selectedCatId === "all") {
         setData(items);
       } else {
-        const filtered = items?.filter((item) => item.category === selectedCategory);
+        const filtered = items?.filter(
+          (item) => item?.category_id === selectedCatId,
+        );
         setData(filtered);
       }
     }
-  }, [items, selectedCategory]);
+  }, [items, selectedCatId]);
 
   return (
     <PageWrapper>
@@ -79,11 +79,7 @@ const ItemListing = () => {
           </AddButton>
         </HeadActions>
       </PageHead>
-      <CategorySelecter
-        options={itemCategories}
-        onChange={handleCategoryFilter}
-        value={selectedCategory}
-      />
+      <CategorySelecter onChange={handleCategoryFilter} value={selectedCatId} />
 
       {/* Content */}
       <ContentArea>
@@ -209,7 +205,7 @@ const AddButton = styled(Button)`
 const SkeletonGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-  gap: 16px;
+  gap: 12px;
 `;
 
 const SkeletonCard = styled.div`

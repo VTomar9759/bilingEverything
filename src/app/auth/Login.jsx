@@ -6,6 +6,7 @@ import { supabase } from "../../lib/supabaseClients";
 import { useDispatch } from "react-redux";
 import { logingAuth } from "../store/slices/authSlices";
 import logo from "../../assets/logo.png";
+import { BrandTitle } from "../utils/commons_style";
 
 const Login = () => {
   const [form] = Form.useForm();
@@ -19,7 +20,7 @@ const Login = () => {
       if (error) throw error;
 
       const { data: user, error: userError } = await supabase
-        .from("users")
+        .from("organization")
         .select("*")
         .eq("id", data.user.id)
         .single();
@@ -29,7 +30,7 @@ const Login = () => {
           userData: { ...data.user, ...user },
           token: data.session.access_token,
           refreshToken: data.session.refresh_token,
-          userId: data.user.id,
+          org_id: data.user.id,
         })
       );
       message.success("Login successful");
@@ -46,8 +47,10 @@ const Login = () => {
           <LogoBadge>
             <img src={logo} alt="logo" className="image-box" />
           </LogoBadge>
+          <BrandTitle>
+            Billing <span className="highlight">Every Thing</span>
+          </BrandTitle>
           <SmallText>Welcome back</SmallText>
-          <Title>Sign in to your account</Title>
         </CardHeader>
 
         <Form
@@ -122,8 +125,8 @@ const Wrapper = styled.div`
 const Card = styled.div`
   background: rgba(255,255,255,0.95);
   backdrop-filter: blur(16px);
-  border-radius: var(--radius-2xl);
-  padding: 36px 40px;
+  border-radius: var(--radius-xl);
+  padding: 24px 28px;
   border: 1px solid rgba(255,255,255,0.6);
   box-shadow: var(--shadow-xl), 0 0 0 1px rgba(0,0,0,0.04);
   display: flex;
@@ -131,18 +134,18 @@ const Card = styled.div`
   gap: 4px;
 
   .ant-form-item {
-    margin-bottom: 16px;
+    margin-bottom: 10px;
   }
 
   .ant-form-item-label > label {
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
     color: #374151;
     letter-spacing: 0.01em;
   }
 
   @media (max-width: 480px) {
-    padding: 28px 24px;
+    padding: 20px 18px;
     border-radius: var(--radius-xl);
   }
 `;
@@ -151,47 +154,38 @@ const CardHeader = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 24px;
   text-align: center;
 `;
 
 const LogoBadge = styled.div`
-  width: 150px;
-  height: 150px;
+  width: 120px;
+  height: 120px;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
   .image-box {
-    width: 150px;
-    height: 150px;
+    width: 120px;
+    height: 120px;
     object-fit: cover;
   }
 `;
 
 const SmallText = styled.p`
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
   color: var(--color-text-muted);
   margin: 0;
 `;
 
-const Title = styled.h1`
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: 22px;
-  letter-spacing: -0.5px;
-  color: var(--color-text-primary);
-  margin: 0;
-`;
+
 
 const StyledInput = styled(Input)`
-  height: 44px !important;
+  height: 38px !important;
   border-radius: var(--radius-md) !important;
   border: 1.5px solid var(--color-border) !important;
   background: var(--color-bg) !important;
-  font-size: 14px !important;
+  font-size: 13px !important;
   transition: all var(--transition-base) !important;
 
   &:hover {
@@ -207,11 +201,11 @@ const StyledInput = styled(Input)`
 `;
 
 const StyledPassword = styled(Input.Password)`
-  height: 44px !important;
+  height: 38px !important;
   border-radius: var(--radius-md) !important;
   border: 1.5px solid var(--color-border) !important;
   background: var(--color-bg) !important;
-  font-size: 14px !important;
+  font-size: 13px !important;
   transition: all var(--transition-base) !important;
 
   &:hover {
@@ -231,14 +225,14 @@ const StyledPassword = styled(Input.Password)`
 const ForgotRow = styled.div`
   display: flex;
   justify-content: flex-end;
-  margin-bottom: 20px;
-  margin-top: -8px;
+  margin-bottom: 14px;
+  margin-top: -4px;
 `;
 
 const ForgotLink = styled.button`
   background: none;
   border: none;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
   color: var(--color-primary);
   cursor: pointer;
@@ -250,9 +244,9 @@ const ForgotLink = styled.button`
 `;
 
 const SubmitBtn = styled(Button)`
-  height: 48px !important;
+  height: 38px !important;
   border-radius: var(--radius-md) !important;
-  font-size: 15px !important;
+  font-size: 13.5px !important;
   font-weight: 700 !important;
   background: var(--color-primary) !important;
   border: none !important;
@@ -276,7 +270,7 @@ const Divider = styled.div`
   display: flex;
   align-items: center;
   gap: 12px;
-  margin: 20px 0 0;
+  margin: 14px 0 0;
 
   &::before, &::after {
     content: "";
@@ -286,7 +280,7 @@ const Divider = styled.div`
   }
 
   span {
-    font-size: 12px;
+    font-size: 11.5px;
     color: var(--color-text-muted);
     white-space: nowrap;
   }
@@ -294,7 +288,7 @@ const Divider = styled.div`
 
 const SignupBtn = styled.button`
   width: 100%;
-  height: 44px;
+  height: 36px;
   border-radius: var(--radius-md);
   background: var(--color-bg);
   border: 1.5px solid var(--color-border);

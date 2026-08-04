@@ -1,20 +1,11 @@
-import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { AppstoreOutlined } from "@ant-design/icons";
+import useCategories from "../app/hooks/useCategories";
 
-const CategorySelecter = ({ options, onChange, value }) => {
-  const [activeCat, setActiveCat] = useState("all");
-
-  useEffect(() => {
-    if (value !== undefined) {
-      setActiveCat(value || "all");
-    }
-  }, [value]);
+const CategorySelecter = ({ onChange, value }) => {
+  const { categories } = useCategories();
 
   const handleCategoryFilter = (category) => {
-    if (value === undefined) {
-      setActiveCat(category);
-    }
     if (onChange) {
       onChange(category);
     }
@@ -23,21 +14,23 @@ const CategorySelecter = ({ options, onChange, value }) => {
   return (
     <Container>
       <ButtonCategory
-        $active={activeCat === "all"}
+        $active={value === "all"}
         onClick={() => handleCategoryFilter("all")}
       >
         <AppstoreOutlined style={{ fontSize: "12px" }} />
         All Items
       </ButtonCategory>
-      {options?.map((category, index) => (
-        <ButtonCategory
-          $active={activeCat === category}
-          onClick={() => handleCategoryFilter(category)}
-          key={index}
-        >
-          {category}
-        </ButtonCategory>
-      ))}
+      {categories?.map((category, index) => {
+        return (
+          <ButtonCategory
+            $active={category?.id === value}
+            onClick={() => handleCategoryFilter(category?.id)}
+            key={index}
+          >
+            {category?.name}
+          </ButtonCategory>
+        );
+      })}
     </Container>
   );
 };
@@ -66,22 +59,31 @@ const ButtonCategory = styled.button`
   gap: 8px;
   padding: 6px 14px;
   border-radius: 8px;
-  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  font-family: "Plus Jakarta Sans", "Inter", sans-serif;
   font-size: 12px;
   font-weight: 600;
-  border: 1px solid ${props => props.$active ? 'var(--color-primary)' : 'var(--color-border)'};
-  background: ${props => props.$active ? 'var(--color-primary)' : 'var(--color-surface)'};
-  color: ${props => props.$active ? '#ffffff' : 'var(--color-text-secondary)'};
+  border: 1px solid
+    ${(props) =>
+      props.$active ? "var(--color-primary)" : "var(--color-border)"};
+  background: ${(props) =>
+    props.$active ? "var(--color-primary)" : "var(--color-surface)"};
+  color: ${(props) =>
+    props.$active ? "#ffffff" : "var(--color-text-secondary)"};
   cursor: pointer;
   white-space: nowrap;
   transition: all 0.2s ease-in-out;
-  box-shadow: ${props => props.$active ? '0 4px 12px rgba(1, 81, 75, 0.15)' : 'var(--shadow-xs)'};
+  box-shadow: ${(props) =>
+    props.$active ? "0 4px 12px rgba(1, 81, 75, 0.15)" : "var(--shadow-xs)"};
 
   &:hover {
     border-color: var(--color-primary-light);
-    color: ${props => props.$active ? '#ffffff' : 'var(--color-primary)'};
-    background: ${props => props.$active ? 'var(--color-primary)' : 'var(--color-primary-50)'};
-    box-shadow: ${props => props.$active ? '0 6px 16px rgba(1, 81, 75, 0.22)' : '0 4px 8px rgba(1, 81, 75, 0.05)'};
+    color: ${(props) => (props.$active ? "#ffffff" : "var(--color-primary)")};
+    background: ${(props) =>
+      props.$active ? "var(--color-primary)" : "var(--color-primary-50)"};
+    box-shadow: ${(props) =>
+      props.$active
+        ? "0 6px 16px rgba(1, 81, 75, 0.22)"
+        : "0 4px 8px rgba(1, 81, 75, 0.05)"};
   }
 
   &:active {

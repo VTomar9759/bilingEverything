@@ -9,8 +9,8 @@ export const layoutType = {
   private: "private",
 };
 
-const SIDEBAR_OPEN_WIDTH = 240;
-const SIDEBAR_CLOSED_WIDTH = 90;
+export const SIDEBAR_OPEN_WIDTH = 230;
+export const SIDEBAR_CLOSED_WIDTH = 70;
 
 const index = ({ type }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -92,15 +92,15 @@ const MainContent = styled.div`
 
 const ContentArea = styled.main`
   flex: 1;
-  padding: 12px 16px;
+  padding: 10px 14px;
   overflow-y: auto;
 
   @media (max-width: 1024px) {
-    padding: 20px 20px;
+    padding: 12px 14px;
   }
 
   @media (max-width: 600px) {
-    padding: 16px;
+    padding: 10px;
   }
 `;
 
@@ -110,7 +110,7 @@ const PublicLayoutStyle = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 40px 20px;
+  padding: 24px 16px;
   position: relative;
   overflow: hidden;
 
@@ -135,15 +135,15 @@ const PublicCard = styled.div`
   position: relative;
   z-index: 1;
   width: 100%;
-  max-width: 960px;
+  max-width: 880px;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 48px;
+  gap: 24px;
   align-items: center;
 
   @media (max-width: 860px) {
     grid-template-columns: 1fr;
-    max-width: 480px;
+    max-width: 440px;
     gap: 0;
   }
 `;
@@ -151,7 +151,7 @@ const PublicCard = styled.div`
 const LeftSection = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 14px;
   color: white;
 
   @media (max-width: 860px) {
@@ -166,8 +166,8 @@ const BrandBadge = styled.div`
   background: rgba(255,255,255,0.12);
   border: 1px solid rgba(255,255,255,0.2);
   border-radius: 999px;
-  padding: 6px 14px;
-  font-size: 12px;
+  padding: 4px 12px;
+  font-size: 11px;
   font-weight: 700;
 
   letter-spacing: 1px;
@@ -178,16 +178,15 @@ const BrandBadge = styled.div`
 const HeroTitle = styled.h1`
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: 52px;
-  line-height: 1.12;
-  letter-spacing: -1.5px;
-
+  font-size: 38px;
+  line-height: 1.15;
+  letter-spacing: -1px;
 `;
 
 const HeroDesc = styled.p`
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 400;
-  line-height: 1.65;
+  line-height: 1.5;
   max-width: 340px;
 `;
 

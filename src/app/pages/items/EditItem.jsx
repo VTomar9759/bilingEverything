@@ -5,29 +5,34 @@ import {
   Input,
   Select,
   Upload,
+  Switch,
   message,
   Spin,
 } from "antd";
 import {
   ArrowLeftOutlined,
   SaveOutlined,
-  PlusOutlined,
   LoadingOutlined,
   DollarCircleOutlined,
   TagOutlined,
   AlignLeftOutlined,
   BarcodeOutlined,
   PictureOutlined,
+  PercentageOutlined,
+  AppstoreOutlined,
+  DeleteOutlined,
 } from "@ant-design/icons";
 
 import TabHeader from "../../../components/TabHeader";
 import { getItemById, updateItem, supabase } from "../../../services";
 import { useDispatch, useSelector } from "react-redux";
 import useImageUpload from "../../hooks/useImageUpload";
+import useCategories from "../../hooks/useCategories";
 import { clearItems } from "../../store/slices/itemSlice";
 
 import {
   StyledPageWrapper,
+  TopStatusBanner,
   BoxSection,
   SectionCard,
   FormColumn,
@@ -43,8 +48,24 @@ import {
   CancelButton,
   SubmitButton,
 } from "./components/FormStyles";
+import styled from "styled-components";
 
 const { Option } = Select;
+
+const LoadingCenter = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  gap: 16px;
+  color: var(--color-text-muted);
+
+  p {
+    font-size: 14px;
+    font-weight: 500;
+  }
+`;
 
 const EditItem = () => {
   const { id } = useParams();
@@ -56,7 +77,10 @@ const EditItem = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [form] = Form.useForm();
-  const { userId } = useSelector((state) => state?.authSlice);
+  const formValues = Form.useWatch([], form);
+  const { userId, org_id } = useSelector((state) => state?.authSlice || {});
+  const activeOrgId = org_id || userId;
+  const { categories } = useCategories();
   const { handleUpload, beforeUpload, uploading } = useImageUpload();
 
   useEffect(() => {
@@ -72,8 +96,9 @@ const EditItem = () => {
           form.setFieldsValue({
             name: data.name,
             code: data.code,
-            category: data.category,
+            category_id: data.category_id,
             price: data.price,
+            gst_status: data.gst_status ?? true,
             title: data.title,
             description: data.description,
             image: data.image,
@@ -129,14 +154,16 @@ const EditItem = () => {
       name: values.name,
       code: values.code,
       image: imageUrl !== undefined ? imageUrl : null,
-      category: values.category,
-      price: values.price,
+      category_id: values.category_id || null,
+      price: values.price !== undefined && values.price !== null ? String(values.price) : null,
+      gst_status: values.gst_status ?? true,
       title: values.title,
       description: values.description,
+      org_id: activeOrgId,
     };
 
     try {
-      await updateItem(userId, id, payload);
+      await updateItem(activeOrgId, id, payload);
       dispatch(clearItems());
       message.success("Product updated successfully");
       navigate(-1);
@@ -150,7 +177,7 @@ const EditItem = () => {
       <div className="upload-icon">
         {uploading ? <LoadingOutlined /> : <PictureOutlined />}
       </div>
-      <p>{uploading ? "Uploading..." : "Click to upload"}</p>
+      <p>{uploading ? "Uploading Image..." : "Click or Drag Image Here"}</p>
       <span>PNG, JPG up to 5MB</span>
     </UploadPlaceholder>
   );
@@ -166,12 +193,14 @@ const EditItem = () => {
     );
   }
 
+  const isGstActive = formValues?.gst_status ?? true;
+
   return (
     <StyledPageWrapper>
       <TabHeader
         breadcrumb={["Items", "Edit Item"]}
         title="Edit Product"
-        subtitle="Update the details of your product below."
+        subtitle="Update the details and tax configurations of your product below."
       />
 
       <StyledForm
@@ -179,11 +208,45 @@ const EditItem = () => {
         layout="vertical"
         onFinish={onFinish}
         autoComplete="off"
-        initialValues={{ category: "Electronics" }}
+        initialValues={{
+          gst_status: true,
+        }}
       >
+        {/* Top GST Status Configuration Banner */}
+        <TopStatusBanner>
+          <div className="status-info">
+            <div className="status-icon-badge">
+              <PercentageOutlined />
+            </div>
+            <div className="status-text">
+              <span className="title">Tax & Status Configuration</span>
+              <span className="subtitle">Configure tax applicability and product status.</span>
+            </div>
+          </div>
+
+          <div className="status-action-row">
+            <div className="status-pill">
+              <span className="label">GST Status:</span>
+              <Form.Item name="gst_status" valuePropName="checked" noStyle>
+                <Switch checkedChildren="Active" unCheckedChildren="Exempt" />
+              </Form.Item>
+              <span className={`badge-tag ${isGstActive ? "active" : "inactive"}`}>
+                {isGstActive ? "GST Applicable" : "Non-GST / Exempt"}
+              </span>
+            </div>
+          </div>
+        </TopStatusBanner>
+
         <BoxSection>
-          {/* Media column */}
-          <SectionCard title="Product Image">
+          {/* Media Column */}
+          <SectionCard
+            title={
+              <>
+                <PictureOutlined />
+                <span>Product Image</span>
+              </>
+            }
+          >
             <Form.Item name="image" noStyle>
               <Input type="hidden" />
             </Form.Item>
@@ -213,15 +276,22 @@ const EditItem = () => {
                     setCurrentImageUrl(null);
                   }}
                 >
-                  Remove image
+                  <DeleteOutlined /> Remove Image
                 </button>
               )}
             </UploadWrapper>
           </SectionCard>
 
-          {/* Form column */}
+          {/* Form Inputs Column */}
           <FormColumn>
-            <SectionCard title="Basic Information">
+            <SectionCard
+              title={
+                <>
+                  <AppstoreOutlined />
+                  <span>Basic Information</span>
+                </>
+              }
+            >
               <div className="form-row">
                 <Form.Item
                   label="Product Name"
@@ -242,20 +312,31 @@ const EditItem = () => {
 
               <Form.Item
                 label="Category"
-                name="category"
+                name="category_id"
                 rules={[{ required: true, message: "Category is required" }]}
               >
                 <StyledSelect placeholder="Select category">
-                  <Option value="Electronics">Electronics</Option>
-                  <Option value="Fashion">Fashion</Option>
-                  <Option value="Home">Home</Option>
-                  <Option value="Food">Food</Option>
-                  <Option value="Other">Other</Option>
+                  {categories?.length > 0 ? (
+                    categories?.map((cat) => (
+                      <Option key={cat.id} value={cat.id}>
+                        {cat.name}
+                      </Option>
+                    ))
+                  ) : (
+                    <Option value="">No Category Found</Option>
+                  )}
                 </StyledSelect>
               </Form.Item>
             </SectionCard>
 
-            <SectionCard title="Pricing & Details">
+            <SectionCard
+              title={
+                <>
+                  <DollarCircleOutlined />
+                  <span>Pricing & Product Details</span>
+                </>
+              }
+            >
               <div className="form-row">
                 <Form.Item
                   label="Price (Rs.)"
@@ -287,7 +368,7 @@ const EditItem = () => {
               >
                 <StyledTextArea
                   rows={4}
-                  placeholder="Describe your product's key features and benefits..."
+                  placeholder="Describe your product's key features and specifications..."
                 />
               </Form.Item>
             </SectionCard>
@@ -313,20 +394,3 @@ const EditItem = () => {
 };
 
 export default EditItem;
-
-import styled from "styled-components";
-
-const LoadingCenter = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 300px;
-  gap: 16px;
-  color: var(--color-text-muted);
-
-  p {
-    font-size: 14px;
-    font-weight: 500;
-  }
-`;

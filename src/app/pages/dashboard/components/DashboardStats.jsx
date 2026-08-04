@@ -163,15 +163,15 @@ export default DashboardStats;
 
 const StatsGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
   width: 100%;
 `;
 
 const StatCard = styled(SurfaceCard)`
   display: flex;
   align-items: flex-start;
-  gap: 16px;
+  gap: 12px;
   position: relative;
   overflow: hidden;
   transition: all var(--transition-base);
@@ -194,9 +194,9 @@ const StatCard = styled(SurfaceCard)`
 `;
 
 const IconContainer = styled.div`
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
   background: ${({ $glow }) => $glow};
   display: flex;
   align-items: center;
@@ -207,17 +207,17 @@ const IconContainer = styled.div`
 const StatContent = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 `;
 
 const Title = styled.span`
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
   color: var(--color-text-secondary);
 `;
 
 const Value = styled.span`
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 800;
   font-family: var(--font-display);
   color: var(--color-text-primary);
@@ -225,7 +225,7 @@ const Value = styled.span`
 `;
 
 const Subtext = styled.span`
-  font-size: 11px;
+  font-size: 10.5px;
   font-weight: 600;
   color: ${({ $isPositive, $isDanger }) =>
     $isDanger
