@@ -39,6 +39,7 @@ function SignUp() {
 
     try {
       const { data, error } = await supabase.auth.signUp({
+        name:full_name,
         email,
         password,
       });
@@ -51,7 +52,9 @@ function SignUp() {
           .upsert([
             {
               id: data.user.id, // Same UUID as auth.users.id
+              created_by: data.user.id,
               full_name,
+
               email,
               phone,
               business_name,

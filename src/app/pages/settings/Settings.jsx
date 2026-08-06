@@ -12,6 +12,7 @@ import InstallPWA from "../../../components/InstallPWA";
 import ThemeToggle from "../../../components/themeToggle";
 import LogoutButton from "./componests/logout";
 import {
+  PATH_ADMINS,
   PATH_CHANGE_PASSWORD,
   PATH_SETTINGS,
   PATH_SETTINGS_BUSINESS,
@@ -36,6 +37,12 @@ const settingsTabs = [
     label: "Change Password",
     icon: <LockOutlined />,
     badge: "Auth",
+  },
+  {
+    path: PATH_ADMINS,
+    label: "Admins",
+    icon: <UserOutlined />,
+    badge: "Admins",
   },
 ];
 

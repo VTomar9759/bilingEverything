@@ -155,6 +155,7 @@ export const createOrder = async (org_id, orderData) => {
 
   const baseOrder = {
     org_id: targetOrgId,
+    created_by: targetOrgId,
     created_at: new Date().toISOString(),
     status: "Pending",
     payment_status: "Unpaid",

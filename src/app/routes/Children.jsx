@@ -7,6 +7,7 @@ import {
   PATH_ADD_ITEM,
   PATH_EDIT_ITEM,
   PATH_CATEGORIES,
+  PATH_ADMINS,
   PATH_DASHBOARD,
   PATH_ORDERS,
   PATH_ORDER_COMPOSER,
@@ -25,6 +26,7 @@ import ItemListing from "../pages/items/ItemListing";
 import AddItem from "../pages/items/AddItem";
 import EditItem from "../pages/items/EditItem";
 import CategoriesListing from "../pages/categories/Cateogies";
+import AdminListing from "../pages/admin/AdminListing";
 
 import DashboardOverview from "../pages/dashboard/DashboardOverview";
 import BillingSection from "../pages/billing/BillingSection";
@@ -109,6 +111,10 @@ export const privateChildren = [
       {
         path: PATH_SETTINGS_BUSINESS,
         element: <BusinessDetails />,
+      },
+      {
+        path: PATH_ADMINS,
+        element: <AdminListing />,
       },
     ],
   },

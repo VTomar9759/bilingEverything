@@ -34,6 +34,7 @@ export const addTable = async (org_id, tableData) => {
   const dbPayload = {
     ...tableData,
     org_id: org_id || null,
+    created_by: org_id || null,
   };
   try {
     const { data, error } = await supabase
@@ -90,7 +91,8 @@ export const updateTABLE_STATUS = async (tableId, status, currentOrderId = null)
 export const updateTable = async (org_id, tableId, tableData) => {
   const dbPayload = {
     ...tableData,
-    updated_by: org_id || null
+    updated_by: org_id || null,
+    created_by: org_id || null
   };
 
   try {

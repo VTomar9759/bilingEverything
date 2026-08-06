@@ -41,6 +41,7 @@ export const getItemById = async (id) => {
 export const addItem = async (org_id, itemData) => {
   const payload = {
     org_id: org_id,
+    created_by: org_id,
     ...itemData,
   };
 
@@ -62,6 +63,7 @@ export const addItem = async (org_id, itemData) => {
 export const updateItem = async (org_id, id, updates) => {
   const payload = {
     org_id: org_id,
+    created_by: org_id,
     ...updates,
   };
 

@@ -36,6 +36,7 @@ export const getCategories = async (orgId) => {
 export const addCategory = async (orgId, categoryData) => {
   const payload = {
     org_id: orgId,
+    created_by: orgId,
     ...categoryData,
   };
 
@@ -48,7 +49,7 @@ export const addCategory = async (orgId, categoryData) => {
     // Retry with user_id if schema has user_id instead of org_id
     const { data: d2, error: e2 } = await supabase
       .from("categories")
-      .insert([{ user_id: orgId, ...categoryData }])
+      .insert([{ user_id: orgId, created_by: orgId, ...categoryData }])
       .select();
 
     if (e2) {
@@ -65,6 +66,7 @@ export const addCategory = async (orgId, categoryData) => {
  */
 export const updateCategory = async (orgId, id, updates) => {
   const payload = {
+    created_by: orgId,
     ...updates,
   };
 

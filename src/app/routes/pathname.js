@@ -8,6 +8,7 @@ export const PATH_ITEMS = "/items";
 export const PATH_ADD_ITEM = "/items/add";
 export const PATH_EDIT_ITEM = "/items/edit/:id";
 export const PATH_CATEGORIES = "/categories";
+export const PATH_ADMINS = "/settings/admins";
 
 // Dashboard paths
 export const PATH_DASHBOARD = "/dashboard";
@@ -71,6 +72,7 @@ export const navItems = [
       PATH_SETTINGS_PROFILE,
       PATH_SETTINGS_PASSWORD,
       PATH_SETTINGS_BUSINESS,
+      PATH_ADMINS,
     ],
     path: PATH_SETTINGS_PROFILE,
   },
