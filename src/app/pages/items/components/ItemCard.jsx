@@ -20,7 +20,7 @@ import { PATH_EDIT_ITEM } from "../../../routes/pathname";
 const ItemCard = ({ item }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { userId } = useSelector((state) => state.authSlice);
+  const { org_id } = useSelector((state) => state.authSlice);
   const [modalVisible, setModalVisible] = useState(false);
   const [imgError, setImgError] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -48,7 +48,7 @@ const ItemCard = ({ item }) => {
         await supabase.storage.from("items-images").remove([imagePath]);
       }
 
-      await deleteItemService(userId, item.id);
+      await deleteItemService(org_id, item.id);
       dispatch(deleteItemAction(item.id));
       message.success("Item deleted successfully");
     } catch (err) {
@@ -271,9 +271,9 @@ const ActionBtn = styled.button`
   cursor:pointer ;
   &:hover {
     background: ${({ $danger }) =>
-      $danger ? "#fff5f5" : "var(--color-primary-50)"};
+    $danger ? "#fff5f5" : "var(--color-primary-50)"};
     border-color: ${({ $danger }) =>
-      $danger ? "#fecaca" : "var(--color-primary-100)"};
+    $danger ? "#fecaca" : "var(--color-primary-100)"};
     color: ${({ $danger }) => ($danger ? "#dc2626" : "var(--color-primary)")};
   }
 `;

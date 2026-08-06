@@ -1,33 +1,40 @@
 import React, { useState, useEffect, useRef } from "react";
 import styled from "styled-components";
+import { useSelector } from "react-redux";
 import { Form, Input, Select, Button, Empty, message, Space } from "antd";
 import {
-  ShoppingCartOutlined,
   SearchOutlined,
   CoffeeOutlined,
-  ArrowLeftOutlined,
   PrinterOutlined,
-  PlusOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import useOrders from "../../hooks/useOrders";
 import useTables from "../../hooks/useTables";
-import useSettings from "../../hooks/useSettings";
 import useItemStore from "../../hooks/useItemStore";
 import TabHeader from "../../../components/TabHeader";
 import { PageWrapper } from "../../styles/commonstyle";
 import { TABLE_STATUS } from "../../utils/constant";
 import { PATH_ORDERS, PATH_BILLING } from "../../routes/pathname";
 import CategorySelecter from "../../../components/CategorySelecter";
+import * as service from "../../../services";
 
 const { Option } = Select;
 
 const PosOrderComposer = () => {
+  const { org_id } = useSelector((state) => state.authSlice);
   const navigate = useNavigate();
   const { createOrder } = useOrders();
   const { tables = [] } = useTables();
-  const { settings = {} } = useSettings();
+  const [settings, setSettings] = useState({});
   const [catalogItems, catalogLoading] = useItemStore();
+
+  useEffect(() => {
+    if (org_id) {
+      service.getSettings(org_id).then((res) => {
+        if (res) setSettings(res);
+      });
+    }
+  }, [org_id]);
 
   const [form] = Form.useForm();
   const [selectedPosItems, setSelectedPosItems] = useState([]); // Array of { item, quantity }

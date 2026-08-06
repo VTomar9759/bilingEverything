@@ -78,8 +78,8 @@ const EditItem = () => {
   const navigate = useNavigate();
   const [form] = Form.useForm();
   const formValues = Form.useWatch([], form);
-  const { userId, org_id } = useSelector((state) => state?.authSlice || {});
-  const activeOrgId = org_id || userId;
+  const { org_id } = useSelector((state) => state?.authSlice || {});
+  
   const { categories } = useCategories();
   const { handleUpload, beforeUpload, uploading } = useImageUpload();
 
@@ -159,11 +159,11 @@ const EditItem = () => {
       gst_status: values.gst_status ?? true,
       title: values.title,
       description: values.description,
-      org_id: activeOrgId,
+      org_id: org_id,
     };
 
     try {
-      await updateItem(activeOrgId, id, payload);
+      await updateItem(org_id, id, payload);
       dispatch(clearItems());
       message.success("Product updated successfully");
       navigate(-1);

@@ -11,18 +11,17 @@ import * as service from "../../../services";
 import OrderInvoiceModal from "../../print/OrderInvoiceModal";
 import { PATH_ORDERS } from "../../routes/pathname";
 import { ShoppingCartOutlined } from "@ant-design/icons";
-import useSettings from "../../hooks/useSettings";
 
 const { Option } = Select;
 
 const BillingSection = () => {
-  const { userId } = useSelector((state) => state.authSlice);
+  const { org_id } = useSelector((state) => state.authSlice);
   const location = useLocation();
-  console.log(location, "sss");
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(true);
   const [orders, setOrders] = useState([]);
+  const [settings, setSettings] = useState({});
 
   const isClearedRef = useRef(false);
 
@@ -38,11 +37,19 @@ const BillingSection = () => {
   const [invoiceVisible, setInvoiceVisible] = useState(false);
   const [settledOrder, setSettledOrder] = useState(null);
 
+  useEffect(() => {
+    if (org_id) {
+      service.getSettings(org_id).then((res) => {
+        if (res) setSettings(res);
+      });
+    }
+  }, [org_id]);
+
   /**
    * Fetch billing data
    */
   const fetchBillingData = async (shouldAutoSelect = true) => {
-    if (!userId) return;
+    if (!org_id) return;
 
     setLoading(true);
 
@@ -57,12 +64,12 @@ const BillingSection = () => {
       let ordersList = [];
       if (targetOrderId) {
         ordersList = await service.getOrders({
-          userId,
+          org_id,
           orderId: targetOrderId,
         });
       } else {
         ordersList = await service.getOrders({
-          userId,
+          org_id,
           startDate: yesterdayStr,
           endDate: todayStr,
         });
@@ -135,7 +142,7 @@ const BillingSection = () => {
 
   useEffect(() => {
     fetchBillingData();
-  }, [userId, location.state, location.search]);
+  }, [org_id, location.state, location.search]);
 
   /**
    * Select order

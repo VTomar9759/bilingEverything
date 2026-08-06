@@ -17,16 +17,20 @@ export const generateReceiptHTML = (order, settings = {}) => {
   if (!order) return "";
 
   const paperWidth = settings?.paper_width || "80mm";
-  const currency = settings?.currency || "Rs.";
-  const taxRate = settings?.tax_rate || 18;
-  const serviceRate = settings?.service_charge_rate || 5;
+  const currency = settings?.currency || "₹";
+  const taxRate = settings?.tax_rate ?? 0;
+  const serviceRate = settings?.service_charge_rate ?? 0;
 
-  const restaurantName = settings?.restaurant_name || "Delight Cafe";
-  const address =
-    settings?.address || "204, Foodie Boulevard, Connaught Place, New Delhi";
-  const gstin = settings?.gstin || "07AAAAA1111A1Z1";
+  const restaurantName =
+    settings?.restaurant_name ||
+    settings?.business_name ||
+    settings?.legal_name ||
+    "Role Express";
+  const address = settings?.address || "Address not set";
+  const gstin = settings?.gstin || settings?.gst_number || "";
+  const footerNote = settings?.invoice_footer || "Thank You For Dining With Us!";
 
-  const orderNum = order.order_number || order.id;
+  const orderNum = order.order_number ?? order.order_no ?? order.id ?? "";
   const dateStr =
     order.created_at && !isNaN(new Date(order.created_at).getTime())
       ? new Date(order.created_at).toLocaleString()
@@ -149,7 +153,7 @@ export const generateReceiptHTML = (order, settings = {}) => {
           <div class="header">
             <h3>${restaurantName}</h3>
             <p>${address}</p>
-            <p>GSTIN: ${gstin}</p>
+            ${gstin ? `<p>GSTIN: ${gstin}</p>` : ""}
           </div>
 
           <div class="divider"></div>
@@ -184,24 +188,30 @@ export const generateReceiptHTML = (order, settings = {}) => {
               <span>Subtotal</span>
               <span>${currency} ${Number(order.subtotal || 0).toFixed(2)}</span>
             </div>
-            ${order.discount > 0
-      ? `<div class="total-row" style="color: #10b981;">
+            ${
+              order.discount > 0
+                ? `<div class="total-row" style="color: #10b981;">
                     <span>Discount Applied</span>
                     <span>-${currency} ${Number(order.discount || 0).toFixed(2)}</span>
                   </div>`
-      : ""
-    }
-            <div class="total-row">
-              <span>CGST & SGST (${taxRate}%)</span>
-              <span>${currency} ${Number(order.tax || 0).toFixed(2)}</span>
-            </div>
-            ${serviceRate > 0
-      ? `<div class="total-row">
+                : ""
+            }
+            ${
+              taxRate > 0 || order.tax > 0
+                ? `<div class="total-row">
+                    <span>CGST & SGST (${taxRate}%)</span>
+                    <span>${currency} ${Number(order.tax || 0).toFixed(2)}</span>
+                  </div>`
+                : ""
+            }
+            ${
+              serviceRate > 0 || order.service_charge > 0
+                ? `<div class="total-row">
                     <span>Service Charge (${serviceRate}%)</span>
                     <span>${currency} ${Number(order.service_charge || 0).toFixed(2)}</span>
                   </div>`
-      : ""
-    }
+                : ""
+            }
             <div class="divider" style="margin: 5px 0;"></div>
             <div class="total-row grand-total">
               <span>Grand Total</span>
@@ -212,8 +222,8 @@ export const generateReceiptHTML = (order, settings = {}) => {
           <div class="divider"></div>
 
           <div class="footer">
-            <p>Thank You For Dining With Us!</p>
-            <p>Power by Systems</p>
+            <p>${footerNote}</p>
+            <p style="font-size: 9px; opacity: 0.75; margin-top: 4px;">Powered by Systems</p>
           </div>
         </div>
       </body>

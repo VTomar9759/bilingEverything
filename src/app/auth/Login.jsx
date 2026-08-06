@@ -58,7 +58,7 @@ const Login = () => {
           layout="vertical"
           onFinish={handleSubmit}
           initialValues={{
-            email: "kanu@yopmail.com",
+            email: "stomar@yopmail.com",
             password: "Password@123",
           }}
         >

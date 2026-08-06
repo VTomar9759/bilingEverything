@@ -58,8 +58,7 @@ const AddItem = () => {
   const navigate = useNavigate();
   const [form] = Form.useForm();
   const formValues = Form.useWatch([], form);
-  const { userId, org_id } = useSelector((state) => state?.authSlice || {});
-  const activeOrgId = org_id || userId;
+  const { org_id } = useSelector((state) => state?.authSlice || {});
   const { categories } = useCategories();
   const { handleUpload, beforeUpload, uploading } = useImageUpload();
 
@@ -101,11 +100,11 @@ const AddItem = () => {
       description: values.description,
       gst_status: values.gst_status ?? true,
       status: values.status ?? true,
-      org_id: activeOrgId,
+      org_id: org_id,
     };
 
     try {
-      await addItem(activeOrgId, payload);
+      await addItem(org_id, payload);
       dispatch(clearItems());
       message.success("Product added successfully");
       navigate(-1);

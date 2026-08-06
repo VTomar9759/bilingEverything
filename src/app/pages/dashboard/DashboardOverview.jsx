@@ -11,7 +11,7 @@ import DashboardStats from "./components/DashboardStats";
 import {
   SalesSplineChart,
   BusyHoursChart,
-} from "../reports/components/AnalyticsCharts";
+} from "./components/AnalyticsCharts";
 import * as service from "../../../services";
 import { PATH_BILLING, PATH_ORDER_COMPOSER } from "../../routes/pathname";
 import { TABLE_STATUS } from "../../utils/constant";
@@ -67,12 +67,6 @@ const DashboardOverview = () => {
           occupancyRate,
           totalItmes: itemsCatalog,
         });
-
-        // Set live subsets
-        setRecentOrders(ordersList.slice(0, 5));
-        setActiveTables(
-          tablesList.filter((t) => t.status !== "Available").slice(0, 4),
-        );
       } catch (err) {
         console.error("DashboardOverview error:", err);
       } finally {

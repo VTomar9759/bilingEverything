@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
+import { useSelector } from "react-redux";
 import { Button, Tabs, Input, Table, Space, Empty, DatePicker } from "antd";
 import {
   SearchOutlined,
@@ -16,19 +17,29 @@ import { PATH_BILLING } from "../../routes/pathname";
 import TabHeader from "../../../components/TabHeader";
 import { PageWrapper } from "../../styles/commonstyle";
 import useOrders from "../../hooks/useOrders";
-import useSettings from "../../hooks/useSettings";
 import OrderDetailDrawer from "./components/OrderDetailDrawer";
 import { getStatusBadge } from "../../utils/common_function";
+import * as service from "../../../services";
 
 const { TabPane } = Tabs;
 
 const OrdersListing = () => {
+  const { org_id } = useSelector((state) => state.authSlice);
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("All");
   const [searchText, setSearchText] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(30);
   const [startDate, setStartDate] = useState(() => dayjs());
+  const [settings, setSettings] = useState({});
+
+  useEffect(() => {
+    if (org_id) {
+      service.getSettings(org_id).then((res) => {
+        if (res) setSettings(res);
+      });
+    }
+  }, [org_id]);
   const [endDate, setEndDate] = useState(() => dayjs());
 
   const todayStr = dayjs().format("YYYY-MM-DD");
@@ -40,14 +51,13 @@ const OrdersListing = () => {
   const isYesterdayActive =
     startDateStr === yesterdayStr && endDateStr === yesterdayStr;
 
-  const { orders, loading, total, updateOrderStatus } = useOrders({
+  const { orders, loading, total, refetch, updateOrderStatus } = useOrders({
     page,
     limit: pageSize,
     status: activeTab,
     startDate: startDate ? startDate.format("YYYY-MM-DD") : undefined,
     endDate: endDate ? endDate.format("YYYY-MM-DD") : undefined,
   });
-  const { settings } = useSettings();
 
   // Drawer state
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -68,7 +78,10 @@ const OrdersListing = () => {
   const filteredOrders = orders.filter((order) => {
     const matchesTab = activeTab === "All" || order.status === activeTab;
     const matchesSearch =
+      !searchText ||
       order.id?.toLowerCase().includes(searchText.toLowerCase()) ||
+      (order.order_number &&
+        String(order.order_number).toLowerCase().includes(searchText.toLowerCase())) ||
       (order.table_name &&
         order.table_name.toLowerCase().includes(searchText.toLowerCase()));
     return matchesTab && matchesSearch;
@@ -246,12 +259,12 @@ const OrdersListing = () => {
             />
             <Button
               type={isTodayActive ? "primary" : "default"}
-              disabled={!!isTodayActive}
               onClick={() => {
                 const today = dayjs();
                 setStartDate(today);
                 setEndDate(today);
                 setPage(1);
+                refetch();
               }}
               style={{
                 height: 32,
@@ -267,12 +280,12 @@ const OrdersListing = () => {
             </Button>
             <Button
               type={isYesterdayActive ? "primary" : "default"}
-              disabled={!!isYesterdayActive}
               onClick={() => {
                 const yesterday = dayjs().subtract(1, "day");
                 setStartDate(yesterday);
                 setEndDate(yesterday);
                 setPage(1);
+                refetch();
               }}
               style={{
                 height: 32,

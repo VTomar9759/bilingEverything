@@ -15,7 +15,7 @@ import { getStatusBadge } from "../../../utils/common_function";
 const OrderDetailDrawer = ({
   open,
   order,
-  settings,
+  settings = {},
   onClose,
   onStatusChange,
 }) => {
