@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { useNavigate, useLocation } from "react-router";
 import styled, { css, keyframes } from "styled-components";
+import useOrgData from "../app/hooks/useOrgData";
 import { navItems } from "../app/routes/pathname";
 import logo from "../assets/logo.png";
 import { SIDEBAR_CLOSED_WIDTH, SIDEBAR_OPEN_WIDTH } from "../app/layout";
@@ -158,7 +159,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
-  const { userData } = useSelector((state) => state.authSlice);
+  const { userData } = useOrgData();
   console.log(userData,"sddddddd")
 
   const initials = userData?.business_name

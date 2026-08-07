@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { useSelector } from "react-redux";
+import useOrgData from "./useOrgData";
 import {
   getOrders,
   createOrder as apiCreateOrder,
@@ -13,7 +13,7 @@ const useOrders = ({
   endDate,
   status,
 } = {}) => {
-  const { org_id } = useSelector((state) => state?.authSlice || {});
+  const { org_id } = useOrgData();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [total, setTotal] = useState(0);

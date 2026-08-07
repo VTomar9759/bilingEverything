@@ -79,6 +79,7 @@ export const updateItem = async (org_id, id, updates) => {
   }
   return data?.[0] || null;
 };
+
 export const updateItemStatus = async (id, status) => {
   const { data, error } = await supabase
     .from("items")

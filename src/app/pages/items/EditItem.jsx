@@ -25,10 +25,12 @@ import {
 
 import TabHeader from "../../../components/TabHeader";
 import { getItemById, updateItem, supabase } from "../../../services";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
+import useOrgData from "../../hooks/useOrgData";
 import useImageUpload from "../../hooks/useImageUpload";
 import useCategories from "../../hooks/useCategories";
 import { clearItems } from "../../store/slices/itemSlice";
+import { PATH_ITEMS } from "../../routes/pathname";
 
 import {
   StyledPageWrapper,
@@ -78,10 +80,16 @@ const EditItem = () => {
   const navigate = useNavigate();
   const [form] = Form.useForm();
   const formValues = Form.useWatch([], form);
-  const { org_id } = useSelector((state) => state?.authSlice || {});
-  
+  const { org_id, hasGst } = useOrgData();
+
   const { categories } = useCategories();
   const { handleUpload, beforeUpload, uploading } = useImageUpload();
+
+  useEffect(() => {
+    if (!hasGst) {
+      form.setFieldsValue({ gst_status: false });
+    }
+  }, [hasGst, form]);
 
   useEffect(() => {
     const fetchItem = async () => {
@@ -98,7 +106,7 @@ const EditItem = () => {
             code: data.code,
             category_id: data.category_id,
             price: data.price,
-            gst_status: data.gst_status ?? true,
+            gst_status: hasGst ? Boolean(data.gst_status ?? true) : false,
             title: data.title,
             description: data.description,
             image: data.image,
@@ -111,7 +119,7 @@ const EditItem = () => {
       }
     };
     fetchItem();
-  }, [id, form]);
+  }, [id, form, hasGst]);
 
   useEffect(() => {
     return () => {
@@ -156,17 +164,18 @@ const EditItem = () => {
       image: imageUrl !== undefined ? imageUrl : null,
       category_id: values.category_id || null,
       price: values.price !== undefined && values.price !== null ? String(values.price) : null,
-      gst_status: values.gst_status ?? true,
+      gst_status: hasGst ? Boolean(values.gst_status ?? true) : false,
       title: values.title,
       description: values.description,
       org_id: org_id,
+
     };
 
     try {
       await updateItem(org_id, id, payload);
       dispatch(clearItems());
       message.success("Product updated successfully");
-      navigate(-1);
+      navigate(PATH_ITEMS);
     } catch (err) {
       message.error(err.message || "Failed to update product");
     }
@@ -193,7 +202,7 @@ const EditItem = () => {
     );
   }
 
-  const isGstActive = formValues?.gst_status ?? true;
+  const isGstActive = hasGst && Boolean(formValues?.gst_status ?? true);
 
   return (
     <StyledPageWrapper>
@@ -209,7 +218,7 @@ const EditItem = () => {
         onFinish={onFinish}
         autoComplete="off"
         initialValues={{
-          gst_status: true,
+          gst_status: hasGst ? true : false,
         }}
       >
         {/* Top GST Status Configuration Banner */}
@@ -228,7 +237,11 @@ const EditItem = () => {
             <div className="status-pill">
               <span className="label">GST Status:</span>
               <Form.Item name="gst_status" valuePropName="checked" noStyle>
-                <Switch checkedChildren="Active" unCheckedChildren="Exempt" />
+                <Switch
+                  disabled={!hasGst}
+                  checkedChildren="Active"
+                  unCheckedChildren="Exempt"
+                />
               </Form.Item>
               <span className={`badge-tag ${isGstActive ? "active" : "inactive"}`}>
                 {isGstActive ? "GST Applicable" : "Non-GST / Exempt"}
@@ -376,7 +389,7 @@ const EditItem = () => {
         </BoxSection>
 
         <FormFooter>
-          <CancelButton icon={<ArrowLeftOutlined />} onClick={() => navigate(-1)}>
+          <CancelButton icon={<ArrowLeftOutlined />} onClick={() => navigate(PATH_ITEMS)}>
             Back
           </CancelButton>
           <SubmitButton

@@ -7,7 +7,7 @@ import {
   DownloadOutlined,
 } from "@ant-design/icons";
 import { printInvoiceSilent } from "../../services";
-import { useSelector } from "react-redux";
+import useOrgData from "../hooks/useOrgData";
 
 // const PrintGlobalStyles = createGlobalStyle`
 //   @media print {
@@ -70,7 +70,7 @@ import { useSelector } from "react-redux";
 const OrderInvoiceModal = ({ visible, onClose, order, settings }) => {
   const receiptRef = useRef();
   const [loadingPrint, setLoadingPrint] = useState(false);
-  const { userData } = useSelector((state) => state.authSlice);
+  const { userData, hasGst: orgHasGst } = useOrgData();
 
   if (!order) return null;
 
@@ -96,6 +96,7 @@ const OrderInvoiceModal = ({ visible, onClose, order, settings }) => {
       : "Address not set";
 
   const gstNumber = userData?.gst_number || settings?.gstin || settings?.gst_number;
+  const hasGst = orgHasGst;
 
   const invoiceFooter =
     userData?.invoice_footer ||
@@ -105,9 +106,6 @@ const OrderInvoiceModal = ({ visible, onClose, order, settings }) => {
   const invoicePrefix = userData?.invoice_prefix || settings?.invoice_prefix || "INV";
   const paperWidth = settings?.paper_width || userData?.paper_width || "80mm";
   const currency = userData?.currency || settings?.currency || "₹";
-
-  const taxRate = order?.tax_rate ?? settings?.tax_rate ?? userData?.tax_rate ?? 0;
-  const serviceRate = order?.service_charge_rate ?? settings?.service_charge_rate ?? userData?.service_charge_rate ?? 0;
 
   const getFormattedOrderNo = () => {
     if (!order) return "";
@@ -122,10 +120,8 @@ const OrderInvoiceModal = ({ visible, onClose, order, settings }) => {
         ...settings,
         restaurant_name: businessName,
         address,
-        gstin: gstNumber,
+        gstin: hasGst ? gstNumber : "",
         currency,
-        tax_rate: taxRate,
-        service_charge_rate: serviceRate,
         paper_width: paperWidth,
       },
       copies: 2,
@@ -143,11 +139,10 @@ const OrderInvoiceModal = ({ visible, onClose, order, settings }) => {
     if (gstNumber) text += `  GSTIN: ${gstNumber}\n`;
     text += "=========================================\n\n";
     text += `Order No:   #${getFormattedOrderNo()}\n`;
-    text += `Date:       ${
-      order.created_at && !isNaN(new Date(order.created_at).getTime())
+    text += `Date:       ${order.created_at && !isNaN(new Date(order.created_at).getTime())
         ? new Date(order.created_at).toLocaleString()
         : new Date().toLocaleString()
-    }\n`;
+      }\n`;
     if (order.table_name) {
       text += `Table:      ${order.table_name}\n`;
     }
@@ -156,7 +151,12 @@ const OrderInvoiceModal = ({ visible, onClose, order, settings }) => {
     text += "Item                 Qty    Price   Total\n";
     text += "-----------------------------------------\n";
     order.items?.forEach((item) => {
-      const name = (item.name || "").padEnd(20).substring(0, 20);
+      const isItemGst =
+        hasGst &&
+        item?.gst_status !== false &&
+        String(item?.gst_status) !== "false";
+      const displayName = isItemGst ? `${item.name} (5% GST)` : item.name;
+      const name = (displayName || "").padEnd(20).substring(0, 20);
       const qty = (item.quantity || 0).toString().padStart(3);
       const price = `${currency} ${item.price}`.padStart(9);
       const total = `${currency} ${item.price * item.quantity}`.padStart(9);
@@ -167,11 +167,8 @@ const OrderInvoiceModal = ({ visible, onClose, order, settings }) => {
     if (order.discount > 0) {
       text += `Discount Applied:         -${currency} ${(order.discount || 0).toFixed(2)}\n`;
     }
-    if (taxRate > 0 || order.tax > 0) {
-      text += `CGST & SGST (${taxRate}%):      ${currency} ${(order.tax || 0).toFixed(2)}\n`;
-    }
-    if (serviceRate > 0 || order.service_charge > 0) {
-      text += `Service Charge (${serviceRate}%):   ${currency} ${(order.service_charge || 0).toFixed(2)}\n`;
+    if (hasGst) {
+      text += `CGST & SGST (5%):        ${currency} ${(order.tax || 0).toFixed(2)}\n`;
     }
     text += "-----------------------------------------\n";
     text += `GRAND TOTAL:               ${currency} ${(order.total || 0).toFixed(2)}\n`;
@@ -214,7 +211,7 @@ const OrderInvoiceModal = ({ visible, onClose, order, settings }) => {
             <ReceiptHeader className="receipt-header">
               <h3>{businessName}</h3>
               <p>{address}</p>
-              {gstNumber && <p>GSTIN: {gstNumber}</p>}
+              {hasGst && <p>GSTIN: {gstNumber}</p>}
             </ReceiptHeader>
 
             <DottedDivider className="dotted-divider" />
@@ -255,18 +252,32 @@ const OrderInvoiceModal = ({ visible, onClose, order, settings }) => {
                 </tr>
               </thead>
               <tbody>
-                {order.items?.map((item, idx) => (
-                  <tr key={idx}>
-                    <td>{item.name}</td>
-                    <td align="center">{item.quantity}</td>
-                    <td align="right" className="text-right">
-                      {currency} {item.price}
-                    </td>
-                    <td align="right" className="text-right">
-                      {currency} {item.price * item.quantity}
-                    </td>
-                  </tr>
-                ))}
+                {order.items?.map((item, idx) => {
+                  const isItemGst =
+                    hasGst &&
+                    item?.gst_status !== false &&
+                    String(item?.gst_status) !== "false";
+
+                  return (
+                    <tr key={idx}>
+                      <td>
+                        {item.name}
+                        {isItemGst && (
+                          <span style={{ fontSize: "8.5px", opacity: 0.75, display: "block", color: "#666" }}>
+                            (5% GST)
+                          </span>
+                        )}
+                      </td>
+                      <td align="center">{item.quantity}</td>
+                      <td align="right" className="text-right">
+                        {currency} {item.price}
+                      </td>
+                      <td align="right" className="text-right">
+                        {currency} {item.price * item.quantity}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </ItemsTable>
 
@@ -287,19 +298,11 @@ const OrderInvoiceModal = ({ visible, onClose, order, settings }) => {
                   </span>
                 </TotalRow>
               )}
-              {(taxRate > 0 || order.tax > 0) && (
+              {hasGst && (
                 <TotalRow>
-                  <span>CGST & SGST ({taxRate}%)</span>
+                  <span>CGST & SGST (5%)</span>
                   <span>
-                    {currency} {order.tax?.toFixed(2)}
-                  </span>
-                </TotalRow>
-              )}
-              {(serviceRate > 0 || order.service_charge > 0) && (
-                <TotalRow>
-                  <span>Service Charge ({serviceRate}%)</span>
-                  <span>
-                    {currency} {order.service_charge?.toFixed(2)}
+                    {currency} {Number(order.tax || 0).toFixed(2)}
                   </span>
                 </TotalRow>
               )}

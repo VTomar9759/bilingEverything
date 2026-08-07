@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
-import { useSelector } from "react-redux";
+import useOrgData from "../../hooks/useOrgData";
 import { Button, Tabs, Input, Table, Space, Empty, DatePicker } from "antd";
 import {
   SearchOutlined,
@@ -24,7 +24,7 @@ import * as service from "../../../services";
 const { TabPane } = Tabs;
 
 const OrdersListing = () => {
-  const { org_id } = useSelector((state) => state.authSlice);
+  const { org_id } = useOrgData();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("All");
   const [searchText, setSearchText] = useState("");

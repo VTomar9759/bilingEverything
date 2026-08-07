@@ -7,8 +7,7 @@ export const getSettings = async (org_id) => {
     user_id: org_id,
     restaurant_name: "Delight Cafe",
     address: "204, Foodie Boulevard, Connaught Place, New Delhi",
-    tax_rate: 18.00,
-    service_charge_rate: 5.00,
+    tax_rate: 5.00,
     currency: "Rs."
   };
   localStorage.setItem(key, JSON.stringify(defaultSettings));

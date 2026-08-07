@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { useSelector } from "react-redux";
+import useOrgData from "./useOrgData";
 import {
   getAdmins,
   createAdmin as createAdminService,
@@ -8,12 +8,9 @@ import {
 } from "../../services";
 
 const useAdmins = () => {
-  const { org_id: reduxOrgId, userData } = useSelector(
-    (state) => state?.authSlice || {}
-  );
+  const { org_id: effectiveOrgId, userData } = useOrgData();
 
-  // Derive org_id and created_by
-  const effectiveOrgId = reduxOrgId || userData?.org_id || userData?.id;
+  // Derive created_by / currentUserId
   const currentUserId = userData?.id || effectiveOrgId;
 
   const [admins, setAdmins] = useState([]);

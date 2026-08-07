@@ -47,7 +47,8 @@ export default Breadcrumb;
 const Wrapper = styled.nav`
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 4px;
+  margin-bottom: 3px;
 `;
 
 const Chevron = styled.span`
@@ -59,13 +60,14 @@ const Chevron = styled.span`
 const BreadItem = styled.span`
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
   font-size: 12px;
   font-weight: ${({ $isLast }) => ($isLast ? "600" : "500")};
   color: ${({ $isLast }) => ($isLast ? "var(--color-primary)" : "var(--color-text-muted)")};
   cursor: ${({ $isLast }) => ($isLast ? "default" : "pointer")};
   border-radius: 6px;
   transition: all var(--transition-fast);
+  padding: 2px 4px;
   
   &:hover {
     background: ${({ $isLast }) => ($isLast ? "transparent" : "var(--color-primary-50)")};

@@ -9,13 +9,14 @@ import {
   CheckCircleOutlined,
   LoadingOutlined,
 } from "@ant-design/icons";
-import { useSelector, useDispatch } from "react-redux";
+import { useDispatch } from "react-redux";
+import useOrgData from "../../../hooks/useOrgData";
 import { supabase } from "../../../../lib/supabaseClients";
 import { udpateProfile } from "../../../store/slices/authSlices";
 
 const LogoUpdate = () => {
   const dispatch = useDispatch();
-  const { org_id, userData } = useSelector((state) => state.authSlice);
+  const { org_id, userData } = useOrgData();
 
   const [loading, setLoading] = useState(false);
   const [logoFile, setLogoFile] = useState(null);

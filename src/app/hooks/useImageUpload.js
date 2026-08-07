@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { message } from "antd";
-import { useSelector } from "react-redux";
+import useOrgData from "./useOrgData";
 import { supabase } from "../../lib/supabaseClients";
 const useImageUpload = () => {
   const [uploading, setUploading] = useState(false);
 
-  const { org_id } = useSelector((state) => state?.authSlice);
+  const { org_id } = useOrgData();
 
   const handleUpload = async ({ file, onSuccess, onError }) => {
     try {

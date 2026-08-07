@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useSelector, useDispatch } from "react-redux";
+import useOrgData from "./useOrgData";
 import {
   getCategories,
   addCategory as addCategoryService,
@@ -18,7 +19,7 @@ const useCategories = () => {
   const dispatch = useDispatch();
   const categories = useSelector((state) => state?.itemsCategorySlices || []);
 
-  const { org_id } = useSelector((state) => state?.authSlice || {});
+  const { org_id } = useOrgData();
 
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);

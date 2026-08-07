@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
-import { useSelector } from "react-redux";
+import useOrgData from "./useOrgData";
 import { getTables, addTable, updateTABLE_STATUS, updateTable, deleteTable, clearAllTables } from "../../services";
 
 
 const useTables = () => {
-  const { org_id } = useSelector((state) => state?.authSlice || {});
+  const { org_id } = useOrgData();
   const [tables, setTables] = useState([]);
   const [loading, setLoading] = useState(false);
 

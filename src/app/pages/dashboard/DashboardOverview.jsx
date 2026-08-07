@@ -4,6 +4,7 @@ import styled from "styled-components";
 import { Button, Skeleton } from "antd";
 import { useSelector } from "react-redux";
 import { PlusOutlined, FileSyncOutlined } from "@ant-design/icons";
+import useOrgData from "../../hooks/useOrgData";
 
 import TabHeader from "../../../components/TabHeader";
 import { PageWrapper } from "../../styles/commonstyle";
@@ -18,7 +19,7 @@ import { TABLE_STATUS } from "../../utils/constant";
 
 const DashboardOverview = () => {
   const navigate = useNavigate();
-  const { org_id,userData } = useSelector((state) => state.authSlice);
+  const { org_id, userData } = useOrgData();
   const itemsCatalog = useSelector((state) => state.itemSlice);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({});

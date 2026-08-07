@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import styled, { keyframes } from "styled-components";
 import { Tag, Tooltip, message } from "antd";
 import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
+import useOrgData from "../../../hooks/useOrgData";
 import {
   deleteItem as deleteItemService,
   supabase,
@@ -20,7 +21,7 @@ import { PATH_EDIT_ITEM } from "../../../routes/pathname";
 const ItemCard = ({ item }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { org_id } = useSelector((state) => state.authSlice);
+  const { org_id } = useOrgData();
   const [modalVisible, setModalVisible] = useState(false);
   const [imgError, setImgError] = useState(false);
   const [loading, setLoading] = useState(false);

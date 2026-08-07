@@ -8,12 +8,12 @@ import {
   SafetyCertificateOutlined,
   CheckCircleOutlined,
 } from "@ant-design/icons";
-import { useSelector } from "react-redux";
+import useOrgData from "../../../hooks/useOrgData";
 import { supabase } from "../../../../lib/supabaseClients";
 
 const ChangePassword = () => {
   const [form] = Form.useForm();
-  const { userData } = useSelector((state) => state.authSlice);
+  const { userData } = useOrgData();
   const [loading, setLoading] = useState(false);
 
   const handleFinish = async (values) => {
