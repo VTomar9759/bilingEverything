@@ -7,6 +7,7 @@ export const TABLE_STATUS = {
     cleaning: "cleaning"
 }
 
+
 export const TABLE_FLOORS = {
     all: "All Floors",
     ground: "Ground Floor",

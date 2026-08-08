@@ -62,13 +62,13 @@ const AddItem = () => {
   const formValues = Form.useWatch([], form);
   const { categories } = useCategories();
   const { handleUpload, beforeUpload, uploading } = useImageUpload();
-  const { org_id, gst_number, created_by, userData } = useOrgData();
-
+  const { org_id, gst_number, created_by, userData, permission } = useOrgData();
+  const itemsPerm = permission?.items_catalog;
+  const canCreate = itemsPerm?.create ?? false;
 
   const hasGst = Boolean(
     gst_number && String(gst_number).trim().length > 0
   );
-
 
   React.useEffect(() => {
     return () => {
@@ -86,6 +86,10 @@ const AddItem = () => {
   };
 
   const onFinish = async (values) => {
+    if (!canCreate) {
+      message.error("You do not have permission to add items.");
+      return;
+    }
     let imageUrl = values.image;
 
     if (file) {

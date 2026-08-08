@@ -22,7 +22,9 @@ import OrderInvoiceModal from "../../print/OrderInvoiceModal";
 const { Option } = Select;
 
 const PosOrderComposer = () => {
-  const { org_id, userData } = useOrgData();
+  const { org_id, userData, permission } = useOrgData();
+  const ordersPerm = permission?.orders;
+  const canCreate = ordersPerm?.create ?? false;
   const navigate = useNavigate();
   const { createOrder } = useOrders();
   const { tables = [] } = useTables();
@@ -74,22 +76,31 @@ const PosOrderComposer = () => {
     }
   };
 
-  const handleAdjustPosQty = (itemId, amount) => {
-    const updated = selectedPosItems
-      .map((i) => {
-        if (i.item.id === itemId) {
-          const nextQty = i.quantity + amount;
-          return nextQty > 0 ? { ...i, quantity: nextQty } : null;
-        }
-        return i;
-      })
-      .filter(Boolean);
-    setSelectedPosItems(updated);
+  const handleRemovePosItem = (itemId) => {
+    setSelectedPosItems(selectedPosItems.filter((i) => i.item.id !== itemId));
   };
 
-  const handleSubmit = async (values) => {
+  const handleUpdateQuantity = (itemId, delta) => {
+    setSelectedPosItems(
+      selectedPosItems
+        .map((i) => {
+          if (i.item.id === itemId) {
+            const newQty = i.quantity + delta;
+            return newQty > 0 ? { ...i, quantity: newQty } : null;
+          }
+          return i;
+        })
+        .filter(Boolean),
+    );
+  };
+
+  const handleFormFinish = async (values) => {
+    if (!canCreate) {
+      message.error("You do not have permission to create orders.");
+      return;
+    }
     if (selectedPosItems.length === 0) {
-      message.warning("Please add at least one item to composition.");
+      message.error("Please add at least one product to the order.");
       return;
     }
 
@@ -199,7 +210,7 @@ const PosOrderComposer = () => {
       />
 
       <ComposerCard>
-        <Form form={form} layout="vertical" onFinish={handleSubmit}>
+        <Form form={form} layout="vertical" onFinish={handleFormFinish}>
           <PosContainer>
             {/* Left Column - Selection Grid */}
             <PosLeftPanel>

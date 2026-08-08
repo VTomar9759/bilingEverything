@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import styled from "styled-components";
 import useOrgData from "../../hooks/useOrgData";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Button, Select, InputNumber, Form, Skeleton, Empty } from "antd";
+import { Button, Select, InputNumber, Form, Skeleton, Empty, message } from "antd";
 import dayjs from "dayjs";
 
 import TabHeader from "../../../components/TabHeader";
@@ -15,7 +15,10 @@ import { ShoppingCartOutlined } from "@ant-design/icons";
 const { Option } = Select;
 
 const BillingSection = () => {
-  const { org_id, userData, hasGst } = useOrgData();
+  const { org_id, userData, hasGst, permission } = useOrgData();
+  const billingPerm = permission?.billing;
+  const canCreate = billingPerm?.create ?? false;
+  const canUpdate = billingPerm?.update ?? false;
   const location = useLocation();
   const navigate = useNavigate();
 

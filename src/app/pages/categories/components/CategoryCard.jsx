@@ -3,7 +3,9 @@ import styled from "styled-components";
 import { EditOutlined, DeleteOutlined, FolderOpenOutlined } from "@ant-design/icons";
 import { Popconfirm, Tooltip } from "antd";
 
-const CategoryCard = ({ category, onEdit, onDelete }) => {
+const CategoryCard = ({ category, onEdit, onDelete, canUpdate = true, canDelete = true }) => {
+  const hasActions = canUpdate || canDelete;
+
   return (
     <CardContainer>
       <CardContent>
@@ -15,27 +17,33 @@ const CategoryCard = ({ category, onEdit, onDelete }) => {
         </CategoryDetails>
       </CardContent>
 
-      <ActionsOverlay>
-        <Tooltip title="Edit Category">
-          <ActionButton onClick={() => onEdit(category)}>
-            <EditOutlined />
-          </ActionButton>
-        </Tooltip>
-        <Tooltip title="Delete Category">
-          <Popconfirm
-            title="Are you sure you want to delete this category?"
-            description="This action cannot be undone."
-            onConfirm={() => onDelete(category.id)}
-            okText="Delete"
-            cancelText="Cancel"
-            okButtonProps={{ danger: true }}
-          >
-            <ActionButton $danger>
-              <DeleteOutlined />
-            </ActionButton>
-          </Popconfirm>
-        </Tooltip>
-      </ActionsOverlay>
+      {hasActions && (
+        <ActionsOverlay>
+          {canUpdate && (
+            <Tooltip title="Edit Category">
+              <ActionButton onClick={() => onEdit(category)}>
+                <EditOutlined />
+              </ActionButton>
+            </Tooltip>
+          )}
+          {canDelete && (
+            <Tooltip title="Delete Category">
+              <Popconfirm
+                title="Are you sure you want to delete this category?"
+                description="This action cannot be undone."
+                onConfirm={() => onDelete(category.id)}
+                okText="Delete"
+                cancelText="Cancel"
+                okButtonProps={{ danger: true }}
+              >
+                <ActionButton $danger>
+                  <DeleteOutlined />
+                </ActionButton>
+              </Popconfirm>
+            </Tooltip>
+          )}
+        </ActionsOverlay>
+      )}
     </CardContainer>
   );
 };

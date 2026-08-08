@@ -24,7 +24,13 @@ import * as service from "../../../services";
 const { TabPane } = Tabs;
 
 const OrdersListing = () => {
-  const { org_id } = useOrgData();
+  const { permission, org_id } = useOrgData();
+  const ordersPerm = permission?.orders;
+
+  const canCreate = ordersPerm?.create ?? false;
+  const canUpdate = ordersPerm?.update ?? false;
+  const canDelete = ordersPerm?.delete ?? false;
+
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("All");
   const [searchText, setSearchText] = useState("");
@@ -64,6 +70,10 @@ const OrdersListing = () => {
   const [detailsVisible, setDetailsVisible] = useState(false);
 
   const handleStatusChange = async (orderId, nextStatus) => {
+    if (!canUpdate) {
+      message.error("You do not have permission to update orders.");
+      return;
+    }
     try {
       await updateOrderStatus(orderId, nextStatus);
       message.success(`Order status set to ${nextStatus}`);
@@ -152,7 +162,7 @@ const OrdersListing = () => {
           >
             Details
           </Button>
-          {record.status === "Pending" && (
+          {canUpdate && record.status === "Pending" && (
             <Button
               size="small"
               type="primary"
@@ -162,7 +172,7 @@ const OrdersListing = () => {
               Cook
             </Button>
           )}
-          {record.status === "Preparing" && (
+          {canUpdate && record.status === "Preparing" && (
             <Button
               size="small"
               type="primary"

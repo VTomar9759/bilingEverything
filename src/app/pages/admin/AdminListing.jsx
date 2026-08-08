@@ -6,10 +6,17 @@ import { PlusOutlined, ReloadOutlined, SearchOutlined, UserAddOutlined } from "@
 import TabHeader from "../../../components/TabHeader";
 import { PageWrapper } from "../../styles/commonstyle";
 import useAdmins from "../../hooks/useAdmins";
+import useOrgData from "../../hooks/useOrgData";
 import AdminCard from "./components/AdminCard";
 import AdminModal from "./components/AdminModal";
 
 const AdminListing = () => {
+  const { permission } = useOrgData();
+  const settingsPerm = permission?.settings;
+  const canCreate = settingsPerm?.create ?? false;
+  const canUpdate = settingsPerm?.update ?? false;
+  const canDelete = settingsPerm?.delete ?? false;
+
   const {
     admins,
     loading,
@@ -27,6 +34,10 @@ const AdminListing = () => {
   const [searchQuery, setSearchQuery] = useState("");
 
   const handleOpenAddModal = () => {
+    if (!canCreate) {
+      message.error("You do not have permission to create admins.");
+      return;
+    }
     if (admins?.length >= 4) {
       message.warning("Maximum limit of 4 admins reached.");
       return;
@@ -36,16 +47,29 @@ const AdminListing = () => {
   };
 
   const handleOpenEditModal = (admin) => {
+    if (!canUpdate) {
+      message.error("You do not have permission to edit admins.");
+      return;
+    }
     setEditingAdmin(admin);
     setModalVisible(true);
   };
 
   const handleFormFinish = async (values) => {
     try {
+      
       if (editingAdmin) {
+        if (!canUpdate) {
+          message.error("You do not have permission to edit admins.");
+          return;
+        }
         await updateAdmin(editingAdmin.id, values);
         message.success(`Admin "${values.name}" updated successfully!`);
       } else {
+        if (!canCreate) {
+          message.error("You do not have permission to create admins.");
+          return;
+        }
         if (admins?.length >= 4) {
           message.error("Cannot create admin. Maximum limit of 4 admins reached.");
           return;
@@ -65,6 +89,10 @@ const AdminListing = () => {
   };
 
   const handleDelete = async (adminId) => {
+    if (!canDelete) {
+      message.error("You do not have permission to delete admins.");
+      return;
+    }
     try {
       await deleteAdmin(adminId);
       message.success("Admin deleted successfully!");
@@ -108,7 +136,7 @@ const AdminListing = () => {
             style={{ height: 32, width: 32, borderRadius: 8 }}
             disabled={loading}
           />
-          {filteredAdmins?.length < 4 && (
+          {canCreate && filteredAdmins?.length < 4 && (
             <Button
               type="primary"
               icon={<PlusOutlined />}
@@ -141,7 +169,7 @@ const AdminListing = () => {
                   : "No admins created yet"
               }
             >
-              {!searchQuery && (
+              {canCreate && !searchQuery && (
                 <Button
                   type="primary"
                   icon={<UserAddOutlined />}
@@ -160,8 +188,8 @@ const AdminListing = () => {
               <AdminCard
                 key={admin.id}
                 admin={admin}
-                onEdit={handleOpenEditModal}
-                onDelete={handleDelete}
+                onEdit={canUpdate ? handleOpenEditModal : undefined}
+                onDelete={canDelete ? handleDelete : undefined}
               />
             ))}
             

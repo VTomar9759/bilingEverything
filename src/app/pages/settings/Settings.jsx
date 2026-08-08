@@ -46,9 +46,9 @@ const settingsTabs = [
 ];
 
 const SettingsLayout = () => {
-  const { userData } = useOrgData();
+  const { userData,permission } = useOrgData();
   const location = useLocation();
-
+   const canView = permission?.settings?.view || false;
   return (
     <LayoutWrapper>
       {/* Header Banner */}
@@ -84,7 +84,7 @@ const SettingsLayout = () => {
       </HeaderCard>
 
       {/* Navigation Tab Bar */}
-      <TabsNavigationContainer>
+     {canView &&   <TabsNavigationContainer>
         <TabsList>
           {settingsTabs.map((tab) => {
             const isActive = location.pathname === tab.path;
@@ -101,7 +101,7 @@ const SettingsLayout = () => {
             );
           })}
         </TabsList>
-      </TabsNavigationContainer>
+      </TabsNavigationContainer>}
       <MainContentCard>
         <Outlet />
       </MainContentCard>

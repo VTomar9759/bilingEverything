@@ -159,8 +159,29 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
-  const { userData } = useOrgData();
-  console.log(userData,"sddddddd")
+  const { userData, permission } = useOrgData();
+  
+
+  const PERMISSION_KEY_MAP = {
+    Dashboard: "dashboard",
+    Categories: "categories",
+    Tables: "tables",
+    "Items Catalog": "items_catalog",
+    Orders: "orders",
+    Billing: "billing",
+  
+  };
+
+  const filteredNavItems = navItems.filter((item) => {
+    if (!permission) return true;
+    const permKey = PERMISSION_KEY_MAP[item.label];
+    if (!permKey) return true;
+    const itemPerm = permission[permKey];
+    if (itemPerm && itemPerm.view === false) {
+      return false;
+    }
+    return true;
+  });
 
   const initials = userData?.business_name
     ? userData.business_name
@@ -223,7 +244,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
 
         {/* Navigation */}
         <NavSection>
-          {navItems.map((item) => {
+          {filteredNavItems.map((item) => {
             const active = isActive(item);
             return (
               <NavItem

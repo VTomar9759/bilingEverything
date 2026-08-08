@@ -1,15 +1,23 @@
 import React, { useState } from "react";
 import styled, { keyframes } from "styled-components";
-import { Button, Space, message, Skeleton } from "antd";
-import { PlusOutlined, ReloadOutlined } from "@ant-design/icons";
+import { Button, Space, message, Skeleton, Result } from "antd";
+import { PlusOutlined, ReloadOutlined, LockOutlined } from "@ant-design/icons";
 
 import TabHeader from "../../../components/TabHeader";
 import { PageWrapper } from "../../styles/commonstyle";
 import useCategories from "../../hooks/useCategories";
+import useOrgData from "../../hooks/useOrgData";
 import CategoryCard from "./components/CategoryCard";
 import CategoryModal from "./components/CategoryModal";
 
 const CategoriesListing = () => {
+  const { permission } = useOrgData();
+  const categoriesPerm = permission?.categories;
+
+  const canCreate = categoriesPerm?.create ?? false;
+  const canUpdate = categoriesPerm?.update ?? false;
+  const canDelete = categoriesPerm?.delete ?? false;
+
   const {
     categories,
     loading,
@@ -24,11 +32,19 @@ const CategoriesListing = () => {
   const [editingCategory, setEditingCategory] = useState(null);
 
   const handleOpenAddModal = () => {
+    if (!canCreate) {
+      message.error("You do not have permission to add categories.");
+      return;
+    }
     setEditingCategory(null);
     setModalVisible(true);
   };
 
   const handleOpenEditModal = (category) => {
+    if (!canUpdate) {
+      message.error("You do not have permission to edit categories.");
+      return;
+    }
     setEditingCategory(category);
     setModalVisible(true);
   };
@@ -36,9 +52,17 @@ const CategoriesListing = () => {
   const handleFormFinish = async (values) => {
     try {
       if (editingCategory) {
+        if (!canUpdate) {
+          message.error("You do not have permission to update categories.");
+          return;
+        }
         await updateCategory(editingCategory.id, values);
         message.success(`Category "${values.name}" updated successfully!`);
       } else {
+        if (!canCreate) {
+          message.error("You do not have permission to create categories.");
+          return;
+        }
         await addCategory(values);
         message.success(`Category "${values.name}" added successfully!`);
       }
@@ -54,6 +78,10 @@ const CategoriesListing = () => {
   };
 
   const handleDelete = async (categoryId) => {
+    if (!canDelete) {
+      message.error("You do not have permission to delete categories.");
+      return;
+    }
     try {
       await deleteCategory(categoryId);
       message.success("Category deleted successfully!");
@@ -62,6 +90,7 @@ const CategoriesListing = () => {
       message.error("Failed to delete category.");
     }
   };
+
 
   return (
     <PageWrapper>
@@ -78,15 +107,17 @@ const CategoriesListing = () => {
             style={{ height: 32, width: 32, borderRadius: 8 }}
             disabled={loading}
           />
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={handleOpenAddModal}
-            style={{ height: 32, fontWeight: 600, borderRadius: 8 }}
-            disabled={loading}
-          >
-            Add Category
-          </Button>
+          {canCreate && (
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={handleOpenAddModal}
+              style={{ height: 32, fontWeight: 600, borderRadius: 8 }}
+              disabled={loading}
+            >
+              Add Category
+            </Button>
+          )}
         </Space>
       </HeaderBox>
 
@@ -102,21 +133,24 @@ const CategoriesListing = () => {
           </SkeletonGrid>
         ) : (
           <CardGrid>
-       
             {categories.map((category) => (
               <CategoryCard
                 key={category.id}
                 category={category}
                 onEdit={handleOpenEditModal}
                 onDelete={handleDelete}
+                canUpdate={canUpdate}
+                canDelete={canDelete}
               />
             ))}
-                 <AddCardContainer onClick={handleOpenAddModal}>
-              <PlusIconWrapper>
-                <PlusOutlined />
-              </PlusIconWrapper>
-              <AddText>Add Category</AddText>
-            </AddCardContainer>
+            {canCreate && (
+              <AddCardContainer onClick={handleOpenAddModal}>
+                <PlusIconWrapper>
+                  <PlusOutlined />
+                </PlusIconWrapper>
+                <AddText>Add Category</AddText>
+              </AddCardContainer>
+            )}
           </CardGrid>
         )}
       </ContentArea>

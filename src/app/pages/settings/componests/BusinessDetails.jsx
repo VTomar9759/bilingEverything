@@ -35,7 +35,9 @@ const { Option } = Select;
 const BusinessDetails = () => {
   const [form] = Form.useForm();
   const dispatch = useDispatch();
-  const { org_id, userData } = useOrgData();
+  const { org_id, userData, permission } = useOrgData();
+  const settingsPerm = permission?.settings;
+  const canUpdate = settingsPerm?.update ?? false;
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -64,6 +66,10 @@ const BusinessDetails = () => {
   }, [userData, form]);
 
   const handleFinish = async (values) => {
+    if (!canUpdate) {
+      message.error("You do not have permission to update business details.");
+      return;
+    }
     try {
       setLoading(true);
 
@@ -356,11 +362,13 @@ const BusinessDetails = () => {
           </Col>
         </Row>
 
-        <ActionRow>
-          <SubmitButton type="primary" htmlType="submit" loading={loading}>
-            Save Business Profile
-          </SubmitButton>
-        </ActionRow>
+        {canUpdate && (
+          <ActionRow>
+            <SubmitButton type="primary" htmlType="submit" loading={loading}>
+              Save Business Profile
+            </SubmitButton>
+          </ActionRow>
+        )}
       </Form>
     </SectionContainer>
   );

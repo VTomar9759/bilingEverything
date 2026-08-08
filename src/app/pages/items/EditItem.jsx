@@ -80,7 +80,9 @@ const EditItem = () => {
   const navigate = useNavigate();
   const [form] = Form.useForm();
   const formValues = Form.useWatch([], form);
-  const { org_id, hasGst } = useOrgData();
+  const { org_id, hasGst, permission } = useOrgData();
+  const itemsPerm = permission?.items_catalog;
+  const canUpdate = itemsPerm?.update ?? false;
 
   const { categories } = useCategories();
   const { handleUpload, beforeUpload, uploading } = useImageUpload();
@@ -137,6 +139,10 @@ const EditItem = () => {
   };
 
   const onFinish = async (values) => {
+    if (!canUpdate) {
+      message.error("You do not have permission to edit items.");
+      return;
+    }
     let imageUrl = values.image;
 
     if (file) {

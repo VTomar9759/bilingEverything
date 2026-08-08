@@ -13,10 +13,16 @@ import { supabase } from "../../../../lib/supabaseClients";
 
 const ChangePassword = () => {
   const [form] = Form.useForm();
-  const { userData } = useOrgData();
+  const { userData, permission } = useOrgData();
+  const settingsPerm = permission?.settings;
+  const canUpdate = settingsPerm?.update ?? false;
   const [loading, setLoading] = useState(false);
 
   const handleFinish = async (values) => {
+    if (!canUpdate) {
+      message.error("You do not have permission to change password.");
+      return;
+    }
     if (!userData?.email) {
       message.error("User email not found in session");
       return;
@@ -115,11 +121,13 @@ const ChangePassword = () => {
               />
             </FormItem>
 
-            <ActionRow>
-              <SubmitButton type="primary" htmlType="submit" loading={loading}>
-                Update Security Password
-              </SubmitButton>
-            </ActionRow>
+            {canUpdate && (
+              <ActionRow>
+                <SubmitButton type="primary" htmlType="submit" loading={loading}>
+                  Update Security Password
+                </SubmitButton>
+              </ActionRow>
+            )}
           </Form>
         </Col>
 

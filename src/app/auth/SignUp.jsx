@@ -12,6 +12,51 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "../../lib/supabaseClients";
 import { PATH_LOGIN } from "../routes/pathname";
 
+ const PERMISSION = {
+  orders: {
+    view: true,
+    create: true,
+    update: true,
+    delete: true
+  },
+  tables: {
+    view: true,
+    create: true,
+    update: true,
+    delete: true
+  },
+  billing: {
+    view: true,
+    create: true,
+    update: true,
+    delete: true
+  },
+  settings: {
+    view: true,
+    create: true,
+    update: true,
+    delete: true
+  },
+  dashboard: {
+    view: true,
+    create: true,
+    update: true,
+    delete: true
+  },
+  categories: {
+    view: true,
+    create: true,
+    update: true,
+    delete: true
+  },
+  items_catalog: {
+    view: true,
+    create: true,
+    update: true,
+    delete: true
+  }
+};
+
 function SignUp() {
   const [form] = Form.useForm();
   const navigate = useNavigate();
@@ -39,7 +84,7 @@ function SignUp() {
 
     try {
       const { data, error } = await supabase.auth.signUp({
-        name:full_name,
+        name: full_name,
         email,
         password,
       });
@@ -54,7 +99,7 @@ function SignUp() {
               id: data.user.id, // Same UUID as auth.users.id
               created_by: data.user.id,
               full_name,
-
+              permissions: PERMISSION,
               email,
               phone,
               business_name,
