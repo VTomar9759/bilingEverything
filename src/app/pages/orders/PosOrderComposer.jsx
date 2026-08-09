@@ -64,25 +64,24 @@ const PosOrderComposer = () => {
   }, [tables, form]);
 
   const handleAddPosItem = (item) => {
-    const existing = selectedPosItems.find((i) => i.item.id === item.id);
-    if (existing) {
-      setSelectedPosItems(
-        selectedPosItems.map((i) =>
+    setSelectedPosItems((prev) => {
+      const existing = prev.find((i) => i.item.id === item.id);
+      if (existing) {
+        return prev.map((i) =>
           i.item.id === item.id ? { ...i, quantity: i.quantity + 1 } : i,
-        ),
-      );
-    } else {
-      setSelectedPosItems([...selectedPosItems, { item, quantity: 1 }]);
-    }
+        );
+      }
+      return [...prev, { item, quantity: 1 }];
+    });
   };
 
   const handleRemovePosItem = (itemId) => {
     setSelectedPosItems(selectedPosItems.filter((i) => i.item.id !== itemId));
   };
 
-  const handleUpdateQuantity = (itemId, delta) => {
-    setSelectedPosItems(
-      selectedPosItems
+  const handleAdjustPosQty = (itemId, delta) => {
+    setSelectedPosItems((prev) =>
+      prev
         .map((i) => {
           if (i.item.id === itemId) {
             const newQty = i.quantity + delta;
