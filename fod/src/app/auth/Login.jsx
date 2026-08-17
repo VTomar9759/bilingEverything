@@ -5,124 +5,46 @@ import { PATH_SIGNUP } from "../routes/pathname";
 import { supabase } from "../../lib/supabaseClients";
 import { useDispatch } from "react-redux";
 import { logingAuth } from "../store/slices/authSlices";
-import logo from "../../assets/logo.png";
-import { BrandTitle } from "../utils/commons_style";
 
 const Login = () => {
   const [form] = Form.useForm();
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
+  const handleSubmit = async (values) => {
+    const { email, password } = values;
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
 
-const handleSubmit = async (values) => {
-  const { email, password } = values;
-
-  try {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) throw error;
-
-    // Check whether the logged-in user exists in admin table
-    const { data: adminRecord, error: adminError } = await supabase
-      .from("admin")
-      .select("*")
-      .or(`id.eq.${data.user.id},email.eq.${email}`)
-      .maybeSingle();
-
-    if (adminError) throw adminError;
-
-    if (adminRecord) {
-      // Get organization ID
-      const targetOrgId =
-        adminRecord.org_id || adminRecord.created_by;
-
-      if (!targetOrgId) {
-        throw new Error("Organization ID not found for admin.");
-      }
-      console.log(targetOrgId);
-     
-      // Get organization data
-      const { data: orgData, error: orgError } = await supabase
-        .from("organization")
-        .select("*")
-        .eq("id",targetOrgId)
-        .maybeSingle();
-
-      if (orgError) throw orgError;
-
-      if (!orgData) {
-        throw new Error("Organization data not found.");
-      }
-
-      // Admin login
-      dispatch(
-        logingAuth({
-          userData: {
-            ...data.user,
-            ...orgData,
-            ...adminRecord,
-            admin: adminRecord,
-            role: "admin",
-            permission:
-              adminRecord.permission ||
-              adminRecord.permissions ||
-              null,
-          },
-          token: data.session.access_token,
-          refreshToken: data.session.refresh_token,
-          org_id: targetOrgId,
-        })
-      );
-    } else {
-      // Normal organization user
       const { data: user, error: userError } = await supabase
-        .from("organization")
+        .from("users")
         .select("*")
         .eq("id", data.user.id)
-        .maybeSingle();
-
-      if (userError) throw userError;
-
-      if (!user) {
-        throw new Error("Organization data not found.");
-      }
+        .single();
 
       dispatch(
         logingAuth({
-          userData: {
-            ...data.user,
-            ...user,
-          },
+          userData: { ...data.user, ...user },
           token: data.session.access_token,
           refreshToken: data.session.refresh_token,
-          org_id: data.user.id,
+          userId: data.user.id,
         })
       );
+      message.success("Login successful");
+    } catch (err) {
+      message.error(err.message);
     }
-
-    message.success("Login successful");
-  } catch (err) {
-    console.error("Login error:", err);
-    message.error(err?.message || "Login failed");
-  }
-};
-
+  };
 
   return (
     <Wrapper>
       <Card>
         {/* Header */}
         <CardHeader>
-          <LogoBadge>
-            <img src={logo} alt="logo" className="image-box" />
-          </LogoBadge>
-          <BrandTitle>
-            Billing <span className="highlight">Every Thing</span>
-          </BrandTitle>
+          <LogoBadge>VT</LogoBadge>
           <SmallText>Welcome back</SmallText>
+          <Title>Sign in to your account</Title>
         </CardHeader>
 
         <Form
@@ -130,7 +52,7 @@ const handleSubmit = async (values) => {
           layout="vertical"
           onFinish={handleSubmit}
           initialValues={{
-            email: "stomar@yopmail.com",
+            email: "kanu@yopmail.com",
             password: "Password@123",
           }}
         >
@@ -197,8 +119,8 @@ const Wrapper = styled.div`
 const Card = styled.div`
   background: rgba(255,255,255,0.95);
   backdrop-filter: blur(16px);
-  border-radius: var(--radius-xl);
-  padding: 24px 28px;
+  border-radius: var(--radius-2xl);
+  padding: 36px 40px;
   border: 1px solid rgba(255,255,255,0.6);
   box-shadow: var(--shadow-xl), 0 0 0 1px rgba(0,0,0,0.04);
   display: flex;
@@ -206,18 +128,18 @@ const Card = styled.div`
   gap: 4px;
 
   .ant-form-item {
-    margin-bottom: 10px;
+    margin-bottom: 16px;
   }
 
   .ant-form-item-label > label {
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 600;
     color: #374151;
     letter-spacing: 0.01em;
   }
 
   @media (max-width: 480px) {
-    padding: 20px 18px;
+    padding: 28px 24px;
     border-radius: var(--radius-xl);
   }
 `;
@@ -226,38 +148,49 @@ const CardHeader = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: 8px;
+  margin-bottom: 24px;
   text-align: center;
 `;
 
 const LogoBadge = styled.div`
-  width: 120px;
-  height: 120px;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
-  .image-box {
-    width: 120px;
-    height: 120px;
-    object-fit: cover;
-  }
+  font-weight: 800;
+  font-size: 16px;
+  color: white;
+  letter-spacing: 1px;
+  box-shadow: 0 4px 14px rgba(1,81,75,0.35);
+  margin-bottom: 4px;
 `;
 
 const SmallText = styled.p`
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   color: var(--color-text-muted);
   margin: 0;
 `;
 
-
+const Title = styled.h1`
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 22px;
+  letter-spacing: -0.5px;
+  color: var(--color-text-primary);
+  margin: 0;
+`;
 
 const StyledInput = styled(Input)`
-  height: 38px !important;
+  height: 44px !important;
   border-radius: var(--radius-md) !important;
   border: 1.5px solid var(--color-border) !important;
   background: var(--color-bg) !important;
-  font-size: 13px !important;
+  font-size: 14px !important;
   transition: all var(--transition-base) !important;
 
   &:hover {
@@ -273,11 +206,11 @@ const StyledInput = styled(Input)`
 `;
 
 const StyledPassword = styled(Input.Password)`
-  height: 38px !important;
+  height: 44px !important;
   border-radius: var(--radius-md) !important;
   border: 1.5px solid var(--color-border) !important;
   background: var(--color-bg) !important;
-  font-size: 13px !important;
+  font-size: 14px !important;
   transition: all var(--transition-base) !important;
 
   &:hover {
@@ -297,14 +230,14 @@ const StyledPassword = styled(Input.Password)`
 const ForgotRow = styled.div`
   display: flex;
   justify-content: flex-end;
-  margin-bottom: 14px;
-  margin-top: -4px;
+  margin-bottom: 20px;
+  margin-top: -8px;
 `;
 
 const ForgotLink = styled.button`
   background: none;
   border: none;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   color: var(--color-primary);
   cursor: pointer;
@@ -316,9 +249,9 @@ const ForgotLink = styled.button`
 `;
 
 const SubmitBtn = styled(Button)`
-  height: 38px !important;
+  height: 48px !important;
   border-radius: var(--radius-md) !important;
-  font-size: 13.5px !important;
+  font-size: 15px !important;
   font-weight: 700 !important;
   background: var(--color-primary) !important;
   border: none !important;
@@ -342,7 +275,7 @@ const Divider = styled.div`
   display: flex;
   align-items: center;
   gap: 12px;
-  margin: 14px 0 0;
+  margin: 20px 0 0;
 
   &::before, &::after {
     content: "";
@@ -352,7 +285,7 @@ const Divider = styled.div`
   }
 
   span {
-    font-size: 11.5px;
+    font-size: 12px;
     color: var(--color-text-muted);
     white-space: nowrap;
   }
@@ -360,7 +293,7 @@ const Divider = styled.div`
 
 const SignupBtn = styled.button`
   width: 100%;
-  height: 36px;
+  height: 44px;
   border-radius: var(--radius-md);
   background: var(--color-bg);
   border: 1.5px solid var(--color-border);
