@@ -1,5 +1,6 @@
 import { useSelector, useDispatch } from "react-redux";
 import { useEffect, useState } from "react";
+import useOrgData from "./useOrgData";
 import { setItems } from "../store/slices/itemSlice";
 import { getItems } from "../../services/itemService";
 import { setCategories } from "../store/slices/itemsCategorySlices";
@@ -8,7 +9,7 @@ const useItemStore = () => {
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(false);
   const items = useSelector((state) => state?.itemSlice);
-  const { org_id } = useSelector((state) => state?.authSlice || {});
+  const { org_id } = useOrgData();
 
   useEffect(() => {
     const fetchCatalog = async () => {

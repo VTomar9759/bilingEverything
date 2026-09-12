@@ -1,14 +1,28 @@
 import { supabase } from "../lib/supabaseClients";
 import { updateTABLE_STATUS } from "./tableService";
 
+const formatStartDate = (startDate) => {
+  if (!startDate) return null;
+  if (startDate.includes("T")) return startDate;
+  const d = new Date(`${startDate}T00:00:00`);
+  return isNaN(d.getTime()) ? `${startDate}T00:00:00` : d.toISOString();
+};
+
+const formatEndDate = (endDate) => {
+  if (!endDate) return null;
+  if (endDate.includes("T")) return endDate;
+  const d = new Date(`${endDate}T23:59:59.999`);
+  return isNaN(d.getTime()) ? `${endDate}T23:59:59.999` : d.toISOString();
+};
+
 export const getOrders = async (params) => {
-  let userId, page, limit, startDate, endDate, status, orderId;
+  let org_id, page, limit, startDate, endDate, status, orderId;
   let isPaginated = false;
 
   if (typeof params === "string") {
-    userId = params;
+    org_id = params;
   } else if (params && typeof params === "object") {
-    userId = params.userId;
+    org_id = params.org_id;
     page = params.page ?? 1;
     limit = params.limit ?? 30;
     startDate = params.startDate;
@@ -22,7 +36,7 @@ export const getOrders = async (params) => {
     let query = supabase
       .from("orders")
       .select("*", { count: "exact" })
-      .eq("user_id", userId)
+      .eq("org_id", org_id)
       .order("created_at", { ascending: false });
 
     if (isPaginated) {
@@ -33,13 +47,13 @@ export const getOrders = async (params) => {
 
     // Filter by start date
     if (startDate) {
-      const formattedStartDate = startDate.includes("T") ? startDate : `${startDate}T00:00:00`;
+      const formattedStartDate = formatStartDate(startDate);
       query = query.gte("created_at", formattedStartDate);
     }
 
     // Filter by end date
     if (endDate) {
-      const formattedEndDate = endDate.includes("T") ? endDate : `${endDate}T23:59:59`;
+      const formattedEndDate = formatEndDate(endDate);
       query = query.lte("created_at", formattedEndDate);
     }
 
@@ -53,9 +67,41 @@ export const getOrders = async (params) => {
       query = query.eq("id", orderId);
     }
 
-    const { data, error, count } = await query;
+    let { data, error, count } = await query;
 
-    if (error) throw error;
+    // Fallback to user_id if query with org_id fails (e.g. legacy schema where column is user_id)
+    if (error) {
+      let fallbackQuery = supabase
+        .from("orders")
+        .select("*", { count: "exact" })
+        .eq("user_id", org_id)
+        .order("created_at", { ascending: false });
+
+      if (isPaginated) {
+        const from = (page - 1) * limit;
+        const to = from + limit - 1;
+        fallbackQuery = fallbackQuery.range(from, to);
+      }
+      if (startDate) {
+        const formattedStartDate = formatStartDate(startDate);
+        fallbackQuery = fallbackQuery.gte("created_at", formattedStartDate);
+      }
+      if (endDate) {
+        const formattedEndDate = formatEndDate(endDate);
+        fallbackQuery = fallbackQuery.lte("created_at", formattedEndDate);
+      }
+      if (status && status !== "All") {
+        fallbackQuery = fallbackQuery.eq("status", status);
+      }
+      if (orderId) {
+        fallbackQuery = fallbackQuery.eq("id", orderId);
+      }
+
+      const res = await fallbackQuery;
+      if (res.error) throw res.error;
+      data = res.data;
+      count = res.count;
+    }
 
     const result = data || [];
     result.total = count || 0;
@@ -65,140 +111,169 @@ export const getOrders = async (params) => {
     return result;
   } catch (err) {
     console.error("Supabase getOrders failed:", err);
-
-    try {
-      const queryParams = new URLSearchParams({
-        userId: userId || "",
-        ...(isPaginated && {
-          page: String(page),
-          limit: String(limit),
-        }),
-        ...(startDate && { startDate }),
-        ...(endDate && { endDate }),
-        ...(status && status !== "All" && { status }),
-        ...(orderId && { orderId }),
-      });
-
-      const response = await fetch(`/api/offline/orders?${queryParams}`);
-
-      if (!response.ok) {
-        throw new Error("Offline API failed");
-      }
-
-      const result = await response.json();
-      const offlineData = result?.data || [];
-      const offlineTotal = result?.total || offlineData.length;
-      
-      const ordersArray = Array.isArray(result) ? result : offlineData;
-      const finalResult = ordersArray || [];
-      finalResult.total = offlineTotal;
-      finalResult.page = page ?? 1;
-      finalResult.limit = limit ?? finalResult.length;
-      finalResult.totalPages = limit ? Math.ceil(offlineTotal / limit) : 1;
-      return finalResult;
-    } catch (offlineErr) {
-      console.error("Offline API getOrders failed:", offlineErr);
-
-      const emptyResult = [];
-      emptyResult.total = 0;
-      emptyResult.page = page ?? 1;
-      emptyResult.limit = limit ?? 30;
-      emptyResult.totalPages = 0;
-      return emptyResult;
-    }
+    throw err;
   }
 };
 
-export const createOrder = async (userId, orderData) => {
+export const generateOrderNumber = async (org_id) => {
+  const now = new Date();
+
+  const mm = String(now.getMonth() + 1).padStart(2, "0");
+  const dd = String(now.getDate()).padStart(2, "0");
+  const yy = String(now.getFullYear()).slice(-2);
+
+  const prefix = `${mm}${dd}${yy}A`;
+
+  const { data, error } = await supabase
+    .from("orders")
+    .select("order_number")
+    .eq("org_id", org_id)
+    .like("order_number", `${prefix}%`)
+    .order("created_at", { ascending: false })
+    .limit(1);
+
+  if (error) throw error;
+
+  let next = 1;
+
+  if (data.length) {
+    const last = data[0].order_number; // e.g. 080626A200
+    next = parseInt(last.replace(prefix, ""), 10) + 1;
+  }
+
+  return `${prefix}${next}`;
+};
+
+export const createOrder = async (org_id, orderData) => {
+  let targetOrgId = org_id;
+  let targetOrderData = orderData;
+
+  if (typeof org_id === "object" && !orderData) {
+    targetOrderData = org_id;
+    targetOrgId = targetOrderData.org_id || targetOrderData.user_id;
+  }
+
   const baseOrder = {
-    user_id: userId,
+    org_id: targetOrgId,
+    created_by: targetOrgId,
     created_at: new Date().toISOString(),
     status: "Pending",
     payment_status: "Unpaid",
-    ...orderData,
+    ...targetOrderData,
   };
 
-  try {
-    // If orderData doesn't explicitly provide an id, omit it so PostgreSQL/Supabase
-    // uses DEFAULT gen_random_uuid()
-    const insertPayload = { ...baseOrder };
-    if (!orderData.id) {
-      delete insertPayload.id;
-    }
+  let attempts = 0;
 
-    const { data, error } = await supabase
-      .from("orders")
-      .insert([insertPayload])
-      .select();
-
-    if (error) throw error;
-
-    const createdOrder = data[0];
-    if (createdOrder.table_id) {
-      await updateTABLE_STATUS(
-        userId,
-        createdOrder.table_id,
-        "Occupied",
-        createdOrder.id,
-      );
-    }
-    return createdOrder;
-  } catch (err) {
+  while (attempts < 5) {
     try {
-      const response = await fetch("/api/offline/orders", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ userId, ...baseOrder }),
-      });
-      if (!response.ok) throw new Error("Offline API failed");
-      const createdOrder = await response.json();
-      if (createdOrder.table_id) {
-        await updateTABLE_STATUS(
-          userId,
-          createdOrder.table_id,
-          "Occupied",
-          createdOrder.id,
-        );
-      }
-      return createdOrder;
-    } catch (offlineErr) {
-      console.error("Offline API createOrder failed:", offlineErr);
-      const offlineOrder = {
-        id: orderData.id || `offline-${Date.now()}`,
+      const orderNumber =
+        attempts === 0 && targetOrderData?.order_number
+          ? targetOrderData.order_number
+          : await generateOrderNumber(targetOrgId);
+
+      const insertPayload = {
         ...baseOrder,
+        order_number: orderNumber,
       };
-      if (offlineOrder.table_id) {
-        await updateTABLE_STATUS(
-          userId,
-          offlineOrder.table_id,
-          "Occupied",
-          offlineOrder.id,
-        );
+
+      if (!targetOrderData?.id) {
+        delete insertPayload.id;
       }
-      return offlineOrder;
+
+      let { data, error } = await supabase
+        .from("orders")
+        .insert([insertPayload])
+        .select();
+
+      if (error) {
+        // Retry without org_id if schema doesn't have org_id column
+        const fallbackPayload = { ...insertPayload };
+        delete fallbackPayload.org_id;
+
+        const res = await supabase
+          .from("orders")
+          .insert([fallbackPayload])
+          .select();
+
+        if (res.error) {
+          // Retry without user_id if schema only has org_id column
+          const fallbackPayload2 = { ...insertPayload };
+          delete fallbackPayload2.user_id;
+
+          const res2 = await supabase
+            .from("orders")
+            .insert([fallbackPayload2])
+            .select();
+
+          if (res2.error) {
+            error = res2.error;
+          } else {
+            data = res2.data;
+            error = null;
+          }
+        } else {
+          data = res.data;
+          error = null;
+        }
+      }
+
+      if (!error && data && data.length > 0) {
+        const createdOrder = data[0];
+        if (createdOrder.table_id) {
+          await updateTABLE_STATUS(
+            createdOrder.table_id,
+            "Occupied",
+            createdOrder.id,
+          );
+        }
+        return createdOrder;
+      }
+
+      if (error && error.code !== "23505") {
+        throw error;
+      }
+
+      attempts++;
+    } catch (err) {
+      if (err.code !== "23505") {
+        console.error("Error creating order in Supabase:", err);
+        throw err;
+      }
+      attempts++;
     }
   }
+
+  throw new Error(
+    "Failed to create order after 5 attempts due to duplicate order number.",
+  );
 };
 
-export const updateOrderStatus = async (userId, orderId, status) => {
+export const updateOrderStatus = async (org_id, orderId, status) => {
   try {
-    const { data, error } = await supabase
+    let { data, error } = await supabase
       .from("orders")
       .update({ status: status })
       .eq("id", orderId)
-      .eq("user_id", userId)
+      .eq("org_id", org_id)
       .select();
 
-    if (error) throw error;
+    if (error) {
+      const res = await supabase
+        .from("orders")
+        .update({ status: status })
+        .eq("id", orderId)
+        .eq("user_id", org_id)
+        .select();
+
+      if (res.error) throw res.error;
+      data = res.data;
+    }
 
     if (status === "Cancelled") {
-      const orders = await getOrders(userId);
+      const orders = await getOrders(org_id);
       const currentOrder = orders.find((o) => o.id === orderId);
       if (currentOrder && currentOrder.table_id) {
         await updateTABLE_STATUS(
-          userId,
           currentOrder.table_id,
           "Available",
           null,

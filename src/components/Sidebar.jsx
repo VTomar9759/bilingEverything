@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { useNavigate, useLocation } from "react-router";
 import styled, { css, keyframes } from "styled-components";
+import useOrgData from "../app/hooks/useOrgData";
 import { navItems } from "../app/routes/pathname";
 import logo from "../assets/logo.png";
 import { SIDEBAR_CLOSED_WIDTH, SIDEBAR_OPEN_WIDTH } from "../app/layout";
@@ -76,21 +77,6 @@ const BillingIcon = () => (
   </svg>
 );
 
-const KitchenIcon = () => (
-  <svg
-    width="16"
-    height="16"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2.2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2M7 2v4M12 15v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-5M17 8V2M21 2c0 3.2-1.4 6-3.8 8l1.8 12" />
-  </svg>
-);
-
 const ItemsIcon = () => (
   <svg
     width="16"
@@ -124,59 +110,6 @@ const CategoriesIcon = () => (
   </svg>
 );
 
-const InventoryIcon = () => (
-  <svg
-    width="16"
-    height="16"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2.2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
-    <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
-    <line x1="12" y1="22.08" x2="12" y2="12" />
-  </svg>
-);
-
-const StaffIcon = () => (
-  <svg
-    width="16"
-    height="16"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2.2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-    <circle cx="9" cy="7" r="4" />
-    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-  </svg>
-);
-
-const ReportsIcon = () => (
-  <svg
-    width="16"
-    height="16"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2.2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <line x1="18" y1="20" x2="18" y2="10" />
-    <line x1="12" y1="20" x2="12" y2="4" />
-    <line x1="6" y1="20" x2="6" y2="14" />
-    <path d="M3 3v18h18" />
-  </svg>
-);
-
 const SettingsIcon = () => (
   <svg
     width="16"
@@ -193,7 +126,7 @@ const SettingsIcon = () => (
   </svg>
 );
 
-const DatabaseIcon = () => (
+const AdminsIcon = () => (
   <svg
     width="16"
     height="16"
@@ -204,24 +137,21 @@ const DatabaseIcon = () => (
     strokeLinecap="round"
     strokeLinejoin="round"
   >
-    <ellipse cx="12" cy="5" rx="9" ry="3" />
-    <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
-    <path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3" />
+    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+    <circle cx="9" cy="7" r="4" />
+    <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
   </svg>
 );
 
 const iconMap = {
   Dashboard: <DashboardIcon />,
+  Admins: <AdminsIcon />,
   Orders: <OrdersIcon />,
   Tables: <TablesIcon />,
   Billing: <BillingIcon />,
-  Kitchen: <KitchenIcon />,
   "Items Catalog": <ItemsIcon />,
   Categories: <CategoriesIcon />,
-  Inventory: <InventoryIcon />,
-  Staff: <StaffIcon />,
-  Reports: <ReportsIcon />,
-  "Database Admin": <DatabaseIcon />,
   Settings: <SettingsIcon />,
 };
 
@@ -229,8 +159,29 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
-  const { userData } = useSelector((state) => state.authSlice);
-  console.log(userData,"sddddddd")
+  const { userData, permission } = useOrgData();
+  
+
+  const PERMISSION_KEY_MAP = {
+    Dashboard: "dashboard",
+    Categories: "categories",
+    Tables: "tables",
+    "Items Catalog": "items_catalog",
+    Orders: "orders",
+    Billing: "billing",
+  
+  };
+
+  const filteredNavItems = navItems.filter((item) => {
+    if (!permission) return true;
+    const permKey = PERMISSION_KEY_MAP[item.label];
+    if (!permKey) return true;
+    const itemPerm = permission[permKey];
+    if (itemPerm && itemPerm.view === false) {
+      return false;
+    }
+    return true;
+  });
 
   const initials = userData?.business_name
     ? userData.business_name
@@ -293,7 +244,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
 
         {/* Navigation */}
         <NavSection>
-          {navItems.map((item) => {
+          {filteredNavItems.map((item) => {
             const active = isActive(item);
             return (
               <NavItem
@@ -333,11 +284,7 @@ const slideIn = keyframes`
   from { opacity: 0; transform: translateX(-6px); }
   to   { opacity: 1; transform: translateX(0); }
 `;
-const Separator = styled.div`
-  width: 1px;
-  height: 18px;
-  background: var(--color-border);
-`;
+
 /* ─── Styled Components ─── */
 
 const HamburgerBtn = styled.button`

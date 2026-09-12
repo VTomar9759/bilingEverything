@@ -4,6 +4,7 @@ import styled from "styled-components";
 import { Button, Skeleton } from "antd";
 import { useSelector } from "react-redux";
 import { PlusOutlined, FileSyncOutlined } from "@ant-design/icons";
+import useOrgData from "../../hooks/useOrgData";
 
 import TabHeader from "../../../components/TabHeader";
 import { PageWrapper } from "../../styles/commonstyle";
@@ -11,14 +12,14 @@ import DashboardStats from "./components/DashboardStats";
 import {
   SalesSplineChart,
   BusyHoursChart,
-} from "../reports/components/AnalyticsCharts";
+} from "./components/AnalyticsCharts";
 import * as service from "../../../services";
 import { PATH_BILLING, PATH_ORDER_COMPOSER } from "../../routes/pathname";
 import { TABLE_STATUS } from "../../utils/constant";
 
 const DashboardOverview = () => {
   const navigate = useNavigate();
-  const { org_id,userData } = useSelector((state) => state.authSlice);
+  const { org_id, userData } = useOrgData();
   const itemsCatalog = useSelector((state) => state.itemSlice);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({});
@@ -67,12 +68,6 @@ const DashboardOverview = () => {
           occupancyRate,
           totalItmes: itemsCatalog,
         });
-
-        // Set live subsets
-        setRecentOrders(ordersList.slice(0, 5));
-        setActiveTables(
-          tablesList.filter((t) => t.status !== "Available").slice(0, 4),
-        );
       } catch (err) {
         console.error("DashboardOverview error:", err);
       } finally {

@@ -1,6 +1,7 @@
 import React from "react";
 import styled from "styled-components";
 import { Drawer, Button, Space } from "antd";
+import useOrgData from "../../../hooks/useOrgData";
 import {
   CheckOutlined,
   ClockCircleOutlined,
@@ -15,11 +16,12 @@ import { getStatusBadge } from "../../../utils/common_function";
 const OrderDetailDrawer = ({
   open,
   order,
-  settings,
+  settings = {},
   onClose,
   onStatusChange,
 }) => {
   const navigate = useNavigate();
+  const { userData, hasGst } = useOrgData();
   if (!order) return null;
 
   return (
@@ -58,21 +60,35 @@ const OrderDetailDrawer = ({
 
         <DetailSection>
           <SectionTitle>Itemized Dishes</SectionTitle>
-          {order.items?.map((item, idx) => (
-            <DishRow key={idx}>
-              <div>
-                <DishName>{item.name}</DishName>
-                <DishPrice>
-                  {settings.currency || "Rs."} {item.price} each
-                </DishPrice>
-              </div>
-              <DishQty>x{item.quantity}</DishQty>
-              <DishTotal>
-                {settings.currency || "Rs."}{" "}
-                {(item.price * item.quantity).toFixed(2)}
-              </DishTotal>
-            </DishRow>
-          ))}
+          {order.items?.map((item, idx) => {
+            const isItemGst =
+              hasGst &&
+              item?.gst_status !== false &&
+              String(item?.gst_status) !== "false";
+
+            return (
+              <DishRow key={idx}>
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    <DishName>{item.name}</DishName>
+                    {isItemGst && (
+                      <span style={{ fontSize: "10px", color: "var(--color-text-secondary)", fontWeight: 500 }}>
+                        (5% GST)
+                      </span>
+                    )}
+                  </div>
+                  <DishPrice>
+                    {settings.currency || "Rs."} {item.price} each
+                  </DishPrice>
+                </div>
+                <DishQty>x{item.quantity}</DishQty>
+                <DishTotal>
+                  {settings.currency || "Rs."}{" "}
+                  {(item.price * item.quantity).toFixed(2)}
+                </DishTotal>
+              </DishRow>
+            );
+          })}
         </DetailSection>
 
         <DetailSection>
@@ -83,18 +99,15 @@ const OrderDetailDrawer = ({
               {settings.currency || "Rs."} {order.subtotal?.toFixed(2)}
             </span>
           </MetaRow>
-          <MetaRow>
-            <span>Taxes & GST ({settings.tax_rate || 18}%)</span>
-            <span>
-              {settings.currency || "Rs."} {order.tax?.toFixed(2)}
-            </span>
-          </MetaRow>
-          <MetaRow>
-            <span>Service Charge ({settings.service_charge_rate || 5}%)</span>
-            <span>
-              {settings.currency || "Rs."} {order.service_charge?.toFixed(2)}
-            </span>
-          </MetaRow>
+          {hasGst && (
+            <MetaRow>
+              <span>CGST (2.5%) + SGST (2.5%)</span>
+              <span>
+                {settings.currency || "Rs."}{" "}
+                {Number(order.tax || 0).toFixed(2)}
+              </span>
+            </MetaRow>
+          )}
           <DashedLine />
           <MetaRow
             style={{

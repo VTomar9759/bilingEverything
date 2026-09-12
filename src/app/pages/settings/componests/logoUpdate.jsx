@@ -9,13 +9,17 @@ import {
   CheckCircleOutlined,
   LoadingOutlined,
 } from "@ant-design/icons";
-import { useSelector, useDispatch } from "react-redux";
+import { useDispatch } from "react-redux";
+import useOrgData from "../../../hooks/useOrgData";
 import { supabase } from "../../../../lib/supabaseClients";
 import { udpateProfile } from "../../../store/slices/authSlices";
 
 const LogoUpdate = () => {
   const dispatch = useDispatch();
-  const { org_id, userData } = useSelector((state) => state.authSlice);
+  const { org_id, userData, permission } = useOrgData();
+  const settingsPerm = permission?.settings;
+  const canUpdate = settingsPerm?.update ?? false;
+  const canDelete = settingsPerm?.delete ?? false;
 
   const [loading, setLoading] = useState(false);
   const [logoFile, setLogoFile] = useState(null);
@@ -28,6 +32,10 @@ const LogoUpdate = () => {
   }, [userData]);
 
   const handleBeforeUpload = (file) => {
+    if (!canUpdate) {
+      message.error("You do not have permission to update logo.");
+      return false;
+    }
     const isImage = file.type.startsWith("image/");
     if (!isImage) {
       message.error("You can only upload image files (PNG, JPG, WEBP, SVG)!");
@@ -61,6 +69,10 @@ const LogoUpdate = () => {
   };
 
   const uploadLogoToSupabase = async () => {
+    if (!canUpdate) {
+      message.error("You do not have permission to update logo.");
+      return;
+    }
     if (!logoFile) {
       message.info("Please select a new logo image to upload.");
       return;
@@ -112,6 +124,10 @@ const LogoUpdate = () => {
   };
 
   const handleRemoveLogo = async () => {
+    if (!canDelete) {
+      message.error("You do not have permission to remove logo.");
+      return;
+    }
     try {
       setLoading(true);
 
@@ -186,17 +202,19 @@ const LogoUpdate = () => {
         </LogoHeaderGroup>
 
         <LogoButtonGroup>
-          <Upload
-            showUploadList={false}
-            beforeUpload={handleBeforeUpload}
-            accept="image/*"
-          >
-            <Button size="small" icon={<UploadOutlined />}>
-              {currentSrc ? "Change Logo" : "Upload Logo"}
-            </Button>
-          </Upload>
+          {canUpdate && (
+            <Upload
+              showUploadList={false}
+              beforeUpload={handleBeforeUpload}
+              accept="image/*"
+            >
+              <Button size="small" icon={<UploadOutlined />}>
+                {currentSrc ? "Change Logo" : "Upload Logo"}
+              </Button>
+            </Upload>
+          )}
 
-          {logoFile && (
+          {canUpdate && logoFile && (
             <SaveButton
               type="primary"
               size="small"
@@ -208,7 +226,7 @@ const LogoUpdate = () => {
             </SaveButton>
           )}
 
-          {currentSrc && !logoFile && (
+          {canDelete && currentSrc && !logoFile && (
             <Button
               danger
               type="text"

@@ -1,34 +1,34 @@
 import { useState, useEffect, useCallback } from "react";
-import { useSelector } from "react-redux";
+import useOrgData from "./useOrgData";
 import { getTables, addTable, updateTABLE_STATUS, updateTable, deleteTable, clearAllTables } from "../../services";
 
 
 const useTables = () => {
-  const { userId } = useSelector((state) => state?.authSlice || {});
+  const { org_id } = useOrgData();
   const [tables, setTables] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const fetchTables = useCallback(async () => {
-    if (!userId) return;
+    if (!org_id) return;
     setLoading(true);
     try {
-      const data = await getTables(userId);
+      const data = await getTables(org_id);
       setTables(data || []);
     } catch (err) {
       console.error("useTables error fetching:", err);
     } finally {
       setLoading(false);
     }
-  }, [userId]);
+  }, [org_id]);
 
   useEffect(() => {
     fetchTables();
   }, [fetchTables]);
 
   const handleAddTable = async (tableData) => {
-    if (!userId) return;
+    if (!org_id) return;
     try {
-      const newTable = await addTable(userId, tableData);
+      const newTable = await addTable(org_id, tableData);
       setTables((prev) => [...prev, newTable]);
       return newTable;
     } catch (err) {
@@ -38,9 +38,8 @@ const useTables = () => {
   };
 
   const handleUpdateTABLE_STATUS = async (tableId, status, orderId = null) => {
-    if (!userId) return;
     try {
-      const updated = await updateTABLE_STATUS(userId, tableId, status, orderId);
+      const updated = await updateTABLE_STATUS(tableId, status, orderId);
       setTables((prev) => prev.map((t) => (t.id === tableId ? updated : t)));
       return updated;
     } catch (err) {
@@ -50,9 +49,8 @@ const useTables = () => {
   };
 
   const handleUpdateTable = async (tableId, tableData) => {
-    if (!userId) return;
     try {
-      const updated = await updateTable(userId, tableId, tableData);
+      const updated = await updateTable(tableId, tableData);
       setTables((prev) => prev.map((t) => (t.id === tableId ? updated : t)));
       return updated;
     } catch (err) {
@@ -62,9 +60,8 @@ const useTables = () => {
   };
 
   const handleDeleteTable = async (tableId) => {
-    if (!userId) return;
     try {
-      await deleteTable(userId, tableId);
+      await deleteTable(tableId);
       setTables((prev) => prev.filter((t) => t.id !== tableId));
     } catch (err) {
       console.error("useTables error deleting:", err);
@@ -73,9 +70,9 @@ const useTables = () => {
   };
 
   const handleClearAllTables = async () => {
-    if (!userId) return;
+    if (!org_id) return;
     try {
-      const updated = await clearAllTables(userId);
+      const updated = await clearAllTables(org_id);
       setTables(updated || []);
       return updated;
     } catch (err) {

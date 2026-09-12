@@ -25,7 +25,8 @@ import {
   AuditOutlined,
   SettingOutlined,
 } from "@ant-design/icons";
-import { useSelector, useDispatch } from "react-redux";
+import { useDispatch } from "react-redux";
+import useOrgData from "../../../hooks/useOrgData";
 import { supabase } from "../../../../lib/supabaseClients";
 import { udpateProfile } from "../../../store/slices/authSlices";
 
@@ -34,7 +35,9 @@ const { Option } = Select;
 const BusinessDetails = () => {
   const [form] = Form.useForm();
   const dispatch = useDispatch();
-  const { org_id, userData } = useSelector((state) => state.authSlice);
+  const { org_id, userData, permission } = useOrgData();
+  const settingsPerm = permission?.settings;
+  const canUpdate = settingsPerm?.update ?? false;
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -56,7 +59,6 @@ const BusinessDetails = () => {
         pincode: userData?.pincode || "",
         currency: userData?.currency ?? "₹",
         tax_rate: userData?.tax_rate ?? 0,
-        service_charge_rate: userData?.service_charge_rate ?? 0,
         invoice_prefix: userData?.invoice_prefix ?? "INV",
         invoice_footer: userData?.invoice_footer || "",
       });
@@ -64,6 +66,10 @@ const BusinessDetails = () => {
   }, [userData, form]);
 
   const handleFinish = async (values) => {
+    if (!canUpdate) {
+      message.error("You do not have permission to update business details.");
+      return;
+    }
     try {
       setLoading(true);
 
@@ -87,11 +93,6 @@ const BusinessDetails = () => {
         tax_rate:
           values.tax_rate !== undefined && values.tax_rate !== null
             ? Number(values.tax_rate)
-            : 0,
-        service_charge_rate:
-          values.service_charge_rate !== undefined &&
-          values.service_charge_rate !== null
-            ? Number(values.service_charge_rate)
             : 0,
         invoice_prefix: values.invoice_prefix,
         invoice_footer: values.invoice_footer,
@@ -302,7 +303,7 @@ const BusinessDetails = () => {
           Billing, Tax & Invoice Settings
         </SubSectionTitle>
         <Row gutter={[12, 8]}>
-          <Col xs={24} md={6}>
+          <Col xs={24} md={8}>
             <FormItem name="currency" label="Currency Symbol">
               <Select
                 showSearch
@@ -323,7 +324,7 @@ const BusinessDetails = () => {
             </FormItem>
           </Col>
 
-          <Col xs={24} md={6}>
+          <Col xs={24} md={8}>
             <FormItem name="invoice_prefix" label="Invoice Prefix">
               <Input
                 prefix={
@@ -334,22 +335,8 @@ const BusinessDetails = () => {
             </FormItem>
           </Col>
 
-          <Col xs={24} md={6}>
+          <Col xs={24} md={8}>
             <FormItem name="tax_rate" label="Default Tax Rate (%)">
-              <InputNumber
-                style={{ width: "100%" }}
-                min={0}
-                max={100}
-                step={0.01}
-                precision={2}
-                placeholder="0.00"
-                addonAfter="%"
-              />
-            </FormItem>
-          </Col>
-
-          <Col xs={24} md={6}>
-            <FormItem name="service_charge_rate" label="Service Charge (%)">
               <InputNumber
                 style={{ width: "100%" }}
                 min={0}
@@ -375,11 +362,13 @@ const BusinessDetails = () => {
           </Col>
         </Row>
 
-        <ActionRow>
-          <SubmitButton type="primary" htmlType="submit" loading={loading}>
-            Save Business Profile
-          </SubmitButton>
-        </ActionRow>
+        {canUpdate && (
+          <ActionRow>
+            <SubmitButton type="primary" htmlType="submit" loading={loading}>
+              Save Business Profile
+            </SubmitButton>
+          </ActionRow>
+        )}
       </Form>
     </SectionContainer>
   );

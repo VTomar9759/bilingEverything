@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { useSelector } from "react-redux";
+import useOrgData from "./useOrgData";
 import {
   getOrders,
   createOrder as apiCreateOrder,
@@ -13,17 +13,17 @@ const useOrders = ({
   endDate,
   status,
 } = {}) => {
-  const { userId } = useSelector((state) => state?.authSlice || {});
+  const { org_id } = useOrgData();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
 
   const fetchOrders = useCallback(async () => {
-    if (!userId) return;
+    if (!org_id) return;
     setLoading(true);
     try {
-      const data = await getOrders({ userId, page, limit, startDate, endDate, status });
+      const data = await getOrders({ org_id, page, limit, startDate, endDate, status });
       setOrders(data || []);
       setTotal(data?.total || 0);
       setTotalPages(data?.totalPages || 0);
@@ -32,16 +32,16 @@ const useOrders = ({
     } finally {
       setLoading(false);
     }
-  }, [userId, page, limit, startDate, endDate, status]);
+  }, [org_id, page, limit, startDate, endDate, status]);
 
   useEffect(() => {
     fetchOrders();
   }, [fetchOrders]);
 
   const createOrder = async (orderData) => {
-    if (!userId) return;
+    if (!org_id) return;
     try {
-      const newOrder = await apiCreateOrder(userId, orderData);
+      const newOrder = await apiCreateOrder(org_id, orderData);
       setOrders((prev) => [newOrder, ...prev]);
       return newOrder;
     } catch (err) {
@@ -51,9 +51,9 @@ const useOrders = ({
   };
 
   const updateOrderStatus = async (orderId, status) => {
-    if (!userId) return;
+    if (!org_id) return;
     try {
-      const updatedOrder = await apiUpdateOrderStatus(userId, orderId, status);
+      const updatedOrder = await apiUpdateOrderStatus(org_id, orderId, status);
       if (updatedOrder) {
         setOrders((prev) =>
           prev.map((o) => (o.id === orderId ? { ...o, ...updatedOrder } : o))

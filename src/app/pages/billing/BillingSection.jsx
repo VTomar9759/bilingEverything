@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import styled from "styled-components";
-import { useSelector } from "react-redux";
+import useOrgData from "../../hooks/useOrgData";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Button, Select, InputNumber, Form, Skeleton, Empty } from "antd";
+import { Button, Select, InputNumber, Form, Skeleton, Empty, message } from "antd";
 import dayjs from "dayjs";
 
 import TabHeader from "../../../components/TabHeader";
@@ -11,18 +11,21 @@ import * as service from "../../../services";
 import OrderInvoiceModal from "../../print/OrderInvoiceModal";
 import { PATH_ORDERS } from "../../routes/pathname";
 import { ShoppingCartOutlined } from "@ant-design/icons";
-import useSettings from "../../hooks/useSettings";
 
 const { Option } = Select;
 
 const BillingSection = () => {
-  const { userId } = useSelector((state) => state.authSlice);
+  const { org_id, userData, hasGst, permission } = useOrgData();
+  const billingPerm = permission?.billing;
+  const canCreate = billingPerm?.create ?? false;
+  const canUpdate = billingPerm?.update ?? false;
   const location = useLocation();
-  console.log(location, "sss");
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(true);
   const [orders, setOrders] = useState([]);
+  const [settings, setSettings] = useState({});
+ 
 
   const isClearedRef = useRef(false);
 
@@ -38,11 +41,19 @@ const BillingSection = () => {
   const [invoiceVisible, setInvoiceVisible] = useState(false);
   const [settledOrder, setSettledOrder] = useState(null);
 
+  useEffect(() => {
+    if (org_id) {
+      service.getSettings(org_id).then((res) => {
+        if (res) setSettings(res);
+      });
+    }
+  }, [org_id]);
+
   /**
    * Fetch billing data
    */
   const fetchBillingData = async (shouldAutoSelect = true) => {
-    if (!userId) return;
+    if (!org_id) return;
 
     setLoading(true);
 
@@ -57,12 +68,12 @@ const BillingSection = () => {
       let ordersList = [];
       if (targetOrderId) {
         ordersList = await service.getOrders({
-          userId,
+          org_id,
           orderId: targetOrderId,
         });
       } else {
         ordersList = await service.getOrders({
-          userId,
+          org_id,
           startDate: yesterdayStr,
           endDate: todayStr,
         });
@@ -135,7 +146,7 @@ const BillingSection = () => {
 
   useEffect(() => {
     fetchBillingData();
-  }, [userId, location.state, location.search]);
+  }, [org_id, location.state, location.search]);
 
   /**
    * Select order
@@ -173,22 +184,31 @@ const BillingSection = () => {
 
     const netTotal = subtotal - discount;
 
-    const taxRate = Number(settings.tax_rate ?? 18);
-    const serviceRate = Number(settings.service_charge_rate ?? 5);
 
-    const tax = netTotal * (taxRate / 100);
-    const service_charge = netTotal * (serviceRate / 100);
 
-    const total = netTotal + tax + service_charge;
+    const discountFactor = 1 - Number(discountPercent || 0) / 100;
+
+    const tax = hasGst
+      ? (activeOrder.items || []).reduce((sum, item) => {
+        const isItemGst =
+          item.gst_status !== false && String(item.gst_status) !== "false";
+        if (!isItemGst) return sum;
+        const itemAmount =
+          Number(item.price || 0) * Number(item.quantity || 0) * discountFactor;
+        return sum + itemAmount * 0.05;
+      }, 0)
+      : 0;
+
+    const total = netTotal + tax;
 
     setFinancials({
       subtotal,
       discount,
       tax,
-      service_charge,
+      service_charge: 0,
       total,
     });
-  }, [activeOrder, discountPercent, settings]);
+  }, [activeOrder, discountPercent, settings, userData]);
 
   /**
    * Generate invoice
@@ -201,7 +221,7 @@ const BillingSection = () => {
       subtotal: financials.subtotal,
       discount: financials.discount,
       tax: financials.tax,
-      service_charge: financials.service_charge,
+      service_charge: 0,
       total: financials.total,
       status: "Served",
     };
@@ -353,26 +373,36 @@ const BillingSection = () => {
 
                 {/* ITEMS */}
                 <ItemsScroll>
-                  {activeOrder.items?.map((item, index) => (
-                    <ItemInvoiceRow key={index}>
-                      <ItemInvoiceDetails>
-                        <ItemInvoiceName>{item.name}</ItemInvoiceName>
+                  {activeOrder.items?.map((item, index) => {
+                    const isItemGst =
+                      hasGst &&
+                      item?.gst_status !== false &&
+                      String(item?.gst_status) !== "false";
 
-                        <ItemInvoicePrice>
-                          {currency} {item.price} each
-                        </ItemInvoicePrice>
-                      </ItemInvoiceDetails>
+                    return (
+                      <ItemInvoiceRow key={index}>
+                        <ItemInvoiceDetails>
+                          <ItemInvoiceNameRow>
+                            <ItemInvoiceName>{item.name}</ItemInvoiceName>
+                            {isItemGst && <GstText>(5% GST)</GstText>}
+                          </ItemInvoiceNameRow>
 
-                      <ItemInvoiceQty>x{item.quantity}</ItemInvoiceQty>
+                          <ItemInvoicePrice>
+                            {currency} {item.price} each
+                          </ItemInvoicePrice>
+                        </ItemInvoiceDetails>
 
-                      <ItemInvoiceTotal>
-                        {currency}{" "}
-                        {(
-                          Number(item.price || 0) * Number(item.quantity || 0)
-                        ).toFixed(2)}
-                      </ItemInvoiceTotal>
-                    </ItemInvoiceRow>
-                  ))}
+                        <ItemInvoiceQty>x{item.quantity}</ItemInvoiceQty>
+
+                        <ItemInvoiceTotal>
+                          {currency}{" "}
+                          {(
+                            Number(item.price || 0) * Number(item.quantity || 0)
+                          ).toFixed(2)}
+                        </ItemInvoiceTotal>
+                      </ItemInvoiceRow>
+                    );
+                  })}
                 </ItemsScroll>
 
                 {/* CALCULATIONS */}
@@ -407,34 +437,18 @@ const BillingSection = () => {
                   )}
 
                   {/* TAX */}
-                  <CalcRow>
-                    <span>GST CGST + SGST ({settings.tax_rate ?? 18}%)</span>
+                  {hasGst && (
+                      <CalcRow>
+                        <span>GST (5%)</span>
 
-                    <span>
-                      {currency}{" "}
-                      {Number(financials.tax ?? activeOrder.tax ?? 0).toFixed(
-                        2,
-                      )}
-                    </span>
-                  </CalcRow>
-
-                  {/* SERVICE CHARGE */}
-                  {Number(settings.service_charge_rate ?? 0) > 0 && (
-                    <CalcRow>
-                      <span>
-                        Service Charge ({settings.service_charge_rate ?? 5}%)
-                      </span>
-
-                      <span>
-                        {currency}{" "}
-                        {Number(
-                          financials.service_charge ??
-                          activeOrder.service_charge ??
-                          0,
-                        ).toFixed(2)}
-                      </span>
-                    </CalcRow>
-                  )}
+                        <span>
+                          {currency}{" "}
+                          {Number(
+                            financials.tax ?? activeOrder.tax ?? 0,
+                          ).toFixed(2)}
+                        </span>
+                      </CalcRow>
+                    )}
 
                   <CalcDivider />
 
@@ -617,6 +631,18 @@ const ItemInvoiceRow = styled.div`
 
 const ItemInvoiceDetails = styled.div`
   min-width: 0;
+`;
+
+const ItemInvoiceNameRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+`;
+
+const GstText = styled.span`
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
 `;
 
 const ItemInvoiceName = styled.div`

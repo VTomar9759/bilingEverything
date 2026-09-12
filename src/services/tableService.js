@@ -5,16 +5,21 @@ import { TABLE_STATUS } from "../app/utils/constant";
 /**
  * Fetch all active dining tables from Supabase dining_tables.
  */
-export const getTables = async (userId) => {
+export const getTables = async (org_id) => {
   try {
-    const { data, error } = await supabase
+    let query = supabase
       .from("dining_tables")
       .select("*")
-      .eq("is_active", true)
-      .order("table_number", { ascending: true });
-    
+      .eq("is_active", true);
+
+    if (org_id) {
+      query = query.eq("org_id", org_id);
+    }
+
+    const { data, error } = await query.order("table_number", { ascending: true });
+
     if (error) throw error;
-    if (data) return data
+    if (data) return data;
     return [];
   } catch (err) {
     console.error("Error fetching tables from Supabase:", err);
@@ -25,11 +30,11 @@ export const getTables = async (userId) => {
 /**
  * Create/Add a new dining table.
  */
-export const addTable = async (userId, tableData) => {
+export const addTable = async (org_id, tableData) => {
   const dbPayload = {
     ...tableData,
-    created_by: userId || null,
-    updated_by: userId || null
+    org_id: org_id || null,
+    created_by: org_id || null,
   };
   try {
     const { data, error } = await supabase
@@ -48,16 +53,15 @@ export const addTable = async (userId, tableData) => {
 /**
  * Update the status of a dining table (e.g. available, occupied, reserved, billed, cleaning).
  */
-export const updateTABLE_STATUS = async (userId, tableId, status, currentOrderId = null) => {
+export const updateTABLE_STATUS = async (tableId, status, currentOrderId = null) => {
   const dbStatus = status.toLowerCase();
-  
+
   try {
-    const updates = { 
-      status: dbStatus, 
+    const updates = {
+      status: dbStatus,
       current_order_id: currentOrderId,
-      updated_by: userId || null
     };
-    
+
     // Auto-release resets bill
     if (dbStatus === TABLE_STATUS.available) {
       updates.current_bill_amount = 0;
@@ -71,7 +75,7 @@ export const updateTABLE_STATUS = async (userId, tableId, status, currentOrderId
       .update(updates)
       .eq("id", tableId)
       .select();
-    
+
     if (error) throw error;
     if (data && data.length > 0) return data[0];
     throw new Error("Table not found for status update");
@@ -84,10 +88,11 @@ export const updateTABLE_STATUS = async (userId, tableId, status, currentOrderId
 /**
  * Update full properties of a dining table (Full CRUD - Update).
  */
-export const updateTable = async (userId, tableId, tableData) => {
+export const updateTable = async (org_id, tableId, tableData) => {
   const dbPayload = {
     ...tableData,
-    updated_by: userId || null
+    updated_by: org_id || null,
+    created_by: org_id || null
   };
 
   try {
@@ -109,7 +114,7 @@ export const updateTable = async (userId, tableId, tableData) => {
 /**
  * Delete a dining table (Full CRUD - Delete).
  */
-export const deleteTable = async (userId, tableId) => {
+export const deleteTable = async (org_id, tableId) => {
   try {
     const { error } = await supabase
       .from("dining_tables")
@@ -127,7 +132,7 @@ export const deleteTable = async (userId, tableId) => {
 /**
  * Reset all active dining tables to status "available".
  */
-export const clearAllTables = async (userId) => {
+export const clearAllTables = async (org_id) => {
   try {
     const updates = {
       status: TABLE_STATUS.available,
@@ -136,14 +141,18 @@ export const clearAllTables = async (userId) => {
       is_reserved: false,
       reserved_by: "",
       reservation_time: null,
-      updated_by: userId || null
     };
 
-    const { data, error } = await supabase
+    let query = supabase
       .from("dining_tables")
       .update(updates)
-      .eq("is_active", true)
-      .select();
+      .eq("is_active", true);
+
+    if (org_id) {
+      query = query.eq("org_id", org_id);
+    }
+
+    const { data, error } = await query.select();
 
     if (error) throw error;
     return data;

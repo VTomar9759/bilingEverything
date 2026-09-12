@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import styled, { keyframes } from "styled-components";
 import { Tag, Tooltip, message } from "antd";
 import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
+import useOrgData from "../../../hooks/useOrgData";
 import {
   deleteItem as deleteItemService,
   supabase,
@@ -17,10 +18,15 @@ import ConfirmModal from "../../../modal/ConfirmModal";
 import placeholderImg from "../../../../assets/no-image.png";
 import { PATH_EDIT_ITEM } from "../../../routes/pathname";
 
-const ItemCard = ({ item }) => {
+const ItemCard = ({ item, canUpdate: canUpdateProp, canDelete: canDeleteProp }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { userId } = useSelector((state) => state.authSlice);
+  const { org_id, permission } = useOrgData();
+  const itemsPerm = permission?.items_catalog;
+
+  const canUpdate = canUpdateProp ?? (itemsPerm?.update ?? false);
+  const canDelete = canDeleteProp ?? (itemsPerm?.delete ?? false);
+
   const [modalVisible, setModalVisible] = useState(false);
   const [imgError, setImgError] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -31,10 +37,18 @@ const ItemCard = ({ item }) => {
 
   const showDeleteModal = (e) => {
     e.stopPropagation();
+    if (!canDelete) {
+      message.error("You do not have permission to delete items.");
+      return;
+    }
     setModalVisible(true);
   };
 
   const handleConfirm = async () => {
+    if (!canDelete) {
+      message.error("You do not have permission to delete items.");
+      return;
+    }
     setLoading(true);
     try {
       if (item.image) {
@@ -48,7 +62,7 @@ const ItemCard = ({ item }) => {
         await supabase.storage.from("items-images").remove([imagePath]);
       }
 
-      await deleteItemService(userId, item.id);
+      await deleteItemService(org_id, item.id);
       dispatch(deleteItemAction(item.id));
       message.success("Item deleted successfully");
     } catch (err) {
@@ -100,23 +114,29 @@ const ItemCard = ({ item }) => {
           )}
 
           {/* Overlay actions */}
-          <OverlayActions className="overlay-actions">
-            <Tooltip title="Edit item">
-              <ActionBtn
-                onClick={(e) => {
-                  e.stopPropagation();
-                  navigate(PATH_EDIT_ITEM.replace(":id", item.id));
-                }}
-              >
-                <EditOutlined />
-              </ActionBtn>
-            </Tooltip>
-            <Tooltip title="Delete item">
-              <ActionBtn $danger onClick={showDeleteModal}>
-                <DeleteOutlined />
-              </ActionBtn>
-            </Tooltip>
-          </OverlayActions>
+          {(canUpdate || canDelete) && (
+            <OverlayActions className="overlay-actions">
+              {canUpdate && (
+                <Tooltip title="Edit item">
+                  <ActionBtn
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(PATH_EDIT_ITEM.replace(":id", item.id));
+                    }}
+                  >
+                    <EditOutlined />
+                  </ActionBtn>
+                </Tooltip>
+              )}
+              {canDelete && (
+                <Tooltip title="Delete item">
+                  <ActionBtn $danger onClick={showDeleteModal}>
+                    <DeleteOutlined />
+                  </ActionBtn>
+                </Tooltip>
+              )}
+            </OverlayActions>
+          )}
 
           {/* Code badge */}
           <CodeBadge>{item.code}</CodeBadge>
@@ -271,9 +291,9 @@ const ActionBtn = styled.button`
   cursor:pointer ;
   &:hover {
     background: ${({ $danger }) =>
-      $danger ? "#fff5f5" : "var(--color-primary-50)"};
+    $danger ? "#fff5f5" : "var(--color-primary-50)"};
     border-color: ${({ $danger }) =>
-      $danger ? "#fecaca" : "var(--color-primary-100)"};
+    $danger ? "#fecaca" : "var(--color-primary-100)"};
     color: ${({ $danger }) => ($danger ? "#dc2626" : "var(--color-primary)")};
   }
 `;

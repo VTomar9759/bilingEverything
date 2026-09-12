@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useSelector, useDispatch } from "react-redux";
+import useOrgData from "./useOrgData";
 import {
   getCategories,
   addCategory as addCategoryService,
@@ -18,19 +19,18 @@ const useCategories = () => {
   const dispatch = useDispatch();
   const categories = useSelector((state) => state?.itemsCategorySlices || []);
 
-  const { org_id, userId } = useSelector((state) => state?.authSlice || {});
-  const activeOrgId = org_id || userId;
+  const { org_id } = useOrgData();
 
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const fetchCategoriesList = useCallback(async () => {
-    if (!activeOrgId) return;
+    if (!org_id) return;
     setLoading(true);
     try {
       let data = [];
       try {
-        data = await getCategories(activeOrgId);
+        data = await getCategories(org_id);
       } catch (err) {
         console.warn("Categories table fetch failed, falling back to items catalog:", err.message);
       }
@@ -38,7 +38,7 @@ const useCategories = () => {
       // If categories table returned no data or errored, fallback to unique categories in items table
       if (!data || data.length === 0) {
         try {
-          const items = await getItems(activeOrgId);
+          const items = await getItems(org_id);
           const uniqueNames = [
             ...new Set(
               items?.filter((item) => item.category).map((item) => item.category)
@@ -47,7 +47,7 @@ const useCategories = () => {
           data = uniqueNames.map((name, idx) => ({
             id: `cat_${idx}_${name}`,
             name,
-            org_id: activeOrgId,
+            org_id: org_id,
           }));
         } catch (itemErr) {
           console.error("Fallback getItems error:", itemErr);
@@ -60,27 +60,27 @@ const useCategories = () => {
     } finally {
       setLoading(false);
     }
-  }, [activeOrgId, dispatch]);
+  }, [org_id, dispatch]);
 
   useEffect(() => {
-    if (activeOrgId && categories.length === 0) {
+    if (org_id && categories.length === 0) {
       fetchCategoriesList();
     }
-  }, [activeOrgId, categories.length, fetchCategoriesList]);
+  }, [org_id, categories.length, fetchCategoriesList]);
 
   const handleAddCategory = async (categoryData) => {
-    if (!activeOrgId) return;
+    if (!org_id) return;
     setSaving(true);
     try {
       let created = null;
       try {
-        created = await addCategoryService(activeOrgId, categoryData);
+        created = await addCategoryService(org_id, categoryData);
       } catch (err) {
         console.warn("Direct insert into categories failed, using local object:", err);
         created = {
           id: `cat_${Date.now()}`,
           name: categoryData.name,
-          org_id: activeOrgId,
+          org_id: org_id,
         };
       }
 
@@ -95,18 +95,18 @@ const useCategories = () => {
   };
 
   const handleUpdateCategory = async (id, categoryData) => {
-    if (!activeOrgId) return;
+    if (!org_id) return;
     setSaving(true);
     try {
       let updated = null;
       try {
-        updated = await updateCategoryService(activeOrgId, id, categoryData);
+        updated = await updateCategoryService(org_id, id, categoryData);
       } catch (err) {
         console.warn("Direct update on categories failed, using local update:", err);
       }
 
       if (!updated) {
-        updated = { id, name: categoryData.name, org_id: activeOrgId };
+        updated = { id, name: categoryData.name, org_id: org_id };
       }
 
       dispatch(updateCategoryAction(updated));
@@ -120,11 +120,11 @@ const useCategories = () => {
   };
 
   const handleDeleteCategory = async (id) => {
-    if (!activeOrgId) return;
+    if (!org_id) return;
     setSaving(true);
     try {
       try {
-        await deleteCategoryService(activeOrgId, id);
+        await deleteCategoryService(org_id, id);
       } catch (err) {
         console.warn("Direct delete on categories table failed:", err);
       }

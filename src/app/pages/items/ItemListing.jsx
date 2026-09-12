@@ -11,8 +11,17 @@ import useItemStore from "../../hooks/useItemStore";
 import InputSearch from "../../../components/SearchInput";
 import CategorySelecter from "../../../components/CategorySelecter";
 
+import useOrgData from "../../hooks/useOrgData";
+
 const ItemListing = () => {
   const navigate = useNavigate();
+  const { permission } = useOrgData();
+  const itemsPerm = permission?.items_catalog;
+
+  const canCreate = itemsPerm?.create ?? false;
+  const canUpdate = itemsPerm?.update ?? false;
+  const canDelete = itemsPerm?.delete ?? false;
+
   const [items, loading] = useItemStore({ search: "", filter: "" });
   const [data, setData] = useState([]);
   const [selectedCatId, setSelectedCatId] = useState("all");
@@ -70,13 +79,15 @@ const ItemListing = () => {
             onSearch={handleSearch}
             placeholder="Search by name or code..."
           />
-          <AddButton
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={() => navigate(PATH_ADD_ITEM)}
-          >
-            Add Item
-          </AddButton>
+          {canCreate && (
+            <AddButton
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() => navigate(PATH_ADD_ITEM)}
+            >
+              Add Item
+            </AddButton>
+          )}
         </HeadActions>
       </PageHead>
       <CategorySelecter onChange={handleCategoryFilter} value={selectedCatId} />
@@ -109,20 +120,26 @@ const ItemListing = () => {
               Your catalog is empty. Start adding products to manage your
               inventory.
             </EmptyDesc>
-            <AddButton
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => navigate(PATH_ADD_ITEM)}
-              size="large"
-            >
-              Add Your First Item
-            </AddButton>
+            {canCreate && (
+              <AddButton
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() => navigate(PATH_ADD_ITEM)}
+                size="large"
+              >
+                Add Your First Item
+              </AddButton>
+            )}
           </EmptyState>
         ) : (
           <Row gutter={[16, 16]}>
             {data.map((item) => (
               <Col xs={12} sm={8} md={6} lg={4} xl={4} xxl={3} key={item.id}>
-                <ItemCard item={item} />
+                <ItemCard
+                  item={item}
+                  canUpdate={canUpdate}
+                  canDelete={canDelete}
+                />
               </Col>
             ))}
           </Row>

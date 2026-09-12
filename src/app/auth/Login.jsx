@@ -13,31 +13,104 @@ const Login = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const handleSubmit = async (values) => {
-    const { email, password } = values;
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) throw error;
 
+const handleSubmit = async (values) => {
+  const { email, password } = values;
+
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) throw error;
+
+    // Check whether the logged-in user exists in admin table
+    const { data: adminRecord, error: adminError } = await supabase
+      .from("admin")
+      .select("*")
+      .or(`id.eq.${data.user.id},email.eq.${email}`)
+      .maybeSingle();
+
+    if (adminError) throw adminError;
+
+    if (adminRecord) {
+      // Get organization ID
+      const targetOrgId =
+        adminRecord.org_id || adminRecord.created_by;
+
+      if (!targetOrgId) {
+        throw new Error("Organization ID not found for admin.");
+      }
+  
+     
+      // Get organization data
+      const { data: orgData, error: orgError } = await supabase
+        .from("organization")
+        .select("*")
+        .eq("id",targetOrgId)
+        .maybeSingle();
+
+      if (orgError) throw orgError;
+
+      if (!orgData) {
+        throw new Error("Organization data not found.");
+      }
+      console.log("data.user.permissions", data.user?.permissions);
+      console.log("orgData",orgData)
+      console.log("adminRecord",adminRecord)
+      // Admin login
+      dispatch(
+        logingAuth({
+          userData: {
+            ...data.user,
+            ...orgData,
+            ...adminRecord,
+            admin: adminRecord,
+            role: "admin",
+            permission: adminRecord?.permissions || adminRecord?.permission,
+            permissions: adminRecord?.permissions || adminRecord?.permission,
+            full_name: adminRecord?.name,
+          },
+          token: data.session.access_token,
+          refreshToken: data.session.refresh_token,
+          org_id: targetOrgId,
+        })
+      );
+    } else {
+      // Normal organization user
       const { data: user, error: userError } = await supabase
         .from("organization")
         .select("*")
         .eq("id", data.user.id)
-        .single();
+        .maybeSingle();
+
+      if (userError) throw userError;
+
+      if (!user) {
+        throw new Error("Organization data not found.");
+      }
 
       dispatch(
         logingAuth({
-          userData: { ...data.user, ...user },
+          userData: {
+            ...data.user,
+            ...user,
+          },
           token: data.session.access_token,
           refreshToken: data.session.refresh_token,
           org_id: data.user.id,
         })
       );
-      message.success("Login successful");
-    } catch (err) {
-      message.error(err.message);
     }
-  };
+
+    message.success("Login successful");
+  } catch (err) {
+    console.error("Login error:", err);
+    message.error(err?.message || "Login failed");
+  }
+};
+
 
   return (
     <Wrapper>
@@ -58,7 +131,7 @@ const Login = () => {
           layout="vertical"
           onFinish={handleSubmit}
           initialValues={{
-            email: "kanu@yopmail.com",
+            email: "stomar@yopmail.com",
             password: "Password@123",
           }}
         >

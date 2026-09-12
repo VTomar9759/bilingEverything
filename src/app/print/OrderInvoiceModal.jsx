@@ -7,6 +7,7 @@ import {
   DownloadOutlined,
 } from "@ant-design/icons";
 import { printInvoiceSilent } from "../../services";
+import useOrgData from "../hooks/useOrgData";
 
 // const PrintGlobalStyles = createGlobalStyle`
 //   @media print {
@@ -69,35 +70,79 @@ import { printInvoiceSilent } from "../../services";
 const OrderInvoiceModal = ({ visible, onClose, order, settings }) => {
   const receiptRef = useRef();
   const [loadingPrint, setLoadingPrint] = useState(false);
-  
+  const { userData, hasGst: orgHasGst } = useOrgData();
+
   if (!order) return null;
+
+  const businessName =
+    userData?.business_name ||
+    userData?.legal_name ||
+    userData?.full_name ||
+    settings?.restaurant_name ||
+    settings?.business_name ||
+    "Role Express";
+
+  // Build full address string dynamically
+  const addressParts = [];
+  const primaryAddress = userData?.address || settings?.address;
+  if (primaryAddress) addressParts.push(primaryAddress);
+  if (userData?.city) addressParts.push(userData.city);
+  if (userData?.state) addressParts.push(userData.state);
+  if (userData?.pincode) addressParts.push(userData.pincode);
+
+  const address =
+    addressParts.length > 0
+      ? addressParts.join(", ")
+      : "Address not set";
+
+  const gstNumber = userData?.gst_number || settings?.gstin || settings?.gst_number;
+  const hasGst = orgHasGst;
+
+  const invoiceFooter =
+    userData?.invoice_footer ||
+    settings?.invoice_footer ||
+    "Thank You For Dining With Us!";
+
+  const invoicePrefix = userData?.invoice_prefix || settings?.invoice_prefix || "INV";
+  const paperWidth = settings?.paper_width || userData?.paper_width || "80mm";
+  const currency = userData?.currency || settings?.currency || "₹";
+
+  const getFormattedOrderNo = () => {
+    if (!order) return "";
+    return order.order_number ?? order.order_no ?? order.id ?? "";
+  };
 
   const handlePrint = async () => {
     setLoadingPrint(true);
     await printInvoiceSilent({
       order,
-      settings,
+      settings: {
+        ...settings,
+        restaurant_name: businessName,
+        address,
+        gstin: hasGst ? gstNumber : "",
+        currency,
+        paper_width: paperWidth,
+      },
       copies: 2,
       receiptElement: receiptRef.current,
     });
     setLoadingPrint(false);
   };
 
-  const paperWidth = settings?.paper_width || "80mm";
-  const currency = settings?.currency || "Rs.";
-  const taxRate = settings?.tax_rate || 18;
-  const serviceRate = settings?.service_charge_rate || 5;
-
   const handleDownloadText = () => {
     if (!order) return;
     let text = "";
     text += "=========================================\n";
-    text += `       ${settings?.restaurant_name || "Delight Cafe"}\n`;
-    text += `  ${settings?.address || "204, Foodie Boulevard, Connaught Place, New Delhi"}\n`;
-    text += `         ${settings?.gstin ? `GSTIN: ${settings.gstin}` : "GSTIN: 07AAAAA1111A1Z1"}\n`;
+    text += `       ${businessName}\n`;
+    text += `  ${address}\n`;
+    if (gstNumber) text += `  GSTIN: ${gstNumber}\n`;
     text += "=========================================\n\n";
-    text += `Order No:   #${order.order_number || order.id}\n`;
-    text += `Date:       ${order.created_at && !isNaN(new Date(order.created_at).getTime()) ? new Date(order.created_at).toLocaleString() : new Date().toLocaleString()}\n`;
+    text += `Order No:   #${getFormattedOrderNo()}\n`;
+    text += `Date:       ${order.created_at && !isNaN(new Date(order.created_at).getTime())
+        ? new Date(order.created_at).toLocaleString()
+        : new Date().toLocaleString()
+      }\n`;
     if (order.table_name) {
       text += `Table:      ${order.table_name}\n`;
     }
@@ -106,33 +151,37 @@ const OrderInvoiceModal = ({ visible, onClose, order, settings }) => {
     text += "Item                 Qty    Price   Total\n";
     text += "-----------------------------------------\n";
     order.items?.forEach((item) => {
-      const name = item.name.padEnd(20).substring(0, 20);
-      const qty = item.quantity.toString().padStart(3);
+      const isItemGst =
+        hasGst &&
+        item?.gst_status !== false &&
+        String(item?.gst_status) !== "false";
+      const displayName = isItemGst ? `${item.name} (5% GST)` : item.name;
+      const name = (displayName || "").padEnd(20).substring(0, 20);
+      const qty = (item.quantity || 0).toString().padStart(3);
       const price = `${currency} ${item.price}`.padStart(9);
       const total = `${currency} ${item.price * item.quantity}`.padStart(9);
       text += `${name} ${qty} ${price} ${total}\n`;
     });
     text += "-----------------------------------------\n";
-    text += `Subtotal:                  ${currency} ${order.subtotal?.toFixed(2)}\n`;
+    text += `Subtotal:                  ${currency} ${(order.subtotal || 0).toFixed(2)}\n`;
     if (order.discount > 0) {
-      text += `Discount Applied:         -${currency} ${order.discount?.toFixed(2)}\n`;
+      text += `Discount Applied:         -${currency} ${(order.discount || 0).toFixed(2)}\n`;
     }
-    text += `CGST & SGST (${taxRate}%):      ${currency} ${order.tax?.toFixed(2)}\n`;
-    if (serviceRate > 0) {
-      text += `Service Charge (${serviceRate}%):   ${currency} ${order.service_charge?.toFixed(2)}\n`;
+    if (hasGst) {
+      text += `CGST & SGST (5%):        ${currency} ${(order.tax || 0).toFixed(2)}\n`;
     }
     text += "-----------------------------------------\n";
-    text += `GRAND TOTAL:               ${currency} ${order.total?.toFixed(2)}\n`;
+    text += `GRAND TOTAL:               ${currency} ${(order.total || 0).toFixed(2)}\n`;
     text += "=========================================\n";
-    text += "       Thank You For Dining With Us!\n";
-    text += "            Power by Systems\n";
+    text += `       ${invoiceFooter}\n`;
+    text += "            Powered by Systems\n";
     text += "=========================================\n";
 
     const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `invoice_${order.order_number || order.id}.txt`;
+    link.download = `invoice_${getFormattedOrderNo()}.txt`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -160,16 +209,16 @@ const OrderInvoiceModal = ({ visible, onClose, order, settings }) => {
         <ReceiptOuter>
           <ReceiptPaper ref={receiptRef} id="receipt" className="printable-receipt-container" $paperWidth={paperWidth}>
             <ReceiptHeader className="receipt-header">
-              <h3>{settings?.restaurant_name || "Delight Cafe"}</h3>
-              <p>{settings?.address || "204, Foodie Boulevard, Connaught Place, New Delhi"}</p>
-              <p>{settings?.gstin ? `GSTIN: ${settings.gstin}` : "GSTIN: 07AAAAA1111A1Z1"}</p>
+              <h3>{businessName}</h3>
+              <p>{address}</p>
+              {hasGst && <p>GSTIN: {gstNumber}</p>}
             </ReceiptHeader>
 
             <DottedDivider className="dotted-divider" />
 
             <ReceiptMeta className="receipt-meta">
               <div>
-                <strong>Order No:</strong> #{order.order_number || order.id}
+                <strong>Order No:</strong> #{getFormattedOrderNo()}
               </div>
               <div>
                 <strong>Date:</strong>{" "}
@@ -203,18 +252,32 @@ const OrderInvoiceModal = ({ visible, onClose, order, settings }) => {
                 </tr>
               </thead>
               <tbody>
-                {order.items?.map((item, idx) => (
-                  <tr key={idx}>
-                    <td>{item.name}</td>
-                    <td align="center">{item.quantity}</td>
-                    <td align="right" className="text-right">
-                      {currency} {item.price}
-                    </td>
-                    <td align="right" className="text-right">
-                      {currency} {item.price * item.quantity}
-                    </td>
-                  </tr>
-                ))}
+                {order.items?.map((item, idx) => {
+                  const isItemGst =
+                    hasGst &&
+                    item?.gst_status !== false &&
+                    String(item?.gst_status) !== "false";
+
+                  return (
+                    <tr key={idx}>
+                      <td>
+                        {item.name}
+                        {isItemGst && (
+                          <span style={{ fontSize: "8.5px", opacity: 0.75, display: "block", color: "#666" }}>
+                            (5% GST)
+                          </span>
+                        )}
+                      </td>
+                      <td align="center">{item.quantity}</td>
+                      <td align="right" className="text-right">
+                        {currency} {item.price}
+                      </td>
+                      <td align="right" className="text-right">
+                        {currency} {item.price * item.quantity}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </ItemsTable>
 
@@ -235,17 +298,11 @@ const OrderInvoiceModal = ({ visible, onClose, order, settings }) => {
                   </span>
                 </TotalRow>
               )}
-              <TotalRow>
-                <span>CGST & SGST ({taxRate}%)</span>
-                <span>
-                  {currency} {order.tax?.toFixed(2)}
-                </span>
-              </TotalRow>
-              {serviceRate > 0 && (
+              {hasGst && (
                 <TotalRow>
-                  <span>Service Charge ({serviceRate}%)</span>
+                  <span>CGST & SGST (5%)</span>
                   <span>
-                    {currency} {order.service_charge?.toFixed(2)}
+                    {currency} {Number(order.tax || 0).toFixed(2)}
                   </span>
                 </TotalRow>
               )}
@@ -264,8 +321,8 @@ const OrderInvoiceModal = ({ visible, onClose, order, settings }) => {
             <DottedDivider className="dotted-divider" />
 
             <ReceiptFooter className="receipt-footer">
-              <p>Thank You For Dining With Us!</p>
-              <p>Power by Systems</p>
+              <p>{invoiceFooter}</p>
+              <p style={{ fontSize: "9px", opacity: 0.75, marginTop: "4px" }}>Powered by Systems</p>
             </ReceiptFooter>
           </ReceiptPaper>
         </ReceiptOuter>

@@ -7,13 +7,13 @@ import {
   ShopOutlined,
   SettingOutlined,
 } from "@ant-design/icons";
-import { useSelector } from "react-redux";
+import useOrgData from "../../hooks/useOrgData";
 import InstallPWA from "../../../components/InstallPWA";
 import ThemeToggle from "../../../components/themeToggle";
 import LogoutButton from "./componests/logout";
 import {
+  PATH_ADMINS,
   PATH_CHANGE_PASSWORD,
-  PATH_SETTINGS,
   PATH_SETTINGS_BUSINESS,
   PATH_SETTINGS_PROFILE,
 } from "../../routes/pathname";
@@ -37,12 +37,18 @@ const settingsTabs = [
     icon: <LockOutlined />,
     badge: "Auth",
   },
+  {
+    path: PATH_ADMINS,
+    label: "Admins",
+    icon: <UserOutlined />,
+    badge: "Admins",
+  },
 ];
 
 const SettingsLayout = () => {
-  const { userData } = useSelector((state) => state.authSlice);
+  const { userData,permission } = useOrgData();
   const location = useLocation();
-
+   const canView = permission?.settings?.view || false;
   return (
     <LayoutWrapper>
       {/* Header Banner */}
@@ -78,7 +84,7 @@ const SettingsLayout = () => {
       </HeaderCard>
 
       {/* Navigation Tab Bar */}
-      <TabsNavigationContainer>
+     {canView &&   <TabsNavigationContainer>
         <TabsList>
           {settingsTabs.map((tab) => {
             const isActive = location.pathname === tab.path;
@@ -95,7 +101,7 @@ const SettingsLayout = () => {
             );
           })}
         </TabsList>
-      </TabsNavigationContainer>
+      </TabsNavigationContainer>}
       <MainContentCard>
         <Outlet />
       </MainContentCard>

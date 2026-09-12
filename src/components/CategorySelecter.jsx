@@ -41,16 +41,21 @@ const Container = styled.div`
   display: flex;
   gap: 10px;
   padding: 8px;
-  overflow-x: auto;
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE 10+ */
-  &::-webkit-scrollbar {
-    display: none; /* WebKit */
-  }
+  width: 100%;
+  background-color: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xs);
+  flex-wrap: wrap;
+  // overflow-x: auto;
+  // scrollbar-width: none; /* Firefox */
+  // -ms-overflow-style: none; /* IE 10+ */
+  // &::-webkit-scrollbar {
+  //   display: none; /* WebKit */
+  // }
 
-  /* Support smooth touch-scrolling */
-  scroll-behavior: smooth;
-  -webkit-overflow-scrolling: touch;
+  // /* Support smooth touch-scrolling */
+  // scroll-behavior: smooth;
+  // -webkit-overflow-scrolling: touch;
 `;
 
 const ButtonCategory = styled.button`

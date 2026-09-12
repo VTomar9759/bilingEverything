@@ -1,33 +1,45 @@
 import React, { useState, useEffect, useRef } from "react";
 import styled from "styled-components";
+import useOrgData from "../../hooks/useOrgData";
 import { Form, Input, Select, Button, Empty, message, Space } from "antd";
 import {
-  ShoppingCartOutlined,
   SearchOutlined,
   CoffeeOutlined,
-  ArrowLeftOutlined,
   PrinterOutlined,
-  PlusOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import useOrders from "../../hooks/useOrders";
 import useTables from "../../hooks/useTables";
-import useSettings from "../../hooks/useSettings";
 import useItemStore from "../../hooks/useItemStore";
 import TabHeader from "../../../components/TabHeader";
 import { PageWrapper } from "../../styles/commonstyle";
 import { TABLE_STATUS } from "../../utils/constant";
 import { PATH_ORDERS, PATH_BILLING } from "../../routes/pathname";
 import CategorySelecter from "../../../components/CategorySelecter";
+import * as service from "../../../services";
+import OrderInvoiceModal from "../../print/OrderInvoiceModal";
 
 const { Option } = Select;
 
 const PosOrderComposer = () => {
+  const { org_id, userData, permission } = useOrgData();
+  const ordersPerm = permission?.orders;
+  const canCreate = ordersPerm?.create ?? false;
   const navigate = useNavigate();
   const { createOrder } = useOrders();
   const { tables = [] } = useTables();
-  const { settings = {} } = useSettings();
+  const [settings, setSettings] = useState({});
   const [catalogItems, catalogLoading] = useItemStore();
+  const [printModalVisible, setPrintModalVisible] = useState(false);
+  const [createdOrderForPrint, setCreatedOrderForPrint] = useState(null);
+
+  useEffect(() => {
+    if (org_id) {
+      service.getSettings(org_id).then((res) => {
+        if (res) setSettings(res);
+      });
+    }
+  }, [org_id]);
 
   const [form] = Form.useForm();
   const [selectedPosItems, setSelectedPosItems] = useState([]); // Array of { item, quantity }
@@ -52,45 +64,69 @@ const PosOrderComposer = () => {
   }, [tables, form]);
 
   const handleAddPosItem = (item) => {
-    const existing = selectedPosItems.find((i) => i.item.id === item.id);
-    if (existing) {
-      setSelectedPosItems(
-        selectedPosItems.map((i) =>
+    setSelectedPosItems((prev) => {
+      const existing = prev.find((i) => i.item.id === item.id);
+      if (existing) {
+        return prev.map((i) =>
           i.item.id === item.id ? { ...i, quantity: i.quantity + 1 } : i,
-        ),
-      );
-    } else {
-      setSelectedPosItems([...selectedPosItems, { item, quantity: 1 }]);
+        );
+      }
+      return [...prev, { item, quantity: 1 }];
+    });
+  };
+
+  const handleRemovePosItem = (itemId) => {
+    setSelectedPosItems(selectedPosItems.filter((i) => i.item.id !== itemId));
+  };
+
+  const handleAdjustPosQty = (itemId, delta) => {
+    setSelectedPosItems((prev) =>
+      prev
+        .map((i) => {
+          if (i.item.id === itemId) {
+            const newQty = i.quantity + delta;
+            return newQty > 0 ? { ...i, quantity: newQty } : null;
+          }
+          return i;
+        })
+        .filter(Boolean),
+    );
+  };
+
+  const handleFormFinish = async (values) => {
+    if (!canCreate) {
+      message.error("You do not have permission to create orders.");
+      return;
     }
-  };
-
-  const handleAdjustPosQty = (itemId, amount) => {
-    const updated = selectedPosItems
-      .map((i) => {
-        if (i.item.id === itemId) {
-          const nextQty = i.quantity + amount;
-          return nextQty > 0 ? { ...i, quantity: nextQty } : null;
-        }
-        return i;
-      })
-      .filter(Boolean);
-    setSelectedPosItems(updated);
-  };
-
-  const handleSubmit = async (values) => {
     if (selectedPosItems.length === 0) {
-      message.warning("Please add at least one item to composition.");
+      message.error("Please add at least one product to the order.");
       return;
     }
 
     const subtotal = selectedPosItems.reduce(
-      (acc, curr) => acc + curr.item.price * curr.quantity,
+      (acc, curr) => acc + Number(curr.item.price || 0) * curr.quantity,
       0,
     );
-    const tax = subtotal * ((settings.tax_rate || 18) / 100);
-    const service_charge =
-      subtotal * ((settings.service_charge_rate || 5) / 100);
-    const total = subtotal + tax + service_charge;
+    const hasGst = Boolean(
+      userData?.gst_number && String(userData.gst_number).trim().length > 0,
+    );
+    const itemsPayload = selectedPosItems.map((i) => {
+      const isItemGst =
+        hasGst && i.item.gst_status !== false && String(i.item.gst_status) !== "false";
+      const itemSubtotal = Number(i.item.price || 0) * i.quantity;
+      const itemTax = isItemGst ? itemSubtotal * 0.05 : 0;
+      return {
+        id: i.item.id,
+        name: i.item.name,
+        price: i.item.price,
+        quantity: i.quantity,
+        category: i.item.category || "Food",
+        gst_status: i.item.gst_status ?? true,
+        tax: itemTax,
+      };
+    });
+    const tax = itemsPayload.reduce((acc, curr) => acc + curr.tax, 0);
+    const total = subtotal + tax;
 
     const tableId = values.table_id;
     const selectedTable = tables.find((t) => t.id === tableId);
@@ -98,16 +134,10 @@ const PosOrderComposer = () => {
     const payload = {
       table_id: tableId || null,
       table_name: selectedTable ? selectedTable.table_name : "Takeaway",
-      items: selectedPosItems.map((i) => ({
-        id: i.item.id,
-        name: i.item.name,
-        price: i.item.price,
-        quantity: i.quantity,
-        category: i.item.category || "Food",
-      })),
+      items: itemsPayload,
       subtotal,
       tax,
-      service_charge,
+      service_charge: 0,
       discount: 0,
       total,
       status: "Preparing",
@@ -119,9 +149,8 @@ const PosOrderComposer = () => {
       form.resetFields();
       setSelectedPosItems([]);
       if (isPrintSubmitRef.current) {
-        navigate(PATH_BILLING, {
-          state: { orderId: newOrder.id, autoPrint: true },
-        });
+        setCreatedOrderForPrint(newOrder);
+        setPrintModalVisible(true);
       } else {
         navigate(PATH_ORDERS);
       }
@@ -139,12 +168,27 @@ const PosOrderComposer = () => {
         item.code?.toLowerCase().includes(posSearchText.toLowerCase())),
   );
   const subtotalSum = selectedPosItems.reduce(
-    (acc, curr) => acc + curr.item.price * curr.quantity,
+    (acc, curr) => acc + Number(curr.item.price || 0) * curr.quantity,
     0,
   );
-  const taxSum = subtotalSum * ((settings.tax_rate || 18) / 100);
-  const serviceSum = subtotalSum * ((settings.service_charge_rate || 5) / 100);
-  const grandTotal = subtotalSum + taxSum + serviceSum;
+  const hasGst = Boolean(
+    userData?.gst_number && String(userData.gst_number).trim().length > 0,
+  );
+  const taxSum = selectedPosItems.reduce((acc, curr) => {
+    const isItemGst =
+      hasGst && curr.item.gst_status !== false && String(curr.item.gst_status) !== "false";
+    const itemSubtotal = Number(curr.item.price || 0) * curr.quantity;
+    return acc + (isItemGst ? itemSubtotal * 0.05 : 0);
+  }, 0);
+  const grandTotal = subtotalSum + taxSum;
+
+  const checkIsItemGst = (item) => {
+    return (
+      hasGst &&
+      item?.gst_status !== false &&
+      String(item?.gst_status) !== "false"
+    );
+  };
 
   return (
     <PageWrapper>
@@ -159,13 +203,13 @@ const PosOrderComposer = () => {
         </Button>
       </HeaderBox>
       <CategorySelecter
-       
+
         onChange={handleCategoryFilter}
         value={selectedCategory}
       />
 
       <ComposerCard>
-        <Form form={form} layout="vertical" onFinish={handleSubmit}>
+        <Form form={form} layout="vertical" onFinish={handleFormFinish}>
           <PosContainer>
             {/* Left Column - Selection Grid */}
             <PosLeftPanel>
@@ -224,6 +268,7 @@ const PosOrderComposer = () => {
                         <MenuAvatar>{item.name[0]}</MenuAvatar>
                       )}
                       <CodeBadge>{item.code}</CodeBadge>
+
                       <MenuCardContent>
                         <MenuMeta>
                           <MenuName>{item.name}</MenuName>
@@ -261,7 +306,12 @@ const PosOrderComposer = () => {
                   selectedPosItems.map(({ item, quantity }) => (
                     <ComposedItem key={item.id}>
                       <div>
-                        <CompName>{item.name}</CompName>
+                        <CompNameRow>
+                          <CompName>{item.name}</CompName>
+                          {hasGst && checkIsItemGst(item) && (
+                            <GstText>(5% GST)</GstText>
+                          )}
+                        </CompNameRow>
                         <CompPrice>
                           {settings.currency || "Rs."} {item.price}
                         </CompPrice>
@@ -293,18 +343,14 @@ const PosOrderComposer = () => {
                     {settings.currency || "Rs."} {subtotalSum.toFixed(2)}
                   </span>
                 </SummaryRow>
-                <SummaryRow>
-                  <span>Tax ({settings.tax_rate || 18}%)</span>
-                  <span>
-                    {settings.currency || "Rs."} {taxSum.toFixed(2)}
-                  </span>
-                </SummaryRow>
-                <SummaryRow>
-                  <span>Service ({settings.service_charge_rate || 5}%)</span>
-                  <span>
-                    {settings.currency || "Rs."} {serviceSum.toFixed(2)}
-                  </span>
-                </SummaryRow>
+                {hasGst && (
+                  <SummaryRow>
+                    <span>GST (5%)</span>
+                    <span>
+                      {settings.currency || "Rs."} {taxSum.toFixed(2)}
+                    </span>
+                  </SummaryRow>
+                )}
                 <DashedLine />
                 <SummaryRow
                   style={{
@@ -370,6 +416,12 @@ const PosOrderComposer = () => {
           </PosContainer>
         </Form>
       </ComposerCard>
+      <OrderInvoiceModal
+        visible={printModalVisible}
+        onClose={() => setPrintModalVisible(false)}
+        order={createdOrderForPrint}
+        settings={settings}
+      />
     </PageWrapper>
   );
 };
@@ -583,6 +635,33 @@ const ComposedItem = styled.div`
   border-radius: 8px;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
+`;
+
+const CompNameRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+`;
+
+const GstText = styled.span`
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+`;
+
+const GstTopBadge = styled.div`
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: ${(props) =>
+    props.$applied ? "rgba(16, 185, 129, 0.85)" : "rgba(107, 114, 128, 0.85)"};
+  backdrop-filter: blur(6px);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
 `;
 
 const CompName = styled.div`

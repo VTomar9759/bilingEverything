@@ -28,6 +28,7 @@ import { addItem } from "../../../services";
 import { useDispatch, useSelector } from "react-redux";
 import useImageUpload from "../../hooks/useImageUpload";
 import { clearItems } from "../../store/slices/itemSlice";
+import { PATH_ITEMS } from "../../routes/pathname";
 
 import {
   StyledPageWrapper,
@@ -48,6 +49,7 @@ import {
   SubmitButton,
 } from "./components/FormStyles";
 import useCategories from "../../hooks/useCategories";
+import useOrgData from "../../hooks/useOrgData";
 
 const { Option } = Select;
 
@@ -58,10 +60,15 @@ const AddItem = () => {
   const navigate = useNavigate();
   const [form] = Form.useForm();
   const formValues = Form.useWatch([], form);
-  const { userId, org_id } = useSelector((state) => state?.authSlice || {});
-  const activeOrgId = org_id || userId;
   const { categories } = useCategories();
   const { handleUpload, beforeUpload, uploading } = useImageUpload();
+  const { org_id, gst_number, created_by, userData, permission } = useOrgData();
+  const itemsPerm = permission?.items_catalog;
+  const canCreate = itemsPerm?.create ?? false;
+
+  const hasGst = Boolean(
+    gst_number && String(gst_number).trim().length > 0
+  );
 
   React.useEffect(() => {
     return () => {
@@ -79,6 +86,10 @@ const AddItem = () => {
   };
 
   const onFinish = async (values) => {
+    if (!canCreate) {
+      message.error("You do not have permission to add items.");
+      return;
+    }
     let imageUrl = values.image;
 
     if (file) {
@@ -99,16 +110,16 @@ const AddItem = () => {
       price: values.price !== undefined && values.price !== null ? String(values.price) : null,
       title: values.title,
       description: values.description,
-      gst_status: values.gst_status ?? true,
+      gst_status: hasGst ? Boolean(values.gst_status ?? true) : false,
       status: values.status ?? true,
-      org_id: activeOrgId,
+      org_id: org_id,
     };
 
     try {
-      await addItem(activeOrgId, payload);
+      await addItem(org_id, payload);
       dispatch(clearItems());
       message.success("Product added successfully");
-      navigate(-1);
+      navigate(PATH_ITEMS);
       form.resetFields();
     } catch (err) {
       message.error(err.message || "Failed to create product");
@@ -125,7 +136,7 @@ const AddItem = () => {
     </UploadPlaceholder>
   );
 
-  const isGstActive = formValues?.gst_status ?? true;
+  const isGstActive = hasGst && Boolean(formValues?.gst_status ?? true);
 
   return (
     <StyledPageWrapper>
@@ -141,7 +152,7 @@ const AddItem = () => {
         onFinish={onFinish}
         autoComplete="off"
         initialValues={{
-          gst_status: true,
+          gst_status: hasGst ? true : false,
           status: true,
         }}
       >
@@ -161,7 +172,11 @@ const AddItem = () => {
             <div className="status-pill">
               <span className="label">GST Status:</span>
               <Form.Item name="gst_status" valuePropName="checked" noStyle>
-                <Switch checkedChildren="Active" unCheckedChildren="Exempt" />
+                <Switch
+                  disabled={!hasGst}
+                  checkedChildren="Active"
+                  unCheckedChildren="Exempt"
+                />
               </Form.Item>
               <span className={`badge-tag ${isGstActive ? "active" : "inactive"}`}>
                 {isGstActive ? "GST Applicable" : "Non-GST / Exempt"}
@@ -308,7 +323,7 @@ const AddItem = () => {
         </BoxSection>
 
         <FormFooter>
-          <CancelButton icon={<ArrowLeftOutlined />} onClick={() => navigate(-1)}>
+          <CancelButton icon={<ArrowLeftOutlined />} onClick={() => navigate(PATH_ITEMS)}>
             Back
           </CancelButton>
           <SubmitButton type="primary" htmlType="submit" icon={<SaveOutlined />} loading={uploading}>

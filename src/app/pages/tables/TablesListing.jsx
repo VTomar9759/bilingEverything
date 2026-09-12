@@ -32,10 +32,18 @@ import useTables from "../../hooks/useTables";
 import TableCard from "./components/TableCard";
 import TableFormModal from "./components/TableFormModal";
 import { getTABLE_STATUSColor } from "../../utils/common_function";
+import useOrgData from "../../hooks/useOrgData";
 import { TABLE_FLOORS, TABLE_STATUS } from "../../utils/constant";
 
 const TablesListing = () => {
   const navigate = useNavigate();
+  const { permission } = useOrgData();
+  const tablesPerm = permission?.tables;
+
+  const canCreate = tablesPerm?.create ?? false;
+  const canUpdate = tablesPerm?.update ?? false;
+  const canDelete = tablesPerm?.delete ?? false;
+
   const {
     tables,
     loading,
@@ -65,11 +73,19 @@ const TablesListing = () => {
   };
 
   const handleOpenAddModal = () => {
+    if (!canCreate) {
+      message.error("You do not have permission to add tables.");
+      return;
+    }
     setEditingTable(null);
     setTableModalVisible(true);
   };
 
   const handleOpenEditModal = () => {
+    if (!canUpdate) {
+      message.error("You do not have permission to edit tables.");
+      return;
+    }
     setEditingTable(selectedTable);
     setDetailVisible(false);
     setTableModalVisible(true);
@@ -78,9 +94,17 @@ const TablesListing = () => {
   const handleFormFinish = async (values) => {
     try {
       if (editingTable) {
+        if (!canUpdate) {
+          message.error("You do not have permission to update tables.");
+          return;
+        }
         await updateTable(editingTable.id, values);
         message.success(`Table ${values.table_number} modified successfully!`);
       } else {
+        if (!canCreate) {
+          message.error("You do not have permission to create tables.");
+          return;
+        }
         await addTable(values);
         message.success(`Table ${values.table_number} added successfully!`);
       }
@@ -94,6 +118,10 @@ const TablesListing = () => {
 
   const handleStatusUpdate = async (status) => {
     if (!selectedTable) return;
+    if (!canUpdate) {
+      message.error("You do not have permission to update table status.");
+      return;
+    }
     try {
       let orderId = selectedTable.current_order_id;
       if (
@@ -113,6 +141,10 @@ const TablesListing = () => {
 
   const handleDeleteTable = async () => {
     if (!selectedTable) return;
+    if (!canDelete) {
+      message.error("You do not have permission to delete tables.");
+      return;
+    }
     try {
       await deleteTable(selectedTable.id);
       message.success(
@@ -126,6 +158,10 @@ const TablesListing = () => {
   };
 
   const handleClearAll = async () => {
+    if (!canDelete) {
+      message.error("You do not have permission to clear tables.");
+      return;
+    }
     try {
       await clearAllTables();
       message.success("All tables cleared and set to available successfully!");
@@ -162,30 +198,36 @@ const TablesListing = () => {
             onClick={refetch}
             style={{ height: 32, width: 32, borderRadius: 8 }}
           />
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={handleOpenAddModal}
-            style={{ height: 32, fontWeight: 600, borderRadius: 8 }}
-          >
-            Add Table
-          </Button>
-          <Popconfirm
-            title="Clear all tables?"
-            description="Are you sure you want to set all tables status to available? This will clear all active orders from the tables."
-            onConfirm={handleClearAll}
-            okText="Clear All"
-            cancelText="Cancel"
-            okButtonProps={{ danger: true }}
-          >
+          {canCreate && (
             <Button
-              danger
-              icon={<ClearOutlined />}
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={handleOpenAddModal}
               style={{ height: 32, fontWeight: 600, borderRadius: 8 }}
             >
-              Clear All
+              Add Table
             </Button>
-          </Popconfirm>
+          )}
+         
+          {canUpdate && (
+            <Popconfirm
+              title="Clear all tables?"
+              description="Are you sure you want to set all tables status to available? This will clear all active orders from the tables."
+              onConfirm={handleClearAll}
+              okText="Clear All"
+              cancelText="Cancel"
+              okButtonProps={{ danger: true }}
+            >
+              <Button
+                danger
+                icon={<ClearOutlined />}
+                style={{ height: 32, fontWeight: 600, borderRadius: 8 }}
+              >
+                Clear All
+              </Button>
+            </Popconfirm>
+          )}
+          
         </Space>
       </HeaderBox>
 
@@ -352,25 +394,29 @@ const TablesListing = () => {
               <ActionsTitleHeader>
                 <ActionsTitle>Table Operations</ActionsTitle>
                 <Space>
-                  <Tooltip title="Modify Details">
-                    <Button
-                      shape="circle"
-                      icon={<EditOutlined />}
-                      onClick={handleOpenEditModal}
-                    />
-                  </Tooltip>
-                  <Tooltip title="Delete Table">
-                    <Popconfirm
-                      title="Are you sure you want to delete this table?"
-                      description="This action will remove the table completely."
-                      onConfirm={handleDeleteTable}
-                      okText="Delete"
-                      cancelText="Cancel"
-                      okButtonProps={{ danger: true }}
-                    >
-                      <Button shape="circle" danger icon={<DeleteOutlined />} />
-                    </Popconfirm>
-                  </Tooltip>
+                  {canUpdate && (
+                    <Tooltip title="Modify Details">
+                      <Button
+                        shape="circle"
+                        icon={<EditOutlined />}
+                        onClick={handleOpenEditModal}
+                      />
+                    </Tooltip>
+                  )}
+                  {canDelete && (
+                    <Tooltip title="Delete Table">
+                      <Popconfirm
+                        title="Are you sure you want to delete this table?"
+                        description="This action will remove the table completely."
+                        onConfirm={handleDeleteTable}
+                        okText="Delete"
+                        cancelText="Cancel"
+                        okButtonProps={{ danger: true }}
+                      >
+                        <Button shape="circle" danger icon={<DeleteOutlined />} />
+                      </Popconfirm>
+                    </Tooltip>
+                  )}
                 </Space>
               </ActionsTitleHeader>
 

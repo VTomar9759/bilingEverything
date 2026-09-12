@@ -3,8 +3,8 @@ import {
   RouterProvider,
   Navigate,
 } from "react-router-dom";
-import { useSelector } from "react-redux";
 import { Suspense } from "react";
+import useOrgData from "../hooks/useOrgData";
 import Loading from "../../loader/Loading";
 import Layout, { layoutType } from "../layout";
 import PageNotFound from "../utils/pagenotFound";
@@ -29,7 +29,7 @@ const PrivateRoute = ({ children, isAuthenticated }) => {
 };
 
 const AppRouter = () => {
-  const { token, userData } = useSelector((state) => state?.authSlice);
+  const { token, userData } = useOrgData();
   const isAuthenticated = !!token && !!userData;
 
   const router = createBrowserRouter([
