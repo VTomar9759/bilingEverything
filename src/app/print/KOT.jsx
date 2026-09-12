@@ -4,7 +4,6 @@ import { Modal, Button, Space } from "antd";
 import {
   PrinterOutlined,
   FileTextOutlined,
-  DownloadOutlined,
 } from "@ant-design/icons";
 import { printKOTSilent } from "../../services";
 import useOrgData from "../hooks/useOrgData";
@@ -52,43 +51,6 @@ const KOT = ({ visible, onClose, order, settings }) => {
     setLoadingPrint(false);
   };
 
-  const handleDownloadText = () => {
-    if (!order) return;
-    let text = "";
-    text += "=========================================\n";
-    text += `       KITCHEN ORDER TICKET (KOT)\n`;
-    if (businessName) {
-      text += `       ${businessName}\n`;
-    }
-    text += "=========================================\n\n";
-    text += `Order No:   #${getFormattedOrderNo()}\n`;
-    text += `Table:      ${order.table_name || "Takeaway"}\n`;
-    text += `Date:       ${
-      order.created_at && !isNaN(new Date(order.created_at).getTime())
-        ? new Date(order.created_at).toLocaleString()
-        : new Date().toLocaleString()
-    }\n`;
-    text += "-----------------------------------------\n";
-    text += "Item Name                              Qty\n";
-    text += "-----------------------------------------\n";
-    order.items?.forEach((item) => {
-      const name = (item.name || "").padEnd(32).substring(0, 32);
-      const qty = (item.quantity || 0).toString().padStart(6);
-      text += `${name} ${qty}\n`;
-    });
-    text += "-----------------------------------------\n";
-
-    const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `KOT_${getFormattedOrderNo()}.txt`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  };
-
   return (
     <Modal
       open={visible}
@@ -101,7 +63,7 @@ const KOT = ({ visible, onClose, order, settings }) => {
           <FileTextOutlined
             style={{ color: "#d97706", fontSize: 20 }}
           />
-          <span>Kitchen Order Ticket (KOT)</span>
+          <span>KOT</span>
         </TitleBox>
       }
     >
@@ -112,12 +74,11 @@ const KOT = ({ visible, onClose, order, settings }) => {
           className="printable-receipt-container"
           $paperWidth={paperWidth}
         >
-          <ReceiptHeader className="receipt-header">
-            <h3 style={{ textTransform: "uppercase", letterSpacing: "1px" }}>
-              KITCHEN ORDER TICKET
-            </h3>
-            {businessName && <p style={{ fontWeight: 600 }}>{businessName}</p>}
-          </ReceiptHeader>
+          {businessName && (
+            <ReceiptHeader className="receipt-header">
+              <p style={{ fontWeight: 600 }}>{businessName}</p>
+            </ReceiptHeader>
+          )}
 
           <DottedDivider className="dotted-divider" />
 
@@ -175,18 +136,6 @@ const KOT = ({ visible, onClose, order, settings }) => {
           alignItems: "end",
         }}
       >
-        <Button
-          key="download"
-          type="default"
-          icon={<DownloadOutlined />}
-          onClick={handleDownloadText}
-          style={{
-            borderColor: "#f59e0b",
-            color: "#d97706",
-          }}
-        >
-          Download KOT
-        </Button>
         <Button
           key="print"
           type="primary"

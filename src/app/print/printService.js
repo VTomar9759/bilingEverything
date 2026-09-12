@@ -6,9 +6,50 @@ import { message } from "antd";
  */
 export async function connectPrinter() {
   if (!qz.websocket.isActive()) {
-    await qz.websocket.connect();
+    const connectPromise = qz.websocket.connect({ retries: 0, delay: 0 });
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error("QZ Tray connection timeout")), 1500)
+    );
+    await Promise.race([connectPromise, timeoutPromise]);
   }
 }
+
+/**
+ * Print fallback via browser print dialog (iframe)
+ */
+export const printViaBrowser = (htmlContent) => {
+  return new Promise((resolve) => {
+    let iframe = document.getElementById("thermal-print-iframe");
+    if (iframe) {
+      iframe.remove();
+    }
+    iframe = document.createElement("iframe");
+    iframe.id = "thermal-print-iframe";
+    iframe.style.position = "fixed";
+    iframe.style.right = "0";
+    iframe.style.bottom = "0";
+    iframe.style.width = "0";
+    iframe.style.height = "0";
+    iframe.style.border = "0";
+    document.body.appendChild(iframe);
+
+    const doc = iframe.contentWindow.document;
+    doc.open();
+    doc.write(htmlContent);
+    doc.close();
+
+    setTimeout(() => {
+      try {
+        iframe.contentWindow.focus();
+        iframe.contentWindow.print();
+        resolve({ success: true, method: "browser" });
+      } catch (err) {
+        console.error("Browser print failed:", err);
+        resolve({ success: false, error: err });
+      }
+    }, 300);
+  });
+};
 
 /**
  * Generate formatted HTML string for 80mm thermal receipt
@@ -232,6 +273,8 @@ export const generateReceiptHTML = (order, settings = {}) => {
  * Print thermal invoice directly via QZ Tray
  */
 export const printInvoiceSilent = async ({ order, settings = {}, copies = 2, receiptElement = null }) => {
+  const receiptData = receiptElement ? receiptElement.outerHTML : generateReceiptHTML(order, settings);
+
   try {
     await connectPrinter();
 
@@ -251,8 +294,6 @@ export const printInvoiceSilent = async ({ order, settings = {}, copies = 2, rec
       margins: 0,
     });
 
-    const receiptData = receiptElement ? receiptElement.outerHTML : generateReceiptHTML(order, settings);
-
     const data = [
       {
         type: "html",
@@ -265,9 +306,10 @@ export const printInvoiceSilent = async ({ order, settings = {}, copies = 2, rec
     message.success(`Invoice printed via QZ Tray (${copies} copies)`);
     return { success: true, method: "qz-tray" };
   } catch (qzError) {
-    console.warn("QZ Tray connection / print error:", qzError);
-    message.error("Could not connect to QZ Tray. Please ensure QZ Tray app is running on this PC.");
-    return { success: false, error: qzError };
+    console.warn("QZ Tray connection failed, falling back to browser print:", qzError);
+    await printViaBrowser(receiptData);
+    message.info("Printed invoice using browser print dialog (QZ Tray app not active).");
+    return { success: true, method: "browser" };
   }
 };
 
@@ -392,12 +434,7 @@ export const generateKOTHTML = (order, settings = {}) => {
       </head>
       <body>
         <div id="kot" class="kot">
-          <div class="header">
-            <h3>KITCHEN ORDER TICKET</h3>
-            ${restaurantName ? `<p>${restaurantName}</p>` : ""}
-          </div>
-
-          <div class="divider"></div>
+          ${restaurantName ? `<div class="header"><p>${restaurantName}</p></div><div class="divider"></div>` : ""}
 
           <div class="meta">
             <div><strong>Order No:</strong> #${orderNum}</div>
@@ -435,6 +472,10 @@ export const printKOTSilent = async ({
   copies = 1,
   receiptElement = null,
 }) => {
+  const kotData = receiptElement
+    ? receiptElement.outerHTML
+    : generateKOTHTML(order, settings);
+
   try {
     await connectPrinter();
 
@@ -454,10 +495,6 @@ export const printKOTSilent = async ({
       margins: 0,
     });
 
-    const kotData = receiptElement
-      ? receiptElement.outerHTML
-      : generateKOTHTML(order, settings);
-
     const data = [
       {
         type: "html",
@@ -470,11 +507,10 @@ export const printKOTSilent = async ({
     message.success(`KOT printed via QZ Tray (${copies} copies)`);
     return { success: true, method: "qz-tray" };
   } catch (qzError) {
-    console.warn("QZ Tray connection / print error:", qzError);
-    message.error(
-      "Could not connect to QZ Tray. Please ensure QZ Tray app is running on this PC."
-    );
-    return { success: false, error: qzError };
+    console.warn("QZ Tray connection failed, falling back to browser print:", qzError);
+    await printViaBrowser(kotData);
+    message.info("Printed KOT using browser print dialog (QZ Tray app not active).");
+    return { success: true, method: "browser" };
   }
 };
 
