@@ -18,7 +18,7 @@ import TabHeader from "../../../components/TabHeader";
 import { PageWrapper } from "../../styles/commonstyle";
 import useOrders from "../../hooks/useOrders";
 import OrderDetailDrawer from "./components/OrderDetailDrawer";
-import { getStatusBadge } from "../../utils/common_function";
+import { getStatusBadge, getPaymentStatusBadge, getPaymentModeBadge, getPaymentBadge } from "../../utils/common_function";
 import * as service from "../../../services";
 
 const { TabPane } = Tabs;
@@ -130,6 +130,12 @@ const OrdersListing = () => {
         }),
     },
     {
+      title: "Status",
+      dataIndex: "status",
+      key: "status",
+      render: (status) => getStatusBadge(status),
+    },
+    {
       title: "Bill Amount",
       dataIndex: "total",
       key: "total",
@@ -140,11 +146,18 @@ const OrdersListing = () => {
       ),
     },
     {
-      title: "Status",
-      dataIndex: "status",
-      key: "status",
-      render: (status) => getStatusBadge(status),
+      title: "Payment Status",
+      dataIndex: "payment_status",
+      key: "payment_status",
+      render: (status) => getPaymentStatusBadge(status || "Unpaid"),
     },
+    {
+      title: "Payment Mode",
+      key: "payment_mode",
+      render: (_, record) =>
+        getPaymentModeBadge(record.payment_mode || record.payment_method) || "-",
+    },
+  
     {
       title: "Actions",
       key: "actions",

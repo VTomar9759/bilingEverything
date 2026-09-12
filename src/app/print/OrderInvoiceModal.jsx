@@ -234,6 +234,10 @@ const OrderInvoiceModal = ({ visible, onClose, order, settings }) => {
               <div>
                 <strong>Status:</strong> INVOICED
               </div>
+              <div>
+                <strong>Payment:</strong> {order.payment_status || (order.status === "Served" ? "Paid" : "Unpaid")}
+                {(order.payment_mode || order.payment_method) && ` (${order.payment_mode || order.payment_method})`}
+              </div>
             </ReceiptMeta>
 
             <DottedDivider className="dotted-divider" />

@@ -10,7 +10,7 @@ import {
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import { PATH_BILLING } from "../../../routes/pathname";
-import { getStatusBadge } from "../../../utils/common_function";
+import { getStatusBadge, getPaymentStatusBadge, getPaymentBadge } from "../../../utils/common_function";
 
 
 const OrderDetailDrawer = ({
@@ -55,6 +55,15 @@ const OrderDetailDrawer = ({
           <MetaRow>
             <span>Invoice Status</span>
             <strong>{order.status === "Served" ? "Generated" : "Pending"}</strong>
+          </MetaRow>
+          <MetaRow>
+            <span>Payment Status</span>
+            <span>
+              {getPaymentBadge(
+                order.payment_status || "Unpaid",
+                order.payment_mode || order.payment_method
+              )}
+            </span>
           </MetaRow>
         </DetailSection>
 

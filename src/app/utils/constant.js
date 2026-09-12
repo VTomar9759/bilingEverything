@@ -7,6 +7,13 @@ export const TABLE_STATUS = {
     cleaning: "cleaning"
 }
 
+export const PAYMENT_MODE = {
+    unpaid: "Unpaid",
+    cash: "Cash",
+    card: "Card",
+    online: "Online",
+}
+
 
 export const TABLE_FLOORS = {
     all: "All Floors",

@@ -88,11 +88,26 @@ export const updateTABLE_STATUS = async (tableId, status, currentOrderId = null)
 /**
  * Update full properties of a dining table (Full CRUD - Update).
  */
-export const updateTable = async (org_id, tableId, tableData) => {
+export const updateTable = async (arg1, arg2, arg3) => {
+  let org_id, tableId, tableData;
+
+  if (arg3 !== undefined) {
+    org_id = arg1;
+    tableId = arg2;
+    tableData = arg3;
+  } else {
+    tableId = arg1;
+    tableData = arg2;
+    org_id = null;
+  }
+
+  if (!tableId) {
+    throw new Error("Table ID is required for table update");
+  }
+
   const dbPayload = {
     ...tableData,
     updated_by: org_id || null,
-    created_by: org_id || null
   };
 
   try {
@@ -114,12 +129,32 @@ export const updateTable = async (org_id, tableId, tableData) => {
 /**
  * Delete a dining table (Full CRUD - Delete).
  */
-export const deleteTable = async (org_id, tableId) => {
+export const deleteTable = async (arg1, arg2) => {
+  let org_id, tableId;
+
+  if (arg2 !== undefined) {
+    org_id = arg1;
+    tableId = arg2;
+  } else {
+    tableId = arg1;
+    org_id = null;
+  }
+
+  if (!tableId) {
+    throw new Error("Table ID is required for table deletion");
+  }
+
   try {
-    const { error } = await supabase
+    let query = supabase
       .from("dining_tables")
       .delete()
       .eq("id", tableId);
+
+    if (org_id) {
+      query = query.eq("org_id", org_id);
+    }
+
+    const { error } = await query;
 
     if (error) throw error;
     return true;

@@ -6,6 +6,11 @@ import {
   SearchOutlined,
   CoffeeOutlined,
   PrinterOutlined,
+  CreditCardOutlined,
+  DollarOutlined,
+  GlobalOutlined,
+  CheckCircleFilled,
+  ClockCircleOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import useOrders from "../../hooks/useOrders";
@@ -13,11 +18,12 @@ import useTables from "../../hooks/useTables";
 import useItemStore from "../../hooks/useItemStore";
 import TabHeader from "../../../components/TabHeader";
 import { PageWrapper } from "../../styles/commonstyle";
-import { TABLE_STATUS } from "../../utils/constant";
+import { TABLE_STATUS, PAYMENT_MODE } from "../../utils/constant";
 import { PATH_ORDERS, PATH_BILLING } from "../../routes/pathname";
 import CategorySelecter from "../../../components/CategorySelecter";
 import * as service from "../../../services";
 import OrderInvoiceModal from "../../print/OrderInvoiceModal";
+import KOT from "../../print/KOT";
 
 const { Option } = Select;
 
@@ -31,6 +37,7 @@ const PosOrderComposer = () => {
   const [settings, setSettings] = useState({});
   const [catalogItems, catalogLoading] = useItemStore();
   const [printModalVisible, setPrintModalVisible] = useState(false);
+  const [kotModalVisible, setKotModalVisible] = useState(false);
   const [createdOrderForPrint, setCreatedOrderForPrint] = useState(null);
 
   useEffect(() => {
@@ -93,6 +100,8 @@ const PosOrderComposer = () => {
     );
   };
 
+  const [paymentMode, setPaymentMode] = useState(PAYMENT_MODE.unpaid); // Default to "Unpaid"
+
   const handleFormFinish = async (values) => {
     if (!canCreate) {
       message.error("You do not have permission to create orders.");
@@ -131,6 +140,8 @@ const PosOrderComposer = () => {
     const tableId = values.table_id;
     const selectedTable = tables.find((t) => t.id === tableId);
 
+    const isPaid = paymentMode && paymentMode !== PAYMENT_MODE.unpaid;
+
     const payload = {
       table_id: tableId || null,
       table_name: selectedTable ? selectedTable.table_name : "Takeaway",
@@ -141,14 +152,22 @@ const PosOrderComposer = () => {
       discount: 0,
       total,
       status: "Preparing",
+      payment_status: isPaid ? "Paid" : "Unpaid",
+      payment_mode: isPaid ? paymentMode : null,
+      payment_method: isPaid ? paymentMode : null,
     };
 
     try {
       const newOrder = await createOrder(payload);
-      message.success("POS order placed successfully!");
+      message.success(
+        isPaid
+          ? `POS order placed & paid via ${paymentMode}!`
+          : "POS order placed successfully!"
+      );
       form.resetFields();
       setSelectedPosItems([]);
-      if (isPrintSubmitRef.current) {
+      setPaymentMode(PAYMENT_MODE.unpaid);
+      if (isPrintSubmitRef.current === "invoice") {
         setCreatedOrderForPrint(newOrder);
         setPrintModalVisible(true);
       } else {
@@ -158,6 +177,34 @@ const PosOrderComposer = () => {
       message.error("Failed to compose order");
       console.error(err);
     }
+  };
+
+  const handleOpenKotModal = () => {
+    if (selectedPosItems.length === 0) {
+      message.error("Please add at least one item to print KOT.");
+      return;
+    }
+    const tableId = form.getFieldValue("table_id");
+    const selectedTable = tables.find((t) => t.id === tableId);
+    const tableName = selectedTable
+      ? selectedTable.table_number
+        ? `Table ${selectedTable.table_number} (${selectedTable.table_name})`
+        : selectedTable.table_name
+      : "Takeaway";
+
+    const draftKotOrder = {
+      order_number: `KOT-${Math.floor(100000 + Math.random() * 900000)}`,
+      table_name: tableName,
+      table_number: selectedTable?.table_number,
+      items: selectedPosItems.map((i) => ({
+        name: i.item.name,
+        quantity: i.quantity,
+      })),
+      created_at: new Date().toISOString(),
+    };
+
+    setCreatedOrderForPrint(draftKotOrder);
+    setKotModalVisible(true);
   };
 
   const menuFilteredCatalog = catalogItems?.filter(
@@ -365,10 +412,69 @@ const PosOrderComposer = () => {
                   </span>
                 </SummaryRow>
 
+                <PaymentSection>
+                  <PaymentButtonGroup>
+                    <PaymentOptionBtn
+                      type={paymentMode === PAYMENT_MODE.unpaid ? "primary" : "default"}
+                      htmlType="button"
+                      $selected={paymentMode === PAYMENT_MODE.unpaid}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setPaymentMode(PAYMENT_MODE.unpaid);
+                      }}
+                    >
+                      <ClockCircleOutlined /> {PAYMENT_MODE.unpaid}
+                    </PaymentOptionBtn>
+                    <PaymentOptionBtn
+                      type={paymentMode === PAYMENT_MODE.cash ? "primary" : "default"}
+                      htmlType="button"
+                      $selected={paymentMode === PAYMENT_MODE.cash}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setPaymentMode((prev) =>
+                          prev === PAYMENT_MODE.cash ? PAYMENT_MODE.unpaid : PAYMENT_MODE.cash
+                        );
+                      }}
+                    >
+                      <DollarOutlined /> {PAYMENT_MODE.cash}
+                    </PaymentOptionBtn>
+                    <PaymentOptionBtn
+                      type={paymentMode === PAYMENT_MODE.card ? "primary" : "default"}
+                      htmlType="button"
+                      $selected={paymentMode === PAYMENT_MODE.card}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setPaymentMode((prev) =>
+                          prev === PAYMENT_MODE.card ? PAYMENT_MODE.unpaid : PAYMENT_MODE.card
+                        );
+                      }}
+                    >
+                      <CreditCardOutlined /> {PAYMENT_MODE.card}
+                    </PaymentOptionBtn>
+                    <PaymentOptionBtn
+                      type={paymentMode === PAYMENT_MODE.online ? "primary" : "default"}
+                      htmlType="button"
+                      $selected={paymentMode === PAYMENT_MODE.online}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setPaymentMode((prev) =>
+                          prev === PAYMENT_MODE.online ? PAYMENT_MODE.unpaid : PAYMENT_MODE.online
+                        );
+                      }}
+                    >
+                      <GlobalOutlined /> {PAYMENT_MODE.online}
+                    </PaymentOptionBtn>
+                  </PaymentButtonGroup>
+                </PaymentSection>
+
                 <div
                   style={{
                     display: "flex",
-                    gap: 10,
+                    gap: 8,
                     width: "100%",
                     marginTop: 12,
                   }}
@@ -386,6 +492,8 @@ const PosOrderComposer = () => {
                       height: 42,
                       fontWeight: 700,
                       borderRadius: 10,
+                      fontSize: 12,
+                      padding: "0 4px",
                     }}
                   >
                     Place POS Order
@@ -396,7 +504,7 @@ const PosOrderComposer = () => {
                     htmlType="submit"
                     disabled={selectedPosItems.length === 0}
                     onClick={() => {
-                      isPrintSubmitRef.current = true;
+                      isPrintSubmitRef.current = "invoice";
                     }}
                     icon={<PrinterOutlined />}
                     style={{
@@ -406,9 +514,31 @@ const PosOrderComposer = () => {
                       borderRadius: 10,
                       borderColor: "var(--color-primary-light)",
                       color: "var(--color-primary)",
+                      fontSize: 12,
+                      padding: "0 4px",
                     }}
                   >
                     Place & Print Invoice
+                  </Button>
+                  <Button
+                    type="default"
+                    block
+                    
+                    disabled={selectedPosItems.length === 0}
+                    onClick={handleOpenKotModal}
+                    icon={<PrinterOutlined />}
+                    style={{
+                      flex: 1,
+                      height: 42,
+                      fontWeight: 700,
+                      borderRadius: 10,
+                      borderColor: "#ff9800",
+                      color: "#d97706",
+                      fontSize: 12,
+                      padding: "0 4px",
+                    }}
+                  >
+                    KOT
                   </Button>
                 </div>
               </ComposerSummary>
@@ -422,6 +552,13 @@ const PosOrderComposer = () => {
         order={createdOrderForPrint}
         settings={settings}
       />
+      <KOT
+        visible={kotModalVisible}
+        onClose={() => setKotModalVisible(false)}
+        order={createdOrderForPrint}
+        settings={settings}
+      />
+
     </PageWrapper>
   );
 };
@@ -719,4 +856,80 @@ const SummaryRow = styled.div`
 const DashedLine = styled.div`
   border-top: 1px dashed var(--color-border);
   margin: 4px 0;
+`;
+
+const PaymentSection = styled.div`
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+`;
+
+const PaymentLabel = styled.div`
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+`;
+
+const PaymentButtonGroup = styled.div`
+  display: flex;
+  gap: 6px;
+  width: 100%;
+`;
+
+const PaymentOptionBtn = styled(Button)`
+  flex: 1;
+  height: 36px;
+  font-size: 11.5px;
+  font-weight: 700;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  transition: all 0.2s ease;
+
+  ${(props) =>
+    props.$selected &&
+    `
+    background-color: #10b981 !important;
+    border-color: #10b981 !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);
+  `}
+`;
+
+const PaidBadge = styled.div`
+  font-size: 11px;
+  font-weight: 600;
+  color: #059669;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 8px;
+  padding: 5px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 2px;
+`;
+
+const PendingBadge = styled.div`
+  font-size: 10.5px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  background: var(--color-bg);
+  border: 1px dashed var(--color-border);
+  border-radius: 8px;
+  padding: 4px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 2px;
 `;

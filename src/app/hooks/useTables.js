@@ -50,7 +50,7 @@ const useTables = () => {
 
   const handleUpdateTable = async (tableId, tableData) => {
     try {
-      const updated = await updateTable(tableId, tableData);
+      const updated = await updateTable(org_id, tableId, tableData);
       setTables((prev) => prev.map((t) => (t.id === tableId ? updated : t)));
       return updated;
     } catch (err) {
@@ -61,7 +61,7 @@ const useTables = () => {
 
   const handleDeleteTable = async (tableId) => {
     try {
-      await deleteTable(tableId);
+      await deleteTable(org_id, tableId);
       setTables((prev) => prev.filter((t) => t.id !== tableId));
     } catch (err) {
       console.error("useTables error deleting:", err);

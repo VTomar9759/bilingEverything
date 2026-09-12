@@ -169,6 +169,7 @@ export const generateReceiptHTML = (order, settings = {}) => {
             <div><strong>Date:</strong> ${dateStr}</div>
             ${order.table_name ? `<div><strong>Table:</strong> ${order.table_name}</div>` : ""}
             <div><strong>Status:</strong> INVOICED</div>
+            <div><strong>Payment:</strong> ${order.payment_status || (order.status === "Served" ? "Paid" : "Unpaid")}${(order.payment_mode || order.payment_method) ? ` (${order.payment_mode || order.payment_method})` : ""}</div>
           </div>
 
           <div class="divider"></div>
@@ -269,3 +270,211 @@ export const printInvoiceSilent = async ({ order, settings = {}, copies = 2, rec
     return { success: false, error: qzError };
   }
 };
+
+/**
+ * Generate formatted HTML string for KOT thermal print
+ */
+export const generateKOTHTML = (order, settings = {}) => {
+  if (!order) return "";
+
+  const paperWidth = settings?.paper_width || "80mm";
+
+  const getCleanName = (name) => {
+    if (!name || typeof name !== "string") return "";
+    if (name.includes("@")) return "";
+    return name.trim();
+  };
+
+  const rawName =
+    settings?.restaurant_name ||
+    settings?.business_name ||
+    settings?.legal_name;
+
+  const restaurantName = getCleanName(rawName);
+
+  const orderNum = order.order_number ?? order.order_no ?? order.id ?? "";
+  const dateStr =
+    order.created_at && !isNaN(new Date(order.created_at).getTime())
+      ? new Date(order.created_at).toLocaleString()
+      : new Date().toLocaleString();
+
+  const itemsHTML = (order.items || [])
+    .map(
+      (item) => `
+      <tr>
+        <td style="width: 75%; text-align: left; vertical-align: top; padding: 4px 0; font-weight: bold; font-size: 11px; word-break: break-word;">
+          ${item.name}
+        </td>
+        <td style="width: 25%; text-align: center; vertical-align: top; padding: 4px 0; font-weight: bold; font-size: 13px;">
+          x${item.quantity}
+        </td>
+      </tr>
+    `
+    )
+    .join("");
+
+  return `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8" />
+        <title>KOT #${orderNum}</title>
+        <style>
+          @page {
+            size: ${paperWidth} auto;
+            margin: 0mm;
+          }
+          html, body {
+            width: ${paperWidth};
+            margin: 0 auto;
+            padding: 0;
+            background: #ffffff;
+            color: #000000;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 11px;
+            line-height: 1.3;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+          .kot {
+            width: ${paperWidth};
+            padding: 4mm 3mm;
+            box-sizing: border-box;
+            background: #ffffff;
+          }
+          .header {
+            text-align: center;
+          }
+          .header h3 {
+            font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+            font-size: 14px;
+            font-weight: 800;
+            margin: 0 0 2px;
+            color: #000;
+            text-transform: uppercase;
+          }
+          .header p {
+            font-size: 11px;
+            margin: 2px 0;
+            color: #333;
+            font-weight: 600;
+          }
+          .divider {
+            border-top: 1.5px dashed #000;
+            margin: 5px 0;
+            width: 100%;
+          }
+          .meta {
+            font-size: 11px;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+          }
+          .meta div strong {
+            font-weight: 700;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+            table-layout: fixed;
+          }
+          th {
+            font-weight: 700;
+            padding-bottom: 4px;
+            border-bottom: 1.5px dashed #000;
+          }
+          tr, .header, .meta, .divider {
+            break-inside: avoid;
+            page-break-inside: avoid;
+          }
+        </style>
+      </head>
+      <body>
+        <div id="kot" class="kot">
+          <div class="header">
+            <h3>KITCHEN ORDER TICKET</h3>
+            ${restaurantName ? `<p>${restaurantName}</p>` : ""}
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="meta">
+            <div><strong>Order No:</strong> #${orderNum}</div>
+            <div><strong>Table:</strong> ${order.table_name || "Takeaway"}</div>
+            <div><strong>Date:</strong> ${dateStr}</div>
+          </div>
+
+          <div class="divider"></div>
+
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 75%; text-align: left;">Item</th>
+                <th style="width: 25%; text-align: center;">Qty</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${itemsHTML}
+            </tbody>
+          </table>
+
+          <div class="divider"></div>
+        </div>
+      </body>
+    </html>
+  `;
+};
+
+/**
+ * Print KOT thermal ticket directly via QZ Tray
+ */
+export const printKOTSilent = async ({
+  order,
+  settings = {},
+  copies = 1,
+  receiptElement = null,
+}) => {
+  try {
+    await connectPrinter();
+
+    let printer;
+    try {
+      if (settings?.printer_name) {
+        printer = await qz.printers.find(settings.printer_name);
+      } else {
+        printer = await qz.printers.find("EPSON");
+      }
+    } catch (e) {
+      printer = await qz.printers.getDefault();
+    }
+
+    const config = qz.configs.create(printer, {
+      copies: copies,
+      margins: 0,
+    });
+
+    const kotData = receiptElement
+      ? receiptElement.outerHTML
+      : generateKOTHTML(order, settings);
+
+    const data = [
+      {
+        type: "html",
+        format: "plain",
+        data: kotData,
+      },
+    ];
+
+    await qz.print(config, data);
+    message.success(`KOT printed via QZ Tray (${copies} copies)`);
+    return { success: true, method: "qz-tray" };
+  } catch (qzError) {
+    console.warn("QZ Tray connection / print error:", qzError);
+    message.error(
+      "Could not connect to QZ Tray. Please ensure QZ Tray app is running on this PC."
+    );
+    return { success: false, error: qzError };
+  }
+};
+
