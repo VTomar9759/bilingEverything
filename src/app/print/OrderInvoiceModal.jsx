@@ -140,8 +140,8 @@ const OrderInvoiceModal = ({ visible, onClose, order, settings }) => {
     text += "=========================================\n\n";
     text += `Order No:   #${getFormattedOrderNo()}\n`;
     text += `Date:       ${order.created_at && !isNaN(new Date(order.created_at).getTime())
-        ? new Date(order.created_at).toLocaleString()
-        : new Date().toLocaleString()
+      ? new Date(order.created_at).toLocaleString()
+      : new Date().toLocaleString()
       }\n`;
     if (order.table_name) {
       text += `Table:      ${order.table_name}\n`;

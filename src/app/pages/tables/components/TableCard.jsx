@@ -79,17 +79,17 @@ const CardContainer = styled.div`
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-xl);
-  padding: 8px;
+  padding: 12px 10px;
   cursor: pointer;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
-  gap: 6px;
+  gap: 8px;
   box-shadow: var(--shadow-sm);
   transition: all var(--transition-base);
   position: relative;
-  min-height: 100px;
+  min-height: 115px;
 
   &:hover {
     transform: translateY(-2px);
@@ -103,12 +103,12 @@ const CardHeader = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 11px;
+  font-size: 11.5px;
 `;
 
 const TableNum = styled.span`
   font-family: var(--font-display);
-  font-size: 13.5px;
+  font-size: 14.5px;
   font-weight: 800;
   color: ${({ $activeColor }) => $activeColor};
 `;
@@ -116,11 +116,11 @@ const TableNum = styled.span`
 const SectionTag = styled.span`
   background: var(--color-bg);
   border: 1px solid var(--color-border);
-  padding: 1.5px 5px;
+  padding: 2px 6px;
   border-radius: 6px;
   color: var(--color-text-secondary);
   font-weight: 600;
-  max-width: 80px;
+  max-width: 90px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -128,8 +128,8 @@ const SectionTag = styled.span`
 
 const ChairWrapper = styled.div`
   position: relative;
-  width: ${({ $shape }) => ($shape === "rectangle" ? "90px" : "60px")};
-  height: 48px;
+  width: ${({ $shape }) => ($shape === "rectangle" ? "100px" : "70px")};
+  height: 56px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -137,8 +137,8 @@ const ChairWrapper = styled.div`
 `;
 
 const TableShape = styled.div`
-  width: ${({ $shape }) => ($shape === "rectangle" ? "76px" : "46px")};
-  height: 46px;
+  width: ${({ $shape }) => ($shape === "rectangle" ? "86px" : "56px")};
+  height: 56px;
   border-radius: ${({ $shape }) => ($shape === "circle" ? "50%" : $shape === "square" ? "12px" : "14px")};
   background: ${({ $activeColor }) => `${$activeColor}14`};
   border: 2.5px solid ${({ $activeColor }) => $activeColor};
@@ -152,13 +152,13 @@ const TableShape = styled.div`
 `;
 
 const TableSeats = styled.span`
-  font-size: 10.5px;
+  font-size: 11px;
   font-weight: 700;
   color: var(--color-text-primary);
   display: inline-flex;
   align-items: center;
   background: var(--color-surface);
-  padding: 1.5px 5px;
+  padding: 2px 6px;
   border-radius: 8px;
   border: 1px solid var(--color-border);
   box-shadow: var(--shadow-sm);
@@ -173,7 +173,7 @@ const CardFooter = styled.div`
 `;
 
 const TableName = styled.div`
-  font-size: 11.5px;
+  font-size: 12.5px;
   font-weight: 700;
   color: var(--color-text-primary);
   white-space: nowrap;
@@ -184,9 +184,9 @@ const TableName = styled.div`
 `;
 
 const StatusPill = styled.span`
-  padding: 1px 8px;
+  padding: 2px 9px;
   border-radius: 999px;
-  font-size: 9px;
+  font-size: 9.5px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -200,8 +200,8 @@ const BillTag = styled.div`
   background: rgba(245, 158, 11, 0.1);
   border: 1px solid rgba(245, 158, 11, 0.3);
   color: #d97706;
-  font-size: 9.5px;
+  font-size: 10px;
   font-weight: 700;
-  padding: 1px 6px;
+  padding: 2px 7px;
   border-radius: 6px;
 `;

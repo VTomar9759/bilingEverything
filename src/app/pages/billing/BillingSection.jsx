@@ -25,7 +25,7 @@ const BillingSection = () => {
   const [loading, setLoading] = useState(true);
   const [orders, setOrders] = useState([]);
   const [settings, setSettings] = useState({});
- 
+
 
   const isClearedRef = useRef(false);
 
@@ -438,17 +438,17 @@ const BillingSection = () => {
 
                   {/* TAX */}
                   {hasGst && (
-                      <CalcRow>
-                        <span>GST (5%)</span>
+                    <CalcRow>
+                      <span>GST (5%)</span>
 
-                        <span>
-                          {currency}{" "}
-                          {Number(
-                            financials.tax ?? activeOrder.tax ?? 0,
-                          ).toFixed(2)}
-                        </span>
-                      </CalcRow>
-                    )}
+                      <span>
+                        {currency}{" "}
+                        {Number(
+                          financials.tax ?? activeOrder.tax ?? 0,
+                        ).toFixed(2)}
+                      </span>
+                    </CalcRow>
+                  )}
 
                   <CalcDivider />
 
