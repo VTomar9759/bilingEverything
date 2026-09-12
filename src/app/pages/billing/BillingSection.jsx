@@ -10,7 +10,14 @@ import { PageWrapper } from "../../styles/commonstyle";
 import * as service from "../../../services";
 import OrderInvoiceModal from "../../print/OrderInvoiceModal";
 import { PATH_ORDERS } from "../../routes/pathname";
-import { ShoppingCartOutlined } from "@ant-design/icons";
+import {
+  ShoppingCartOutlined,
+  ClockCircleOutlined,
+  DollarOutlined,
+  CreditCardOutlined,
+  GlobalOutlined,
+} from "@ant-design/icons";
+import { PAYMENT_MODE } from "../../utils/constant";
 
 const { Option } = Select;
 
@@ -26,7 +33,6 @@ const BillingSection = () => {
   const [orders, setOrders] = useState([]);
   const [settings, setSettings] = useState({});
 
-
   const isClearedRef = useRef(false);
 
   // Selected order
@@ -36,6 +42,10 @@ const BillingSection = () => {
   // Discount / calculations
   const [discountPercent, setDiscountPercent] = useState(0);
   const [financials, setFinancials] = useState({});
+
+  // Payment Mode selection
+  const [paymentMode, setPaymentMode] = useState(PAYMENT_MODE.cash);
+  const [submitting, setSubmitting] = useState(false);
 
   // Invoice modal
   const [invoiceVisible, setInvoiceVisible] = useState(false);
@@ -48,6 +58,19 @@ const BillingSection = () => {
       });
     }
   }, [org_id]);
+
+  useEffect(() => {
+    if (activeOrder) {
+      const existingMode = activeOrder.payment_mode || activeOrder.payment_method;
+      if (existingMode) {
+        setPaymentMode(existingMode);
+      } else if (activeOrder.payment_status === "Paid") {
+        setPaymentMode(PAYMENT_MODE.cash);
+      } else {
+        setPaymentMode(PAYMENT_MODE.unpaid);
+      }
+    }
+  }, [activeOrder]);
 
   /**
    * Fetch billing data
@@ -211,23 +234,77 @@ const BillingSection = () => {
   }, [activeOrder, discountPercent, settings, userData]);
 
   /**
-   * Generate invoice
+   * Update payment mode immediately in DB when button is clicked
    */
-  const handleSettleSubmit = () => {
-    if (!activeOrder) return;
+  const handlePaymentModeChange = async (selectedMode) => {
+    setPaymentMode(selectedMode);
+    if (!activeOrder || !org_id) return;
 
-    const finalizedOrder = {
-      ...activeOrder,
-      subtotal: financials.subtotal,
-      discount: financials.discount,
-      tax: financials.tax,
-      service_charge: 0,
-      total: financials.total,
-      status: "Served",
+    const isPaid = selectedMode !== PAYMENT_MODE.unpaid;
+    const modePayload = {
+      payment_status: isPaid ? "Paid" : "Unpaid",
+      payment_mode: isPaid ? selectedMode : PAYMENT_MODE.unpaid,
+      payment_method: isPaid ? selectedMode : PAYMENT_MODE.unpaid,
     };
 
-    setSettledOrder(finalizedOrder);
-    setInvoiceVisible(true);
+    try {
+      await service.updateOrder(org_id, activeOrder.id, modePayload);
+      setActiveOrder((prev) => (prev ? { ...prev, ...modePayload } : prev));
+      setOrders((prev) =>
+        prev.map((o) => (o.id === activeOrder.id ? { ...o, ...modePayload } : o)),
+      );
+      message.success(`Payment mode updated to ${selectedMode}!`);
+    } catch (err) {
+      console.error("Failed to update payment mode:", err);
+      message.error("Failed to update payment mode.");
+    }
+  };
+
+  /**
+   * Generate invoice & save payment details in DB
+   */
+  const handleSettleSubmit = async () => {
+    if (!activeOrder || !org_id) return;
+
+    setSubmitting(true);
+
+    const isPaid = paymentMode !== PAYMENT_MODE.unpaid;
+    const updatePayload = {
+      subtotal: Number(financials.subtotal || 0),
+      discount: Number(financials.discount || 0),
+      tax: Number(financials.tax || 0),
+      service_charge: 0,
+      total: Number(financials.total || 0),
+      status: "Served",
+      payment_status: isPaid ? "Paid" : "Unpaid",
+      payment_mode: isPaid ? paymentMode : PAYMENT_MODE.unpaid,
+      payment_method: isPaid ? paymentMode : PAYMENT_MODE.unpaid,
+    };
+
+    try {
+      const updatedOrderFromDb = await service.updateOrder(
+        org_id,
+        activeOrder.id,
+        updatePayload,
+      );
+
+      const finalizedOrder = {
+        ...activeOrder,
+        ...updatePayload,
+        ...(updatedOrderFromDb || {}),
+      };
+
+      setSettledOrder(finalizedOrder);
+      setInvoiceVisible(true);
+      message.success("Invoice generated & payment updated!");
+
+      await fetchBillingData(false);
+    } catch (err) {
+      console.error("Error updating order invoice payment:", err);
+      message.error("Failed to update order payment details.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   /**
@@ -322,6 +399,59 @@ const BillingSection = () => {
                 </Select>
               </Form.Item>
 
+              {/* PAYMENT MODE BUTTONS */}
+              <Form.Item label="Payment Mode">
+                <PaymentButtonGroup>
+                  <PaymentOptionBtn
+                    type={paymentMode === PAYMENT_MODE.unpaid ? "primary" : "default"}
+                    htmlType="button"
+                    $selected={paymentMode === PAYMENT_MODE.unpaid}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handlePaymentModeChange(PAYMENT_MODE.unpaid);
+                    }}
+                  >
+                    <ClockCircleOutlined /> {PAYMENT_MODE.unpaid}
+                  </PaymentOptionBtn>
+
+                  <PaymentOptionBtn
+                    type={paymentMode === PAYMENT_MODE.cash ? "primary" : "default"}
+                    htmlType="button"
+                    $selected={paymentMode === PAYMENT_MODE.cash}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handlePaymentModeChange(PAYMENT_MODE.cash);
+                    }}
+                  >
+                    <DollarOutlined /> {PAYMENT_MODE.cash}
+                  </PaymentOptionBtn>
+
+                  <PaymentOptionBtn
+                    type={paymentMode === PAYMENT_MODE.card ? "primary" : "default"}
+                    htmlType="button"
+                    $selected={paymentMode === PAYMENT_MODE.card}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handlePaymentModeChange(PAYMENT_MODE.card);
+                    }}
+                  >
+                    <CreditCardOutlined /> {PAYMENT_MODE.card}
+                  </PaymentOptionBtn>
+
+                  <PaymentOptionBtn
+                    type={paymentMode === PAYMENT_MODE.online ? "primary" : "default"}
+                    htmlType="button"
+                    $selected={paymentMode === PAYMENT_MODE.online}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handlePaymentModeChange(PAYMENT_MODE.online);
+                    }}
+                  >
+                    <GlobalOutlined /> {PAYMENT_MODE.online}
+                  </PaymentOptionBtn>
+                </PaymentButtonGroup>
+              </Form.Item>
+
               {/* DISCOUNT */}
               <Form.Item label="Apply Discount Percentage (%)">
                 <InputNumber
@@ -344,6 +474,7 @@ const BillingSection = () => {
                 block
                 size="large"
                 disabled={!activeOrder}
+                loading={submitting}
                 onClick={handleSettleSubmit}
                 style={{
                   height: 45,
@@ -694,3 +825,32 @@ const CalcDivider = styled.div`
   border-top: 1.5px dashed var(--color-border);
   margin: 5px 0;
 `;
+
+const PaymentButtonGroup = styled.div`
+  display: flex;
+  gap: 6px;
+  width: 100%;
+`;
+
+const PaymentOptionBtn = styled(Button)`
+  flex: 1;
+  height: 36px;
+  font-size: 11.5px;
+  font-weight: 700;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  transition: all 0.2s ease;
+
+  ${(props) =>
+    props.$selected &&
+    `
+    background-color: #10b981 !important;
+    border-color: #10b981 !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);
+  `}
+`;
+

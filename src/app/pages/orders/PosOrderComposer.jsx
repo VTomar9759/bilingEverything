@@ -153,8 +153,8 @@ const PosOrderComposer = () => {
       total,
       status: "Preparing",
       payment_status: isPaid ? "Paid" : "Unpaid",
-      payment_mode: isPaid ? paymentMode : null,
-      payment_method: isPaid ? paymentMode : null,
+      payment_mode: isPaid ? paymentMode : PAYMENT_MODE.unpaid,
+      payment_method: isPaid ? paymentMode : PAYMENT_MODE.unpaid,
     };
 
     try {

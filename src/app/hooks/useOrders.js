@@ -4,7 +4,6 @@ import {
   getOrders,
   createOrder as apiCreateOrder,
   updateOrderStatus as apiUpdateOrderStatus,
-  updateOrder as apiUpdateOrder,
 } from "../../services";
 
 const useOrders = ({
@@ -67,21 +66,6 @@ const useOrders = ({
     }
   };
 
-  const updateOrder = async (orderId, orderData) => {
-    if (!org_id) return;
-    try {
-      const updatedOrder = await apiUpdateOrder(org_id, orderId, orderData);
-      if (updatedOrder) {
-        setOrders((prev) =>
-          prev.map((o) => (o.id === orderId ? { ...o, ...updatedOrder } : o))
-        );
-      }
-      return updatedOrder;
-    } catch (err) {
-      console.error("useOrders error updating order:", err);
-      throw err;
-    }
-  };
 
   return {
     orders,
@@ -91,7 +75,7 @@ const useOrders = ({
     refetch: fetchOrders,
     createOrder,
     updateOrderStatus,
-    updateOrder,
+
   };
 };
 

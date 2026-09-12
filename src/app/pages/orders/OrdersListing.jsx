@@ -99,16 +99,16 @@ const OrdersListing = () => {
     {
       title: "#",
       key: "index",
-      render: (_, __, index) => {
-        return (page - 1) * pageSize + index + 1;
-      },
+      width: 50,
+      align: "center",
+      render: (_, __, index) => (page - 1) * pageSize + index + 1,
     },
     {
       title: "OrderNo.",
       dataIndex: "order_number",
-      key: "idorder_number  ",
+      key: "order_number",
       render: (order_number) => (
-        <strong style={{ color: "var(--color-primary-light)" }}>
+        <strong style={{ color: "var(--color-primary-light)", fontSize: "13.5px" }}>
           {order_number}
         </strong>
       ),
@@ -140,7 +140,7 @@ const OrdersListing = () => {
       dataIndex: "total",
       key: "total",
       render: (total) => (
-        <strong>
+        <strong style={{ fontSize: "13.5px" }}>
           {settings.currency || "Rs."} {total?.toFixed(2)}
         </strong>
       ),
@@ -157,27 +157,19 @@ const OrdersListing = () => {
       render: (_, record) =>
         getPaymentModeBadge(record.payment_mode || record.payment_method) || "-",
     },
-  
     {
       title: "Actions",
       key: "actions",
+      align: "right",
       render: (_, record) => (
-        <Space>
-          <Button
-            size="small"
-            icon={<EyeOutlined />}
-            onClick={() => {
-              setSelectedOrder(record);
-              setDetailsVisible(true);
-            }}
-          >
-            Details
-          </Button>
+        <Space size={6}>
+        
           {canUpdate && record.status === "Pending" && (
             <Button
               size="small"
               type="primary"
               icon={<ClockCircleOutlined />}
+              style={{ fontSize: "12.5px" }}
               onClick={() => handleStatusChange(record.id, "Preparing")}
             >
               Cook
@@ -188,7 +180,7 @@ const OrdersListing = () => {
               size="small"
               type="primary"
               icon={<CheckOutlined />}
-              style={{ background: "#10b981", borderColor: "#10b981" }}
+              style={{ background: "#10b981", borderColor: "#10b981", fontSize: "12.5px" }}
               onClick={() => handleStatusChange(record.id, "Ready")}
             >
               Ready
@@ -202,6 +194,7 @@ const OrdersListing = () => {
               style={{
                 borderColor: "var(--color-primary-light)",
                 color: "var(--color-primary)",
+                fontSize: "12.5px",
               }}
               onClick={() =>
                 navigate(PATH_BILLING, { state: { orderId: record.id } })
@@ -210,6 +203,16 @@ const OrdersListing = () => {
               Generate Invoice
             </Button>
           )}
+            <Button
+            size="small"
+            icon={<EyeOutlined />}
+            style={{ fontSize: "12.5px" }}
+            title="View Details"
+            onClick={() => {
+              setSelectedOrder(record);
+              setDetailsVisible(true);
+            }}
+          />
         </Space>
       ),
     },
@@ -356,7 +359,7 @@ const OrdersListing = () => {
           </Space>
         </div>
 
-        <Table
+        <StyledTable
           dataSource={filteredOrders}
           columns={columns}
           rowKey="id"
@@ -414,9 +417,36 @@ const PanelCard = styled.div`
 const PaymentTag = styled.span`
   padding: 3px 8px;
   border-radius: 999px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   background: ${({ $paid }) =>
     $paid ? "rgba(16,185,129,0.12)" : "rgba(239,68,68,0.12)"};
   color: ${({ $paid }) => ($paid ? "#10b981" : "#ef4444")};
+`;
+
+const StyledTable = styled(Table)`
+  width: 100%;
+
+  .ant-table {
+    font-size: 13.5px !important;
+  }
+
+  .ant-table-thead > tr > th {
+    font-size: 13.5px !important;
+    font-weight: 700 !important;
+    padding: 10px 10px !important;
+  }
+
+  .ant-table-tbody > tr > td {
+    font-size: 13.5px !important;
+    padding: 10px 10px !important;
+  }
+
+  .ant-badge-status-text {
+    font-size: 13px !important;
+  }
+
+  .ant-table-pagination {
+    font-size: 13px !important;
+  }
 `;
