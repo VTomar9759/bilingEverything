@@ -36,7 +36,7 @@ import PosOrderComposer from "../pages/orders/PosOrderComposer";
 import TablesListing from "../pages/tables/TablesListing";
 
 import SettingsLayout from "../pages/settings/Settings";
-import ProfileUpdate from "../pages/settings/componests/ProfileUpdate";
+import ProfileUpdate from "../pages/settings/componests/profileUpdate";
 import ChangePassword from "../pages/settings/componests/changePassword";
 import BusinessDetails from "../pages/settings/componests/BusinessDetails";
 

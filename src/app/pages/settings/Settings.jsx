@@ -9,7 +9,7 @@ import {
 } from "@ant-design/icons";
 import useOrgData from "../../hooks/useOrgData";
 import InstallPWA from "../../../components/InstallPWA";
-import ThemeToggle from "../../../components/themeToggle";
+import ThemeToggle from "../../../components/ThemeToggle";
 import LogoutButton from "./componests/logout";
 import {
   PATH_ADMINS,
