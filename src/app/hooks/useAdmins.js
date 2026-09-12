@@ -78,12 +78,13 @@ const useAdmins = () => {
     }
   };
 
-  const deleteAdmin = async (id) => {
+  const deleteAdmin = async (idOrAdmin) => {
     if (!effectiveOrgId) return;
+    const targetId = typeof idOrAdmin === "object" ? idOrAdmin.id : idOrAdmin;
     setSaving(true);
     try {
-      await deleteAdminService(effectiveOrgId, id);
-      setAdmins((prev) => prev.filter((item) => item.id !== id));
+      await deleteAdminService(effectiveOrgId, idOrAdmin);
+      setAdmins((prev) => prev.filter((item) => item.id !== targetId));
       return true;
     } catch (err) {
       console.error("useAdmins deleteAdmin error:", err);

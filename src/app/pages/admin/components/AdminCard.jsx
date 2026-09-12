@@ -36,7 +36,7 @@ const AdminCard = ({ admin, onEdit, onDelete }) => {
               <Popconfirm
                 title="Delete Admin"
                 description={`Are you sure you want to delete ${admin.name}?`}
-                onConfirm={() => onDelete(admin.id)}
+                onConfirm={() => onDelete(admin)}
                 okText="Delete"
                 cancelText="Cancel"
                 okButtonProps={{ danger: true }}

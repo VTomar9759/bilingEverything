@@ -317,12 +317,13 @@ const fadeSlide = keyframes`
 /* ─── Styled Components ─── */
 const Wrapper = styled.div`
   width: 100%;
-  max-width: 580px;
   animation: ${fadeSlide} 0.4s ease;
   margin: 0 auto;
+  
 `;
 
 const Card = styled.div`
+  width: 600px;
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(16px);
   border-radius: var(--radius-xl);

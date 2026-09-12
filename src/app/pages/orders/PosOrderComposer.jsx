@@ -446,6 +446,7 @@ const ComposerCard = styled.div`
   border: 1px solid var(--color-border-light);
   box-shadow: var(--shadow-sm);
   padding: 14px;
+  
 `;
 const CodeBadge = styled.div`
   position: absolute;
@@ -465,7 +466,7 @@ const PosContainer = styled.div`
   display: grid;
   grid-template-columns: 3fr 2fr;
   gap: 16px;
-  height: calc(100vh - 200px);
+  height: calc(100vh - 100px);
   min-height: 520px;
 
   @media (max-width: 800px) {
@@ -523,6 +524,7 @@ const MenuItemCard = styled.div`
   background: var(--color-bg);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
+  overflow: hidden;
   cursor: pointer;
   transition: all var(--transition-fast);
   &:hover {
@@ -573,7 +575,8 @@ const MenuName = styled.div`
 
 const MenuMeta = styled.div`
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
+  justify-content: start
   align-items: center;
 `;
 

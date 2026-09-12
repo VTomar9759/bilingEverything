@@ -41,3 +41,20 @@ BEGIN
   RETURN TRUE;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- 4. Helper RPC function to delete auth user by email directly
+CREATE OR REPLACE FUNCTION public.delete_auth_user_by_email(p_email TEXT)
+RETURNS BOOLEAN AS $$
+BEGIN
+  IF p_email IS NOT NULL THEN
+    DELETE FROM auth.users WHERE LOWER(email) = LOWER(p_email);
+  END IF;
+  RETURN TRUE;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- 5. Grant permissions to database roles
+GRANT EXECUTE ON FUNCTION public.delete_admin_user(UUID, UUID) TO anon, authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.delete_auth_user_by_email(TEXT) TO anon, authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.delete_auth_user_on_admin_delete() TO anon, authenticated, service_role;
+

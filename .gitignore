@@ -43,3 +43,8 @@ hosting.*.cache
 .firebaserc
 firebase.json
 /.firebase
+
+# supabase
+supabase/.temp/
+.temp/
+

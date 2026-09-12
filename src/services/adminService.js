@@ -138,11 +138,30 @@ export const updateAdmin = async (orgId, id, updates) => {
 };
 
 /**
- * Delete an admin by ID
+ * Delete an admin by ID or admin object
  * @param {string} orgId
- * @param {string} id
+ * @param {string|object} idOrAdmin
  */
-export const deleteAdmin = async (orgId, id) => {
+export const deleteAdmin = async (orgId, idOrAdmin) => {
+  const id = typeof idOrAdmin === "object" ? idOrAdmin.id : idOrAdmin;
+  let email = typeof idOrAdmin === "object" ? idOrAdmin.email : null;
+
+  if (!id) throw new Error("Admin ID is required for deletion.");
+
+  // If email not provided, fetch admin record to get email before deletion
+  if (!email) {
+    const { data: adminRecord } = await supabase
+      .from("admin")
+      .select("email")
+      .eq("id", id)
+      .eq("org_id", orgId)
+      .maybeSingle();
+
+    if (adminRecord) {
+      email = adminRecord.email;
+    }
+  }
+
   // 1. Try calling the RPC function delete_admin_user (deletes from admin table and auth.users)
   const { error: rpcError } = await supabase.rpc("delete_admin_user", {
     p_admin_id: id,
@@ -153,8 +172,24 @@ export const deleteAdmin = async (orgId, id) => {
     return true;
   }
 
-  // 2. Fallback: Delete directly from public.admin table
-  // (Postgres trigger on_admin_deleted_remove_auth_user will remove from auth.users)
+  console.warn(
+    "RPC delete_admin_user failed or not found, attempting fallback...",
+    rpcError.message
+  );
+
+  // 2. If email is available, try delete_auth_user_by_email RPC as secondary check
+  if (email) {
+    const { error: emailRpcErr } = await supabase.rpc(
+      "delete_auth_user_by_email",
+      { p_email: email }
+    );
+    if (!emailRpcErr) {
+      console.log("Successfully deleted auth user via delete_auth_user_by_email RPC");
+    }
+  }
+
+  // 3. Fallback: Delete directly from public.admin table
+  // (Postgres trigger on_admin_deleted_remove_auth_user will remove from auth.users if trigger exists)
   const { error } = await supabase
     .from("admin")
     .delete()

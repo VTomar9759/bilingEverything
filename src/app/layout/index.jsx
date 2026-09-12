@@ -133,8 +133,7 @@ const PublicLayoutStyle = styled.div`
 const PublicCard = styled.div`
   position: relative;
   z-index: 1;
-  width: 100%;
-  max-width: 880px;
+  max-width: 1000px;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 24px;

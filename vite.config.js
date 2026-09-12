@@ -10,8 +10,8 @@ export default defineConfig({
       registerType: "autoUpdate",
       includeAssets: ["favicon.ico", "apple-touch-icon.png", "mask-icon.svg"],
       manifest: {
-        name: "Sunfocus CMS",
-        short_name: "Sunfocus",
+        name: "CMS",
+        short_name: "CMS",
         description: "Modern Food Management System CMS",
         theme_color: "#ffffff",
         icons: [

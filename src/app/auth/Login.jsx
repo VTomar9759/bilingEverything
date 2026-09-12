@@ -191,7 +191,7 @@ const fadeSlide = keyframes`
 /* ─── Styled ─── */
 const Wrapper = styled.div`
   width: 100%;
-  max-width: 440px;
+  max-width: 460px;
   animation: ${fadeSlide} 0.4s ease;
 `;
 
