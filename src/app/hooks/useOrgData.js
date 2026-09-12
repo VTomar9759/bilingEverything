@@ -77,7 +77,7 @@ const useOrgData = () => {
     token,
     refreshToken,
     userData: userData || null,
-    permission:defaultPermission,
+    permission: permission,
   };
 };
 

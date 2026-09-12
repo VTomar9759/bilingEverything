@@ -80,7 +80,13 @@ const AdminListing = () => {
       setModalVisible(false);
       setEditingAdmin(null);
     } catch (err) {
-      if (err?.code === "23505" || err?.message?.includes("unique")) {
+      if (
+        err?.code === "23505" ||
+        err?.code === "user_already_exists" ||
+        err?.message?.toLowerCase().includes("unique") ||
+        err?.message?.toLowerCase().includes("already registered") ||
+        err?.message?.toLowerCase().includes("already exists")
+      ) {
         message.error("An admin with this email address already exists.");
       } else {
         message.error(err?.message || "Failed to save admin user.");

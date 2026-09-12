@@ -29,6 +29,9 @@ export default defineConfig({
       },
     }),
   ],
+  build: {
+    chunkSizeWarningLimit: 3000,
+  },
   server: {
     host: "0.0.0.0", // Accept connections from any IP
     port: 5173, // (optional) default Vite port

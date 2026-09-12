@@ -31,44 +31,62 @@ export const getAdmins = async (orgId) => {
  * @param {object} adminData - { name, email, password, permissions }
  */
 export const createAdmin = async (orgId, createdBy, adminData) => {
-  const { name, email, password, permissions, permission } = adminData || {};
+  const { name, email, password, permissions, permission, role_type } = adminData || {};
 
   if (!name || !email || !password) {
     throw new Error("Name, email, and password are required.");
   }
 
-  // 1. Optionally sign up in Supabase Auth (or proceed if auth user already exists / sign up fails on existing user)
-  let authUserId = null;
-  try {
-    const { data: authData, error: authError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          full_name: name,
-          org_id: orgId,
-          role: "admin",
-        },
-      },
-    });
+  const cleanEmail = email.trim().toLowerCase();
 
-    if (authError && !authError.message?.includes("User already registered")) {
-      console.warn("Supabase Auth signUp note:", authError.message);
-    }
-    if (authData?.user?.id) {
-      authUserId = authData.user.id;
-    }
-  } catch (authErr) {
-    console.warn("Auth signup error (continuing DB insert):", authErr);
+  // 1. Check if admin with this email already exists in public.admin
+  const { data: existingAdmin } = await supabase
+    .from("admin")
+    .select("id")
+    .eq("org_id", orgId)
+    .eq("email", cleanEmail)
+    .maybeSingle();
+
+  if (existingAdmin) {
+    const err = new Error("User already registered");
+    err.code = "user_already_exists";
+    throw err;
   }
 
-  // 2. Insert into public.admin table
+  // 2. Sign up in Supabase Auth
+  const { data: authData, error: authError } = await supabase.auth.signUp({
+    email: cleanEmail,
+    password,
+    options: {
+      data: {
+        full_name: name,
+        org_id: orgId,
+        role: "admin",
+      },
+    },
+  });
+
+  if (authError) {
+    if (
+      authError.code === "user_already_exists" ||
+      authError.message?.toLowerCase().includes("user already registered") ||
+      authError.message?.toLowerCase().includes("already registered")
+    ) {
+      const err = new Error("User already registered");
+      err.code = "user_already_exists";
+      throw err;
+    }
+    throw authError;
+  }
+
+  // 3. Insert into public.admin table
   const payload = {
     name,
-    email,
+    email: cleanEmail,
     org_id: orgId,
     created_by: createdBy || orgId,
     permissions: permissions || permission || {},
+    role_type: role_type || "admin",
   };
 
   const { data, error } = await supabase
@@ -77,6 +95,11 @@ export const createAdmin = async (orgId, createdBy, adminData) => {
     .select();
 
   if (error) {
+    if (error.code === "23505" || error.message?.toLowerCase().includes("unique")) {
+      const err = new Error("User already registered");
+      err.code = "user_already_exists";
+      throw err;
+    }
     console.error("Error creating admin record:", error.message);
     throw error;
   }
@@ -120,6 +143,18 @@ export const updateAdmin = async (orgId, id, updates) => {
  * @param {string} id
  */
 export const deleteAdmin = async (orgId, id) => {
+  // 1. Try calling the RPC function delete_admin_user (deletes from admin table and auth.users)
+  const { error: rpcError } = await supabase.rpc("delete_admin_user", {
+    p_admin_id: id,
+    p_org_id: orgId,
+  });
+
+  if (!rpcError) {
+    return true;
+  }
+
+  // 2. Fallback: Delete directly from public.admin table
+  // (Postgres trigger on_admin_deleted_remove_auth_user will remove from auth.users)
   const { error } = await supabase
     .from("admin")
     .delete()

@@ -9,6 +9,7 @@ const initialisation = {
   gst_status: null,
   created_by: null,
   userData: null,
+  
 };
 
 const authSlice = createSlice({

@@ -42,7 +42,7 @@ const handleSubmit = async (values) => {
       if (!targetOrgId) {
         throw new Error("Organization ID not found for admin.");
       }
-      console.log(targetOrgId);
+  
      
       // Get organization data
       const { data: orgData, error: orgError } = await supabase
@@ -56,7 +56,9 @@ const handleSubmit = async (values) => {
       if (!orgData) {
         throw new Error("Organization data not found.");
       }
-
+      console.log("data.user.permissions", data.user?.permissions);
+      console.log("orgData",orgData)
+      console.log("adminRecord",adminRecord)
       // Admin login
       dispatch(
         logingAuth({
@@ -66,10 +68,9 @@ const handleSubmit = async (values) => {
             ...adminRecord,
             admin: adminRecord,
             role: "admin",
-            permission:
-              adminRecord.permission ||
-              adminRecord.permissions ||
-              null,
+            permission: adminRecord?.permissions || adminRecord?.permission,
+            permissions: adminRecord?.permissions || adminRecord?.permission,
+            full_name: adminRecord?.name,
           },
           token: data.session.access_token,
           refreshToken: data.session.refresh_token,
