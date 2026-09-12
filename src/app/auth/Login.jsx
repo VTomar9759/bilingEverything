@@ -130,10 +130,7 @@ const handleSubmit = async (values) => {
           form={form}
           layout="vertical"
           onFinish={handleSubmit}
-          initialValues={{
-            email: "stomar@yopmail.com",
-            password: "Password@123",
-          }}
+   
         >
           <Form.Item
             name="email"
