@@ -194,6 +194,9 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
 
   const handleNavClick = (path) => {
     navigate(path);
+    if (window.innerWidth <= 720 && isOpen) {
+      toggleSidebar();
+    }
   };
 
   const isActive = (item) =>
@@ -310,7 +313,7 @@ const HamburgerBtn = styled.button`
 
 const MobileOverlay = styled.div`
   display: none;
-  @media (max-width: 768px) {
+  @media (max-width: 720px) {
     display: block;
     position: fixed;
     inset: 0;
@@ -407,7 +410,7 @@ const SidebarContainer = styled.div`
   z-index: var(--z-sidebar);
   box-shadow: 3px 0 16px rgba(1, 81, 75, 0.15);
 
-  @media (max-width: 768px) {
+  @media (max-width: 720px) {
     width: ${({ $isOpen }) => ($isOpen ? "210px" : "0")};
   }
 `;

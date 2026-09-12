@@ -149,7 +149,7 @@ export const BoxSection = styled.div`
   gap: 16px;
   align-items: flex-start;
 
-  @media (max-width: 1024px) {
+  @media (max-width: 768px) {
     grid-template-columns: 1fr;
   }
 `;

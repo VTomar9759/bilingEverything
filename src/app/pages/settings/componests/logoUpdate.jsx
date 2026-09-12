@@ -257,7 +257,7 @@ const LogoCard = styled.div`
   border: 1px solid var(--color-border, #e2e8f0);
   margin-bottom: 12px;
 
-  @media (max-width: 640px) {
+  @media (max-width: 720px) {
     flex-direction: column;
     align-items: flex-start;
   }

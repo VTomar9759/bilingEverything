@@ -147,7 +147,7 @@ const ActionsOverlay = styled.div`
     background: linear-gradient(90deg, rgba(240,250,249,0) 0%, var(--color-primary-50) 30%, var(--color-primary-50) 100%);
   }
 
-  @media (max-width: 768px) {
+  @media (max-width: 720px) {
     opacity: 1;
     pointer-events: auto;
     transform: translateY(-50%) translateX(0);

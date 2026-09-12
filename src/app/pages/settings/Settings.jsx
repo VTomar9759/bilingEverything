@@ -340,7 +340,7 @@ const MainContentCard = styled.main`
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
   min-height: 360px;
 
-  @media (max-width: 768px) {
+  @media (max-width: 720px) {
     padding: 12px 14px;
   }
 `;

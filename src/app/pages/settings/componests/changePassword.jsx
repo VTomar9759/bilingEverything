@@ -69,7 +69,7 @@ const ChangePassword = () => {
       </SectionHeader>
 
       <Row gutter={[16, 12]}>
-        <Col xs={24} lg={15}>
+        <Col xs={24} md={14} lg={15}>
           <Form form={form} layout="vertical" onFinish={handleFinish}>
             <FormItem
               name="oldPassword"
@@ -131,7 +131,7 @@ const ChangePassword = () => {
           </Form>
         </Col>
 
-        <Col xs={24} lg={9}>
+        <Col xs={24} md={10} lg={9}>
           <TipsCard>
             <TipsTitle>
               <SafetyCertificateOutlined style={{ color: "var(--color-primary, #01514b)" }} />

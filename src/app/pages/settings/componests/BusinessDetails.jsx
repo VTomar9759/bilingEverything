@@ -89,7 +89,7 @@ const BusinessDetails = () => {
         city: values.city,
         state: values.state,
         pincode: values.pincode,
-        currency: values.currency,
+        currency: values.currency || "₹",
         tax_rate:
           values.tax_rate !== undefined && values.tax_rate !== null
             ? Number(values.tax_rate)
@@ -132,7 +132,7 @@ const BusinessDetails = () => {
           General Identity & Contact
         </SubSectionTitle>
         <Row gutter={[12, 8]}>
-          <Col xs={24} md={12}>
+          <Col xs={24} sm={12} md={12}>
             <FormItem
               name="business_name"
               label="Business / Store Name"
@@ -148,7 +148,7 @@ const BusinessDetails = () => {
               />
             </FormItem>
           </Col>
-          <Col xs={24} md={12}>
+          <Col xs={24} sm={12} md={12}>
             <FormItem name="legal_name" label="Legal Entity Name">
               <Input
                 prefix={
@@ -160,7 +160,7 @@ const BusinessDetails = () => {
               />
             </FormItem>
           </Col>
-          <Col xs={24} md={12}>
+          <Col xs={24} sm={12} md={12}>
             <FormItem name="full_name" label="Owner / Primary Contact Name">
               <Input
                 prefix={
@@ -170,7 +170,7 @@ const BusinessDetails = () => {
               />
             </FormItem>
           </Col>
-          <Col xs={24} md={12}>
+          <Col xs={24} sm={12} md={12}>
             <FormItem name="email" label="Business Email Address">
               <Input
                 prefix={
@@ -180,7 +180,7 @@ const BusinessDetails = () => {
               />
             </FormItem>
           </Col>
-          <Col xs={24} md={12}>
+          <Col xs={24} sm={12} md={12}>
             <FormItem name="phone" label="Contact Phone Number">
               <Input
                 prefix={
@@ -190,7 +190,7 @@ const BusinessDetails = () => {
               />
             </FormItem>
           </Col>
-          <Col xs={24} md={12}>
+          <Col xs={24} sm={12} md={12}>
             <FormItem name="website" label="Website / Online Store URL">
               <Input
                 prefix={
@@ -210,7 +210,7 @@ const BusinessDetails = () => {
           Tax & Registrations
         </SubSectionTitle>
         <Row gutter={[12, 8]}>
-          <Col xs={24} md={12}>
+          <Col xs={24} sm={12} md={12}>
             <FormItem
               name="gst_number"
               label="GST / Tax Identification No. (GSTIN)"
@@ -224,7 +224,7 @@ const BusinessDetails = () => {
               />
             </FormItem>
           </Col>
-          <Col xs={24} md={12}>
+          <Col xs={24} sm={12} md={12}>
             <FormItem name="fssai_number" label="FSSAI / Food License Number">
               <Input
                 prefix={
@@ -234,7 +234,7 @@ const BusinessDetails = () => {
               />
             </FormItem>
           </Col>
-          <Col xs={24} md={12}>
+          <Col xs={24} sm={12} md={12}>
             <FormItem name="pan_number" label="PAN Number">
               <Input
                 prefix={
@@ -245,7 +245,7 @@ const BusinessDetails = () => {
               />
             </FormItem>
           </Col>
-          <Col xs={24} md={12}>
+          <Col xs={24} sm={12} md={12}>
             <FormItem name="cin_number" label="CIN / Corporate Identification No.">
               <Input
                 prefix={
@@ -276,17 +276,17 @@ const BusinessDetails = () => {
               />
             </FormItem>
           </Col>
-          <Col xs={24} md={8}>
+          <Col xs={24} sm={12} md={8}>
             <FormItem name="city" label="City">
               <Input placeholder="City Name" />
             </FormItem>
           </Col>
-          <Col xs={24} md={8}>
+          <Col xs={24} sm={12} md={8}>
             <FormItem name="state" label="State / Province">
               <Input placeholder="State" />
             </FormItem>
           </Col>
-          <Col xs={24} md={8}>
+          <Col xs={24} sm={12} md={8}>
             <FormItem name="pincode" label="Pincode / Zip Code">
               <Input placeholder="Pincode" />
             </FormItem>
@@ -303,9 +303,10 @@ const BusinessDetails = () => {
           Billing, Tax & Invoice Settings
         </SubSectionTitle>
         <Row gutter={[12, 8]}>
-          <Col xs={24} md={8}>
-            <FormItem name="currency" label="Currency Symbol">
+          <Col xs={24} sm={12} md={8}>
+            <FormItem name="currency" label="Currency Symbol" initialValue="₹">
               <Select
+                disabled
                 showSearch
                 placeholder="Select Currency"
                 optionFilterProp="children"
@@ -324,7 +325,7 @@ const BusinessDetails = () => {
             </FormItem>
           </Col>
 
-          <Col xs={24} md={8}>
+          <Col xs={24} sm={12} md={8}>
             <FormItem name="invoice_prefix" label="Invoice Prefix">
               <Input
                 prefix={
@@ -335,7 +336,7 @@ const BusinessDetails = () => {
             </FormItem>
           </Col>
 
-          <Col xs={24} md={8}>
+          <Col xs={24} sm={12} md={8}>
             <FormItem name="tax_rate" label="Default Tax Rate (%)">
               <InputNumber
                 style={{ width: "100%" }}
@@ -444,9 +445,14 @@ const FormItem = styled(Form.Item)`
     font-size: 13px;
   }
   .ant-input:not(textarea),
+  .ant-input-affix-wrapper,
   .ant-select-single:not(.ant-select-customize-input) .ant-select-selector,
   .ant-input-number {
     height: 35px;
+  }
+
+  .ant-input-affix-wrapper .ant-input {
+    height: auto !important;
   }
 
   .ant-select-single .ant-select-selector {

@@ -75,6 +75,11 @@ const CardContainer = styled.div`
   min-width: 280px;
   max-width: 360px;
   flex: 1 1 300px;
+
+  @media (max-width: 480px) {
+    min-width: 100%;
+    max-width: 100%;
+  }
   box-shadow: var(--shadow-sm, 0 1px 2px 0 rgba(0, 0, 0, 0.05));
   transition: all var(--transition-base, 0.2s ease);
   display: flex;

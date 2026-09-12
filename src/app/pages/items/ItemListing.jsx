@@ -165,7 +165,7 @@ const PageHead = styled.div`
   gap: 12px;
   animation: ${fadeIn} 0.3s ease;
 
-  @media (max-width: 768px) {
+  @media (max-width: 720px) {
     flex-direction: column;
     align-items: flex-start;
   }

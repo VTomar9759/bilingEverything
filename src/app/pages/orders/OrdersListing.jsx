@@ -27,9 +27,7 @@ const OrdersListing = () => {
   const { permission, org_id } = useOrgData();
   const ordersPerm = permission?.orders;
 
-  const canCreate = ordersPerm?.create ?? false;
   const canUpdate = ordersPerm?.update ?? false;
-  const canDelete = ordersPerm?.delete ?? false;
 
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("All");
@@ -265,7 +263,7 @@ const OrdersListing = () => {
               }
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
-              style={{ width: 240, height: 32, borderRadius: 6 }}
+              style={{ width: 200, maxWidth: "100%", height: 32, borderRadius: 6 }}
             />
             <Button
               type={isTodayActive ? "primary" : "default"}
@@ -351,6 +349,7 @@ const OrdersListing = () => {
           rowKey="id"
           loading={loading}
           size="small"
+          scroll={{ x: true }}
           pagination={{
             current: page,
             pageSize: pageSize,

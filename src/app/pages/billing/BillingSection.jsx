@@ -523,7 +523,7 @@ const RegisterLayout = styled.div`
   gap: 12px;
   width: 100%;
 
-  @media (max-width: 860px) {
+  @media (max-width: 720px) {
     grid-template-columns: 1fr;
   }
 `;

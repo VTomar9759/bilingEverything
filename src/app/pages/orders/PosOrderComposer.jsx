@@ -469,7 +469,7 @@ const PosContainer = styled.div`
   height: calc(100vh - 100px);
   min-height: 520px;
 
-  @media (max-width: 800px) {
+  @media (max-width: 720px) {
     grid-template-columns: 1fr;
     height: auto;
   }
@@ -509,7 +509,7 @@ const FilterRow = styled.div`
 
 const MenuGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(115px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
   grid-auto-rows: max-content;
   align-content: start;
   gap: 8px;

@@ -254,13 +254,13 @@ export const BusyHoursChart = () => {
 
 const ChartContainer = styled(SurfaceCard)`
   flex: 1;
-  min-width: 280px;
+  min-width: 240px;
   transition: all var(--transition-base);
   &:hover { box-shadow: var(--shadow-md); }
 `;
 
 const DonutCard = styled(SurfaceCard)`
-  min-width: 280px;
+  min-width: 240px;
   transition: all var(--transition-base);
   &:hover { box-shadow: var(--shadow-md); }
 `;

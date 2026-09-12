@@ -130,7 +130,7 @@ const HeaderSection = styled.div`
   flex-wrap: wrap;
   gap: 10px;
 
-  @media (max-width: 768px) {
+  @media (max-width: 720px) {
     flex-direction: column;
     align-items: flex-start;
   }

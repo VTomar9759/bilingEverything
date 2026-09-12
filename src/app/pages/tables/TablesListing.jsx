@@ -531,7 +531,7 @@ const FilterBarContainer = styled.div`
   flex-wrap: wrap;
   gap: 8px;
   transition: all 0.3s ease;
-  @media (max-width: 768px) {
+  @media (max-width: 720px) {
     flex-direction: column;
     align-items: flex-start;
   }
@@ -551,7 +551,7 @@ const FilterRightArea = styled.div`
   flex-wrap: wrap;
   margin-left: auto;
 
-  @media (max-width: 768px) {
+  @media (max-width: 720px) {
     margin-left: 0;
     width: 100%;
     justify-content: space-between;
@@ -568,7 +568,7 @@ const FilterLabel = styled.span`
 
 const FloorGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
   gap: 10px;
   width: 100%;
   margin-top: 10px;

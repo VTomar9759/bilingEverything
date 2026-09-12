@@ -178,3 +178,36 @@ body {
 a, button {
   transition: all var(--transition-base);
 }
+
+/* ─── Responsive: 720px minimum viewport ─── */
+body {
+  overflow-x: hidden;
+}
+
+@media (max-width: 768px) {
+  .ant-table-wrapper .ant-table-thead > tr > th {
+    padding: 6px 8px !important;
+    font-size: 11px !important;
+  }
+
+  .ant-table-wrapper .ant-table-tbody > tr > td {
+    padding: 5px 8px !important;
+    font-size: 11.5px !important;
+  }
+
+  .ant-form-item {
+    margin-bottom: 8px !important;
+  }
+
+  .ant-card-body {
+    padding: 10px 12px !important;
+  }
+
+  .ant-card-head {
+    padding: 0 12px !important;
+  }
+
+  .ant-modal {
+    max-width: calc(100vw - 32px) !important;
+  }
+}
