@@ -252,7 +252,7 @@ export const updateOrderStatus = async (org_id, orderId, status) => {
   try {
     let { data, error } = await supabase
       .from("orders")
-      .update({ status: status })
+      .update({ status: status, updated_at: new Date().toISOString() })
       .eq("id", orderId)
       .eq("org_id", org_id)
       .select();
@@ -260,7 +260,7 @@ export const updateOrderStatus = async (org_id, orderId, status) => {
     if (error) {
       const res = await supabase
         .from("orders")
-        .update({ status: status })
+        .update({ status: status, updated_at: new Date().toISOString() })
         .eq("id", orderId)
         .eq("user_id", org_id)
         .select();
@@ -269,7 +269,7 @@ export const updateOrderStatus = async (org_id, orderId, status) => {
       data = res.data;
     }
 
-    if (status === "Cancelled") {
+    if (status === "Cancelled" || status === "Served") {
       const orders = await getOrders(org_id);
       const currentOrder = orders.find((o) => o.id === orderId);
       if (currentOrder && currentOrder.table_id) {
@@ -286,5 +286,53 @@ export const updateOrderStatus = async (org_id, orderId, status) => {
     throw err;
   }
 };
+
+export const updateOrder = async (org_id, orderId, orderData) => {
+  try {
+    const payload = {
+      ...orderData,
+      updated_at: new Date().toISOString(),
+    };
+
+    let { data, error } = await supabase
+      .from("orders")
+      .update(payload)
+      .eq("id", orderId)
+      .eq("org_id", org_id)
+      .select();
+
+    if (error) {
+      const res = await supabase
+        .from("orders")
+        .update(payload)
+        .eq("id", orderId)
+        .eq("user_id", org_id)
+        .select();
+
+      if (res.error) throw res.error;
+      data = res.data;
+    }
+
+    const updatedOrder = data?.[0];
+
+    if (
+      updatedOrder &&
+      updatedOrder.table_id &&
+      (payload.status === "Served" || payload.status === "Cancelled")
+    ) {
+      try {
+        await updateTABLE_STATUS(updatedOrder.table_id, "Available", null);
+      } catch (tblErr) {
+        console.warn("Could not update table status on order update:", tblErr);
+      }
+    }
+
+    return updatedOrder;
+  } catch (err) {
+    console.error("Error updating order in Supabase:", err);
+    throw err;
+  }
+};
+
 
 

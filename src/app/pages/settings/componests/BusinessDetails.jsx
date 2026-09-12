@@ -29,6 +29,7 @@ import { useDispatch } from "react-redux";
 import useOrgData from "../../../hooks/useOrgData";
 import { supabase } from "../../../../lib/supabaseClients";
 import { udpateProfile } from "../../../store/slices/authSlices";
+import { PRINT_TYPE, PRINT_TYPE_OPTIONS } from "../../../utils/constant";
 
 const { Option } = Select;
 
@@ -61,6 +62,7 @@ const BusinessDetails = () => {
         tax_rate: userData?.tax_rate ?? 0,
         invoice_prefix: userData?.invoice_prefix ?? "INV",
         invoice_footer: userData?.invoice_footer || "",
+        print_type: userData?.print_type || PRINT_TYPE.MODERN,
       });
     }
   }, [userData, form]);
@@ -96,6 +98,7 @@ const BusinessDetails = () => {
             : 0,
         invoice_prefix: values.invoice_prefix,
         invoice_footer: values.invoice_footer,
+        print_type: values.print_type || PRINT_TYPE.MODERN,
         is_active: userData?.is_active ?? true,
       };
 
@@ -361,6 +364,11 @@ const BusinessDetails = () => {
               />
             </FormItem>
           </Col>
+          <Col xs={24}>
+            <FormItem name="print_type" label="Print Receipt Format / Size">
+              <PrintTypeSelector />
+            </FormItem>
+          </Col>
         </Row>
 
         {canUpdate && (
@@ -486,3 +494,80 @@ const SubmitButton = styled(Button)`
     transform: translateY(-1px);
   }
 `;
+
+/* ─── Print Type Selector Styled Component ─── */
+
+const PrintTypeSelector = ({ value, onChange }) => {
+  const selectedValue = value || PRINT_TYPE.MODERN;
+
+  return (
+    <PrintTypeContainer>
+      {PRINT_TYPE_OPTIONS.map((option, index) => {
+        const isSelected = selectedValue === option.value;
+        const prevSelected =
+          index > 0 && selectedValue === PRINT_TYPE_OPTIONS[index - 1].value;
+        const showDivider = index > 0 && !isSelected && !prevSelected;
+
+        return (
+          <React.Fragment key={option.value}>
+            {showDivider && <PrintTypeDivider />}
+            <PrintTypeButton
+              type="button"
+              $isSelected={isSelected}
+              onClick={() => onChange && onChange(option.value)}
+            >
+              {option.label}
+            </PrintTypeButton>
+          </React.Fragment>
+        );
+      })}
+    </PrintTypeContainer>
+  );
+};
+
+const PrintTypeContainer = styled.div`
+  display: inline-flex;
+  align-items: center;
+  background-color: var(--color-primary, #01514b);
+  padding: 5px 6px;
+  border-radius: var(--radius-lg, 11px);
+  max-width: 100%;
+  overflow-x: auto;
+  gap: 2px;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.12);
+`;
+
+const PrintTypeButton = styled.button`
+  border: none;
+  background: ${(props) => (props.$isSelected ? "#ffffff" : "transparent")};
+  color: ${(props) =>
+    props.$isSelected ? "var(--color-primary, #01514b)" : "#ffffff"};
+  font-weight: 700;
+  font-size: 12.5px;
+  font-family: var(--font-sans, inherit);
+  padding: 6px 16px;
+  border-radius: var(--radius-md, 8px);
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  white-space: nowrap;
+  box-shadow: ${(props) =>
+    props.$isSelected ? "0 2px 6px rgba(0, 0, 0, 0.18)" : "none"};
+
+  &:hover {
+    color: ${(props) =>
+      props.$isSelected ? "var(--color-primary, #01514b)" : "#ffffff"};
+    opacity: ${(props) => (props.$isSelected ? "1" : "0.9")};
+  }
+
+  &:focus {
+    outline: none;
+  }
+`;
+
+const PrintTypeDivider = styled.div`
+  width: 1px;
+  height: 14px;
+  background-color: rgba(255, 255, 255, 0.35);
+  margin: 0 4px;
+`;
+

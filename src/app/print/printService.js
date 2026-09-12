@@ -1,5 +1,6 @@
 import qz from "qz-tray";
 import { message } from "antd";
+import { PRINT_TYPE, PRINT_SIZE } from "../utils/constant";
 
 /**
  * Connect to QZ Tray WebSocket if inactive
@@ -52,13 +53,16 @@ export const printViaBrowser = (htmlContent) => {
 };
 
 /**
- * Generate formatted HTML string for 80mm thermal receipt
+ * Generate formatted HTML string for thermal receipt
  */
 export const generateReceiptHTML = (order, settings = {}) => {
   if (!order) return "";
 
-  const paperWidth = settings?.paper_width || "80mm";
+  const printType = settings?.print_type || order?.print_type || PRINT_TYPE.MODERN;
+  const printConfig = PRINT_SIZE[printType] || PRINT_SIZE[PRINT_TYPE.MODERN];
+  const paperWidth = settings?.paper_width || printConfig.width;
   const currency = settings?.currency || "₹";
+  const logoImage = settings?.logo_image || settings?.logo || settings?.logo_url || "";
 
   const restaurantName =
     settings?.restaurant_name ||
@@ -71,6 +75,7 @@ export const generateReceiptHTML = (order, settings = {}) => {
   const footerNote = settings?.invoice_footer || "Thank You For Dining With Us!";
 
   const orderNum = order.order_number ?? order.order_no ?? order.id ?? "";
+  const tableCode = order.table_code || order.table_number || order.table_no || order.table_name || "";
   const dateStr =
     order.created_at && !isNaN(new Date(order.created_at).getTime())
       ? new Date(order.created_at).toLocaleString()
@@ -85,12 +90,12 @@ export const generateReceiptHTML = (order, settings = {}) => {
 
       return `
       <tr>
-        <td style="width: 45%; text-align: left; vertical-align: top; padding: 3.5px 0; word-break: break-word;">
-          ${item.name}${isItemGst ? '<br/><span style="font-size: 8.5px; opacity: 0.75; color: #555;">(5% GST)</span>' : ''}
+        <td style="width: 45%; text-align: left; vertical-align: top; padding: 3px 0; word-break: break-word; font-size: 9.5px; color: #000000;">
+          ${item.name}${isItemGst ? '<br/><span style="font-size: 8.5px; font-weight: 600; color: #000000;">(5% GST)</span>' : ''}
         </td>
-        <td style="width: 12%; text-align: center; vertical-align: top; padding: 3.5px 0;">${item.quantity}</td>
-        <td style="width: 21.5%; text-align: right; vertical-align: top; padding: 3.5px 0;">${currency} ${item.price}</td>
-        <td style="width: 21.5%; text-align: right; vertical-align: top; padding: 3.5px 0;">${currency} ${item.price * item.quantity}</td>
+        <td style="width: 12%; text-align: center; vertical-align: top; padding: 3px 0; font-size: 9.5px; color: #000000;">${item.quantity}</td>
+        <td style="width: 21.5%; text-align: right; vertical-align: top; padding: 3px 0; font-size: 9.5px; color: #000000;">${currency} ${item.price}</td>
+        <td style="width: 21.5%; text-align: right; vertical-align: top; padding: 3px 0; font-size: 9.5px; color: #000000;">${currency} ${item.price * item.quantity}</td>
       </tr>
     `;
     })
@@ -108,8 +113,8 @@ export const generateReceiptHTML = (order, settings = {}) => {
             margin: 0mm;
           }
           html, body {
-            width: ${paperWidth};
-            margin: 0 auto;
+            width: 100%;
+            margin: 0;
             padding: 0;
             background: #ffffff;
             color: #000000;
@@ -119,149 +124,191 @@ export const generateReceiptHTML = (order, settings = {}) => {
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
           }
+          .receipt-wrapper {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+          }
           .receipt {
             width: ${paperWidth};
+            max-width: 100%;
+            margin: 0 auto;
             padding: 4mm 3mm;
             box-sizing: border-box;
             background: #ffffff;
           }
-          .header {
-            text-align: center;
+          .header, .receipt-header {
+            text-align: center !important;
+            width: 100% !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: center !important;
+            margin-bottom: 6px !important;
           }
-          .header h3 {
-            font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
-            font-size: 14px;
-            font-weight: 700;
-            margin: 0 0 2px;
-            color: #000;
+          .header img, .receipt-header img {
+            max-height: 55px !important;
+            max-width: 130px !important;
+            object-fit: contain !important;
+            margin: 0 auto 6px auto !important;
+            display: block !important;
           }
-          .header p {
-            font-size: 10.5px;
-            margin: 2px 0;
-            color: #333;
+          .header h3, .receipt-header h3 {
+            font-family: 'Plus Jakarta Sans', 'Inter', sans-serif !important;
+            font-size: 15px !important;
+            font-weight: 800 !important;
+            margin: 0 0 2px 0 !important;
+            text-align: center !important;
+            color: #000000 !important;
+            text-transform: uppercase !important;
+            width: 100% !important;
           }
-          .divider {
-            border-top: 1.5px dashed #666;
-            margin: 5px 0;
-            width: 100%;
+          .header p, .receipt-header p {
+            font-size: 10.5px !important;
+            margin: 2px 0 !important;
+            text-align: center !important;
+            color: #000000 !important;
+            width: 100% !important;
           }
-          .meta {
-            font-size: 10.5px;
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
+          .divider, .dotted-divider {
+            border-top: 1.5px dashed #000000 !important;
+            margin: 6px 0 !important;
+            width: 100% !important;
+            display: block !important;
           }
-          .meta div strong {
-            font-weight: 700;
+          .meta, .receipt-meta {
+            font-size: 10.5px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 2px !important;
+            color: #000000 !important;
+            width: 100% !important;
           }
-          table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 10.5px;
-            table-layout: fixed;
+          .meta div strong, .receipt-meta div strong {
+            font-weight: 700 !important;
           }
-          th {
-            font-weight: 700;
-            padding-bottom: 4px;
-            border-bottom: 1.5px dashed #666;
+          .items-table {
+            width: 100% !important;
+            border-collapse: collapse !important;
+            font-size: 9.5px !important;
+            table-layout: fixed !important;
+            color: #000000 !important;
+            margin: 4px 0 !important;
           }
-          .totals {
-            display: flex;
-            flex-direction: column;
-            gap: 3.5px;
-            font-size: 11px;
+          .items-table th {
+            font-weight: 700 !important;
+            font-size: 9.5px !important;
+            padding-bottom: 4px !important;
+            border-bottom: 1.5px dashed #000000 !important;
+            color: #000000 !important;
           }
-          .total-row {
-            display: flex;
-            justify-content: space-between;
+          .items-table td {
+            font-size: 9.5px !important;
+            color: #000000 !important;
           }
-          .grand-total {
-            font-size: 14px;
-            font-weight: 700;
-            color: #000000;
+          .totals-table {
+            width: 100% !important;
+            border-collapse: collapse !important;
+            font-size: 10.5px !important;
+            color: #000000 !important;
+            margin-top: 2px !important;
           }
-          .footer {
-            text-align: center;
-            font-size: 10px;
-            color: #4b5563;
-            margin-top: 4px;
+          .totals-table td {
+            padding: 2px 0 !important;
+            color: #000000 !important;
           }
-          .footer p {
-            margin: 2px 0;
+          .footer, .receipt-footer {
+            text-align: center !important;
+            font-size: 10px !important;
+            color: #000000 !important;
+            margin-top: 6px !important;
+            width: 100% !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: center !important;
           }
-          tr, .header, .meta, .totals, .footer, .divider {
-            break-inside: avoid;
-            page-break-inside: avoid;
+          .footer p, .receipt-footer p {
+            margin: 2px 0 !important;
+            text-align: center !important;
+            width: 100% !important;
+          }
+          tr, .header, .receipt-header, .meta, .receipt-meta, .totals-table, .footer, .receipt-footer, .divider, .dotted-divider {
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
           }
         </style>
       </head>
       <body>
-        <div id="receipt" class="receipt">
-          <div class="header">
-            <h3>${restaurantName}</h3>
-            <p>${address}</p>
-            ${hasGst ? `<p>GSTIN: ${gstin}</p>` : ""}
-          </div>
+        <div class="receipt-wrapper">
+          <div id="receipt" class="receipt">
+            <div class="receipt-header">
+              ${logoImage ? `<img src="${logoImage}" alt="Logo" />` : ""}
+              <h3>${restaurantName}</h3>
+              <p>${address}</p>
+              ${hasGst && gstin ? `<p style="font-weight: 700;">GSTIN: ${gstin}</p>` : ""}
+            </div>
 
-          <div class="divider"></div>
+            <div class="dotted-divider"></div>
 
-          <div class="meta">
-            <div><strong>Order No:</strong> #${orderNum}</div>
-            <div><strong>Date:</strong> ${dateStr}</div>
-            ${order.table_name ? `<div><strong>Table:</strong> ${order.table_name}</div>` : ""}
-            <div><strong>Status:</strong> INVOICED</div>
-            <div><strong>Payment:</strong> ${order.payment_status || (order.status === "Served" ? "Paid" : "Unpaid")}${(order.payment_mode || order.payment_method) ? ` (${order.payment_mode || order.payment_method})` : ""}</div>
-          </div>
+            <div class="receipt-meta">
+              <div><strong>Order No:</strong> #${orderNum}</div>
+              <div><strong>Date:</strong> ${dateStr}</div>
+              ${tableCode ? `<div><strong>Table:</strong> ${tableCode}</div>` : ""}
+              <div><strong>Status:</strong> INVOICED</div>
+              <div><strong>Payment:</strong> ${order.payment_status || (order.status === "Served" ? "Paid" : "Unpaid")}${(order.payment_mode || order.payment_method) ? ` (${order.payment_mode || order.payment_method})` : ""}</div>
+            </div>
 
-          <div class="divider"></div>
+            <div class="dotted-divider"></div>
 
-          <table>
-            <thead>
+            <table class="items-table">
+              <thead>
+                <tr>
+                  <th style="width: 45%; text-align: left;">Item</th>
+                  <th style="width: 12%; text-align: center;">Qty</th>
+                  <th style="width: 21.5%; text-align: right;">Price</th>
+                  <th style="width: 21.5%; text-align: right;">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${itemsHTML}
+              </tbody>
+            </table>
+
+            <div class="dotted-divider"></div>
+
+            <table class="totals-table">
               <tr>
-                <th style="width: 45%; text-align: left;">Item</th>
-                <th style="width: 12%; text-align: center;">Qty</th>
-                <th style="width: 21.5%; text-align: right;">Price</th>
-                <th style="width: 21.5%; text-align: right;">Total</th>
+                <td style="text-align: left;">Subtotal</td>
+                <td style="text-align: right; font-weight: 600;">${currency} ${Number(order.subtotal || 0).toFixed(2)}</td>
               </tr>
-            </thead>
-            <tbody>
-              ${itemsHTML}
-            </tbody>
-          </table>
+              ${order.discount > 0 ? `
+              <tr>
+                <td style="text-align: left;">Discount Applied</td>
+                <td style="text-align: right; font-weight: 600;">-${currency} ${Number(order.discount || 0).toFixed(2)}</td>
+              </tr>` : ""}
+              ${hasGst && order.tax > 0 ? `
+              <tr>
+                <td style="text-align: left;">CGST & SGST (5%)</td>
+                <td style="text-align: right; font-weight: 600;">${currency} ${Number(order.tax || 0).toFixed(2)}</td>
+              </tr>` : ""}
+              <tr>
+                <td colspan="2" style="padding: 2px 0;">
+                  <div class="dotted-divider" style="margin: 3px 0;"></div>
+                </td>
+              </tr>
+              <tr style="font-size: 13px; font-weight: 800;">
+                <td style="text-align: left; padding: 2px 0;">Grand Total</td>
+                <td style="text-align: right; padding: 2px 0;">${currency} ${Number(order.total || 0).toFixed(2)}</td>
+              </tr>
+            </table>
 
-          <div class="divider"></div>
+            <div class="dotted-divider"></div>
 
-          <div class="totals">
-            <div class="total-row">
-              <span>Subtotal</span>
-              <span>${currency} ${Number(order.subtotal || 0).toFixed(2)}</span>
+            <div class="receipt-footer">
+              <p style="font-weight: 600;">${footerNote}</p>
+              <p style="font-size: 9px; margin-top: 4px;">Powered by Systems</p>
             </div>
-            ${order.discount > 0
-      ? `<div class="total-row" style="color: #10b981;">
-                    <span>Discount Applied</span>
-                    <span>-${currency} ${Number(order.discount || 0).toFixed(2)}</span>
-                  </div>`
-      : ""
-    }
-            ${hasGst
-      ? `<div class="total-row">
-                    <span>CGST & SGST (5%)</span>
-                    <span>${currency} ${Number(order.tax || 0).toFixed(2)}</span>
-                  </div>`
-      : ""
-    }
-            <div class="divider" style="margin: 5px 0;"></div>
-            <div class="total-row grand-total">
-              <span>Grand Total</span>
-              <span>${currency} ${Number(order.total || 0).toFixed(2)}</span>
-            </div>
-          </div>
-
-          <div class="divider"></div>
-
-          <div class="footer">
-            <p>${footerNote}</p>
-            <p style="font-size: 9px; opacity: 0.75; margin-top: 4px;">Powered by Systems</p>
           </div>
         </div>
       </body>

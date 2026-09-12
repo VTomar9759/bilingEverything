@@ -1,5 +1,6 @@
 
 import { useSelector } from "react-redux";
+import { PRINT_TYPE } from "../utils/constant";
 
 const useOrgData = () => {
   const authState = useSelector((state) => state?.authSlice) || {};
@@ -9,6 +10,7 @@ const useOrgData = () => {
   const effectiveCreatedBy = created_by || userData?.created_by || effectiveOrgId;
   const effectiveGstNumber = gst_number || userData?.gst_number || null;
   const effectiveGstStatus = gst_status || userData?.gst_status || null;
+  const effectivePrintType = userData?.print_type || authState?.print_type || PRINT_TYPE.MODERN;
   const hasGst = Boolean(effectiveGstNumber && String(effectiveGstNumber).trim().length > 0);
   const rawPermission = userData?.permissions || userData?.permission || null;
   let parsedPermission = null;
@@ -78,6 +80,7 @@ const useOrgData = () => {
     refreshToken,
     userData: userData || null,
     permission: permission,
+    print_type: effectivePrintType,
   };
 };
 

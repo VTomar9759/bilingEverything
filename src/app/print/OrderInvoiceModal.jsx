@@ -8,64 +8,119 @@ import {
 } from "@ant-design/icons";
 import { printInvoiceSilent } from "../../services";
 import useOrgData from "../hooks/useOrgData";
+import { PRINT_TYPE, PRINT_SIZE } from "../utils/constant";
 
-// const PrintGlobalStyles = createGlobalStyle`
-//   @media print {
-//     @page {
-//       size: ${({ $paperWidth }) => $paperWidth || "80mm"} auto;
-//       margin: 0mm;
-//     }
+const PrintGlobalStyles = createGlobalStyle`
+  @media print {
+    @page {
+      size: ${({ $paperWidth }) => $paperWidth || "80mm"} auto;
+      margin: 0mm;
+    }
 
-//     html, body {
-//       width: ${({ $paperWidth }) => $paperWidth || "80mm"} !important;
-//       margin: 0 !important;
-//       padding: 0 !important;
-//       background: #ffffff !important;
-//       color: #000000 !important;
-//       -webkit-print-color-adjust: exact !important;
-//       print-color-adjust: exact !important;
-//     }
+    html, body {
+      width: 100% !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      background: #ffffff !important;
+      color: #000000 !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
 
-//     /* Hide unnecessary UI elements during printing */
-//     body * {
-//       visibility: hidden !important;
-//     }
+    /* Hide unnecessary UI elements during printing */
+    body * {
+      visibility: hidden !important;
+    }
 
-//     /* Show only the receipt container and its children */
-//     .printable-receipt-container,
-//     .printable-receipt-container * {
-//       visibility: visible !important;
-//     }
+    /* Show only the receipt container and its children */
+    .printable-receipt-container,
+    .printable-receipt-container * {
+      visibility: visible !important;
+    }
 
-//     .printable-receipt-container {
-//       position: absolute !important;
-//       left: 0 !important;
-//       top: 0 !important;
-//       width: ${({ $paperWidth }) => $paperWidth || "80mm"} !important;
-//       max-width: ${({ $paperWidth }) => $paperWidth || "80mm"} !important;
-//       min-width: ${({ $paperWidth }) => $paperWidth || "80mm"} !important;
-//       margin: 0 !important;
-//       padding: 4mm 3mm !important;
-//       box-sizing: border-box !important;
-//       background: #ffffff !important;
-//       color: #000000 !important;
-//       font-family: 'Courier New', Courier, monospace !important;
-//       box-shadow: none !important;
-//       border: none !important;
-//       border-radius: 0 !important;
-//     }
+    .printable-receipt-container {
+      position: relative !important;
+      margin: 0 auto !important;
+      left: 0 !important;
+      right: 0 !important;
+      top: 0 !important;
+      width: ${({ $paperWidth }) => $paperWidth || "80mm"} !important;
+      max-width: ${({ $paperWidth }) => $paperWidth || "80mm"} !important;
+      padding: 4mm 3mm !important;
+      box-sizing: border-box !important;
+      background: #ffffff !important;
+      color: #000000 !important;
+      font-family: 'Courier New', Courier, monospace !important;
+      box-shadow: none !important;
+      border: none !important;
+      border-radius: 0 !important;
+    }
 
-//     .printable-receipt-container .grand-total {
-//       color: #000000 !important;
-//     }
+    .printable-receipt-container .receipt-header {
+      text-align: center !important;
+      width: 100% !important;
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: center !important;
+      justify-content: center !important;
+    }
 
-//     /* Ensure continuous flow and clean page breaks across multiple pages */
-//     tr, .receipt-header, .receipt-meta, .totals-section, .receipt-footer, .dotted-divider {
-//       break-inside: avoid !important;
-//       page-break-inside: avoid !important;
-//     }
-//   }
-// `;
+    .printable-receipt-container .receipt-header h3,
+    .printable-receipt-container .receipt-header p,
+    .printable-receipt-container .receipt-header img {
+      text-align: center !important;
+      margin-left: auto !important;
+      margin-right: auto !important;
+      width: 100% !important;
+    }
+
+    .printable-receipt-container .receipt-footer {
+      text-align: center !important;
+      width: 100% !important;
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: center !important;
+      justify-content: center !important;
+    }
+
+    .printable-receipt-container .receipt-footer p {
+      text-align: center !important;
+      width: 100% !important;
+      margin-left: auto !important;
+      margin-right: auto !important;
+    }
+
+    .printable-receipt-container .dotted-divider {
+      border-top: 1.5px dashed #000000 !important;
+      margin: 6px 0 !important;
+      width: 100% !important;
+      display: block !important;
+    }
+
+    .printable-receipt-container .items-table,
+    .printable-receipt-container .items-table th,
+    .printable-receipt-container .items-table td {
+      font-size: 9.5px !important;
+      color: #000000 !important;
+    }
+
+    .printable-receipt-container .totals-table {
+      width: 100% !important;
+      font-size: 10.5px !important;
+      color: #000000 !important;
+    }
+
+    .printable-receipt-container .grand-total {
+      color: #000000 !important;
+    }
+
+    /* Ensure continuous flow and clean page breaks across multiple pages */
+    tr, .receipt-header, .receipt-meta, .totals-table, .receipt-footer, .dotted-divider {
+      break-inside: avoid !important;
+      page-break-inside: avoid !important;
+    }
+  }
+`;
 
 const OrderInvoiceModal = ({ visible, onClose, order, settings }) => {
   const receiptRef = useRef();
@@ -103,9 +158,14 @@ const OrderInvoiceModal = ({ visible, onClose, order, settings }) => {
     settings?.invoice_footer ||
     "Thank You For Dining With Us!";
 
-  const invoicePrefix = userData?.invoice_prefix || settings?.invoice_prefix || "INV";
-  const paperWidth = settings?.paper_width || userData?.paper_width || "80mm";
+  const printType = userData?.print_type || settings?.print_type || PRINT_TYPE.MODERN;
+  const printConfig = PRINT_SIZE[printType] || PRINT_SIZE[PRINT_TYPE.MODERN];
+  const paperWidth = settings?.paper_width || userData?.paper_width || printConfig.width;
+  const modalWidth = printConfig.widthPx + 78;
   const currency = userData?.currency || settings?.currency || "₹";
+
+  const logoImage = userData?.logo_image || settings?.logo_image || settings?.logo || "";
+  const tableCode = order.table_code || order.table_number || order.table_no || order.table_name || "";
 
   const getFormattedOrderNo = () => {
     if (!order) return "";
@@ -123,6 +183,8 @@ const OrderInvoiceModal = ({ visible, onClose, order, settings }) => {
         gstin: hasGst ? gstNumber : "",
         currency,
         paper_width: paperWidth,
+        print_type: printType,
+        logo_image: logoImage,
       },
       copies: 2,
       receiptElement: receiptRef.current,
@@ -190,28 +252,34 @@ const OrderInvoiceModal = ({ visible, onClose, order, settings }) => {
 
   return (
     <>
-      {/* <PrintGlobalStyles $paperWidth={paperWidth} /> */}
+      <PrintGlobalStyles $paperWidth={paperWidth} />
       <Modal
         open={visible}
         onCancel={onClose}
-        width={360}
+        width={modalWidth}
         centered
         footer={false}
-        title={
-          <TitleBox>
-            <FileTextOutlined
-              style={{ color: "var(--color-primary-light)", fontSize: 20 }}
-            />
-            <span>Order Invoice</span>
-          </TitleBox>
-        }
+        title={null}
       >
         <ReceiptOuter>
           <ReceiptPaper ref={receiptRef} id="receipt" className="printable-receipt-container" $paperWidth={paperWidth}>
             <ReceiptHeader className="receipt-header">
+              {logoImage && (
+                <img
+                  src={logoImage}
+                  alt="Logo"
+                  style={{
+                    maxHeight: 55,
+                    maxWidth: 130,
+                    objectFit: "contain",
+                    margin: "0 auto 6px auto",
+                    display: "block",
+                  }}
+                />
+              )}
               <h3>{businessName}</h3>
               <p>{address}</p>
-              {hasGst && <p>GSTIN: {gstNumber}</p>}
+              {hasGst && gstNumber && <p style={{ fontWeight: 700 }}>GSTIN: {gstNumber}</p>}
             </ReceiptHeader>
 
             <DottedDivider className="dotted-divider" />
@@ -226,9 +294,9 @@ const OrderInvoiceModal = ({ visible, onClose, order, settings }) => {
                   ? new Date(order.created_at).toLocaleString()
                   : new Date().toLocaleString()}
               </div>
-              {order.table_name && (
+              {tableCode && (
                 <div>
-                  <strong>Table:</strong> {order.table_name}
+                  <strong>Table:</strong> {tableCode}
                 </div>
               )}
               <div>
@@ -242,7 +310,7 @@ const OrderInvoiceModal = ({ visible, onClose, order, settings }) => {
 
             <DottedDivider className="dotted-divider" />
 
-            <ItemsTable>
+            <ItemsTable className="items-table">
               <thead>
                 <tr>
                   <th align="left" style={{ width: "45%" }}>Item</th>
@@ -267,7 +335,7 @@ const OrderInvoiceModal = ({ visible, onClose, order, settings }) => {
                       <td>
                         {item.name}
                         {isItemGst && (
-                          <span style={{ fontSize: "8.5px", opacity: 0.75, display: "block", color: "#666" }}>
+                          <span style={{ fontSize: "8.5px", fontWeight: 600, display: "block", color: "#000" }}>
                             (5% GST)
                           </span>
                         )}
@@ -287,46 +355,49 @@ const OrderInvoiceModal = ({ visible, onClose, order, settings }) => {
 
             <DottedDivider className="dotted-divider" />
 
-            <TotalsSection className="totals-section">
-              <TotalRow>
-                <span>Subtotal</span>
-                <span>
-                  {currency} {order.subtotal?.toFixed(2)}
-                </span>
-              </TotalRow>
-              {order.discount > 0 && (
-                <TotalRow $discount>
-                  <span>Discount Applied</span>
-                  <span>
-                    -{currency} {order.discount?.toFixed(2)}
-                  </span>
-                </TotalRow>
-              )}
-              {hasGst && (
-                <TotalRow>
-                  <span>CGST & SGST (5%)</span>
-                  <span>
-                    {currency} {Number(order.tax || 0).toFixed(2)}
-                  </span>
-                </TotalRow>
-              )}
-              <DottedDivider className="dotted-divider" style={{ margin: "5px 0" }} />
-              <TotalRow
-                className="totals grand-total"
-                style={{ fontSize: 14, color: "var(--color-primary)" }}
-              >
-                <span>Grand Total</span>
-                <span>
-                  {currency} {order.total?.toFixed(2)}
-                </span>
-              </TotalRow>
-            </TotalsSection>
+            <TotalsTable className="totals-table">
+              <tbody>
+                <tr>
+                  <td align="left">Subtotal</td>
+                  <td align="right" style={{ fontWeight: 600 }}>
+                    {currency} {order.subtotal?.toFixed(2)}
+                  </td>
+                </tr>
+                {order.discount > 0 && (
+                  <tr style={{ color: "#10b981" }}>
+                    <td align="left">Discount Applied</td>
+                    <td align="right" style={{ fontWeight: 600 }}>
+                      -{currency} {order.discount?.toFixed(2)}
+                    </td>
+                  </tr>
+                )}
+                {hasGst && order.tax > 0 && (
+                  <tr>
+                    <td align="left">CGST & SGST (5%)</td>
+                    <td align="right" style={{ fontWeight: 600 }}>
+                      {currency} {Number(order.tax || 0).toFixed(2)}
+                    </td>
+                  </tr>
+                )}
+                <tr>
+                  <td colSpan={2} style={{ padding: "2px 0" }}>
+                    <DottedDivider className="dotted-divider" style={{ margin: "3px 0" }} />
+                  </td>
+                </tr>
+                <tr className="totals grand-total" style={{ fontSize: 13, fontWeight: 800 }}>
+                  <td align="left">Grand Total</td>
+                  <td align="right">
+                    {currency} {order.total?.toFixed(2)}
+                  </td>
+                </tr>
+              </tbody>
+            </TotalsTable>
 
             <DottedDivider className="dotted-divider" />
 
             <ReceiptFooter className="receipt-footer">
-              <p>{invoiceFooter}</p>
-              <p style={{ fontSize: "9px", opacity: 0.75, marginTop: "4px" }}>Powered by Systems</p>
+              <p style={{ fontWeight: 600 }}>{invoiceFooter}</p>
+              <p style={{ fontSize: "9px", marginTop: "4px" }}>Powered by Systems</p>
             </ReceiptFooter>
           </ReceiptPaper>
         </ReceiptOuter>
@@ -454,20 +525,16 @@ const ItemsTable = styled.table`
   }
 `;
 
-const TotalsSection = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 3.5px;
-  font-size: 11px;
-`;
+const TotalsTable = styled.table`
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 10.5px;
+  font-family: "Courier New", Courier, monospace;
+  color: #1f2937;
 
-const TotalRow = styled.div`
-  display: flex;
-  justify-content: space-between;
-  gap: 4px;
-  font-weight: ${({ className }) =>
-    className?.includes("totals") ? "700" : "500"};
-  color: ${({ $discount }) => ($discount ? "#10b981" : "#1f2937")};
+  td {
+    padding: 2px 0;
+  }
 `;
 
 const ReceiptFooter = styled.div`
