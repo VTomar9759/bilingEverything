@@ -78,7 +78,7 @@ const TableCardComponent = ({ table, onClick, activeOrder }) => {
           </BillTag>
         )}
 
-        <RecomposerButton onClick={handleReComposerClick}>
+        <RecomposerButton     $status={table.status}  onClick={handleReComposerClick}>
           <EditOutlined /> Recomposer
         </RecomposerButton>
       </CardFooter>
@@ -221,8 +221,10 @@ const BillTag = styled.div`
 `;
 
 const RecomposerButton = styled.button`
+  pointer-events: ${({ $status }) => $status === "available" ? "none" : "auto"};
   margin-top: 6px;
   width: 100%;
+  opacity: ${({ $status }) => $status === "available" ? "0.5" : "1"};
   padding: 5px 10px;
   font-size: 11px;
   font-weight: 600;

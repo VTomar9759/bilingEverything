@@ -12,6 +12,8 @@ import DashboardStats from "./components/DashboardStats";
 import {
   SalesSplineChart,
   BusyHoursChart,
+  OrderStatusDonut,
+  TopSellingItems,
 } from "./components/AnalyticsCharts";
 import * as service from "../../../services";
 import { PATH_BILLING, PATH_ORDER_COMPOSER } from "../../routes/pathname";
@@ -23,6 +25,7 @@ const DashboardOverview = () => {
   const itemsCatalog = useSelector((state) => state.itemSlice);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({});
+  const [ordersList, setOrdersList] = useState([]);
 
 
   useEffect(() => {
@@ -34,6 +37,8 @@ const DashboardOverview = () => {
           service.getOrders(org_id),
           service.getTables(org_id),
         ]);
+
+        setOrdersList(ordersList || []);
 
         const completedPaidOrders = ordersList.filter(
           (o) => o.status !== "Cancelled",
@@ -112,8 +117,14 @@ const DashboardOverview = () => {
 
           {/* Central Analytics Charts Layout */}
           <ChartLayout>
-            <SalesSplineChart />
-            <BusyHoursChart />
+            <SalesSplineChart orders={ordersList} />
+            <BusyHoursChart orders={ordersList} />
+          </ChartLayout>
+
+          {/* Secondary Analytics Row */}
+          <ChartLayout>
+            <OrderStatusDonut orders={ordersList} />
+            <TopSellingItems orders={ordersList} />
           </ChartLayout>
         </>
       )}
