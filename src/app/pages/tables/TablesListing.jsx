@@ -11,6 +11,7 @@ import {
   Popconfirm,
   Tooltip,
   Select,
+  Spin,
 } from "antd";
 import {
   PlusOutlined,
@@ -23,6 +24,7 @@ import {
   DeleteOutlined,
   ReloadOutlined,
   ClearOutlined,
+  LoadingOutlined,
   AppstoreOutlined,
 } from "@ant-design/icons";
 
@@ -307,9 +309,16 @@ const TablesListing = () => {
 
       {/* Tables Floor Grid */}
       {loading ? (
-        <p>Loading table layouts...</p>
+        <LoadingWrapper>
+          <Spin
+            indicator={<LoadingOutlined style={{ fontSize: 28, color: "var(--color-primary)" }} spin />}
+            tip="Loading table layouts..."
+          />
+        </LoadingWrapper>
       ) : filteredTables.length === 0 ? (
-        <Empty description="No tables match selected state" />
+        <div style={{ height: "60vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+  <Empty description="No tables found" />
+</div>
       ) : (
         <FloorGrid>
           {filteredTables.map((t) => (
@@ -751,3 +760,15 @@ const ActionsTitle = styled.h4`
   color: var(--color-text-primary);
   margin: 0;
 `;
+
+/* ─── Loading Styled Component ─── */
+const LoadingWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 220px;
+  width: 100%;
+  gap: 12px;
+`;
+
