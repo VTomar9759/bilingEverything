@@ -3,12 +3,14 @@ import authSlice from "./slices/authSlices";
 import itemSlice from "./slices/itemSlice";
 import themeSlice from "./slices/themeSlice";
 import itemsCategorySlices from "./slices/itemsCategorySlices";
+import printSettingSlice from "./slices/printSettingSlice";
 
 const rootReducer = combineReducers({
     authSlice,
     itemSlice,
     themeSlice,
-    itemsCategorySlices
+    itemsCategorySlices,
+    printSettingSlice,
 });
 
 export default rootReducer;

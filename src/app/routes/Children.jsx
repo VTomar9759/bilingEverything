@@ -20,6 +20,7 @@ import {
   PATH_SETTINGS_PROFILE,
   PATH_CHANGE_PASSWORD,
   PATH_SETTINGS_BUSINESS,
+  PATH_SETTINGS_PRINT,
 } from "./pathname";
 
 import Login from "../auth/Login";
@@ -45,6 +46,7 @@ import SettingsLayout from "../pages/settings/Settings";
 import ProfileUpdate from "../pages/settings/componests/profileUpdate";
 import ChangePassword from "../pages/settings/componests/changePassword";
 import BusinessDetails from "../pages/settings/componests/BusinessDetails";
+import PrintSetting from "../pages/settings/componests/PrintSetting";
 
 export const publicChildren = [
   {
@@ -132,6 +134,10 @@ export const privateChildren = [
       {
         path: PATH_SETTINGS_BUSINESS,
         element: <BusinessDetails />,
+      },
+      {
+        path: PATH_SETTINGS_PRINT,
+        element: <PrintSetting />,
       },
       {
         path: PATH_ADMINS,

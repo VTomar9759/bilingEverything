@@ -13,6 +13,7 @@ import {
   ClockCircleOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
 import useOrders from "../../hooks/useOrders";
 import useTables from "../../hooks/useTables";
 import useItemStore from "../../hooks/useItemStore";
@@ -24,6 +25,7 @@ import CategorySelecter from "../../../components/CategorySelecter";
 import * as service from "../../../services";
 import OrderInvoiceModal from "../../print/OrderInvoiceModal";
 import KOT from "../../print/KOT";
+import { fetchPrintSettings } from "../../store/slices/printSettingSlice";
 
 const { Option } = Select;
 
@@ -32,6 +34,7 @@ const PosOrderComposer = () => {
   const ordersPerm = permission?.orders;
   const canCreate = ordersPerm?.create ?? false;
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { createOrder } = useOrders();
   const { tables = [] } = useTables();
   const [settings, setSettings] = useState({});
@@ -45,8 +48,9 @@ const PosOrderComposer = () => {
       service.getSettings(org_id).then((res) => {
         if (res) setSettings(res);
       });
+      dispatch(fetchPrintSettings(org_id));
     }
-  }, [org_id]);
+  }, [org_id, dispatch]);
 
   const [form] = Form.useForm();
   const [selectedPosItems, setSelectedPosItems] = useState([]); // Array of { item, quantity }

@@ -1,10 +1,14 @@
 
 import { useSelector } from "react-redux";
 import { PRINT_TYPE } from "../utils/constant";
+import { selectPrintSettings, selectPrintSettingsFetched } from "../store/slices/printSettingSlice";
 
 const useOrgData = () => {
   const authState = useSelector((state) => state?.authSlice) || {};
   const { org_id, created_by, gst_number, gst_status, token, refreshToken, userData } = authState;
+
+  const printSettings = useSelector(selectPrintSettings);
+  const printSettingsFetched = useSelector(selectPrintSettingsFetched);
 
   const effectiveOrgId = org_id || userData?.org_id || userData?.id || null;
   const effectiveCreatedBy = created_by || userData?.created_by || effectiveOrgId;
@@ -81,7 +85,9 @@ const useOrgData = () => {
     userData: userData || null,
     permission: permission,
     print_type: effectivePrintType,
+    printSettings,
+    printSettingsFetched,
   };
 };
 
-export default useOrgData;
+export default useOrgData;

@@ -4,6 +4,7 @@ export * from "./tableService";
 export * from "./orderService";
 export * from "./orderEditService";
 export * from "./settingsService";
+export * from "./printSettingsService";
 export * from "./adminService";
 export * from "../app/print/printService";
 export { supabase } from "../lib/supabaseClients";

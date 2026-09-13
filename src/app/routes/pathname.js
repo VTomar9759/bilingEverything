@@ -25,6 +25,7 @@ export const PATH_SETTINGS = "/settings";
 export const PATH_SETTINGS_PROFILE = "/settings/profile";
 export const PATH_SETTINGS_PASSWORD = "/settings/change-password";
 export const PATH_SETTINGS_BUSINESS = "/settings/business-details";
+export const PATH_SETTINGS_PRINT = "/settings/print-settings";
 export const PATH_CHANGE_PASSWORD = "/settings/change-password";
 
 // Sidebar paths (navItems)
@@ -81,6 +82,7 @@ export const navItems = [
       PATH_SETTINGS_PROFILE,
       PATH_SETTINGS_PASSWORD,
       PATH_SETTINGS_BUSINESS,
+      PATH_SETTINGS_PRINT,
       PATH_ADMINS,
     ],
     path: PATH_SETTINGS_PROFILE,

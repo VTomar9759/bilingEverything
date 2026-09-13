@@ -9,12 +9,40 @@ import Loading from "../../loader/Loading";
 import Layout, { layoutType } from "../layout";
 import PageNotFound from "../utils/pagenotFound";
 import { privateChildren, publicChildren, withoutSidenave } from "./Children";
-import { PATH_DASHBOARD, PATH_LOGIN } from "./pathname";
+import {
+  PATH_DASHBOARD,
+  PATH_LOGIN,
+  PATH_CATEGORIES,
+  PATH_TABLES,
+  PATH_ITEMS,
+  PATH_ADD_ITEM,
+  PATH_EDIT_ITEM,
+  PATH_ORDERS,
+  PATH_ORDER_COMPOSER,
+  PATH_ORDER_EDIT,
+  PATH_BILLING,
+  PATH_SETTINGS,
+} from "./pathname";
 import ErrorElement from "../utils/ErrorElement";
-import OnlyQueue from "../only-queue/OnlyQueue";
 
-const PublicRoute = ({ children, isAuthenticated }) => {
+const ROUTE_PERMISSION_MAP = {
+  [PATH_DASHBOARD]: "dashboard",
+  [PATH_CATEGORIES]: "categories",
+  [PATH_TABLES]: "tables",
+  [PATH_ITEMS]: "items_catalog",
+  [PATH_ADD_ITEM]: "items_catalog",
+  [PATH_EDIT_ITEM]: "items_catalog",
+  [PATH_ORDERS]: "orders",
+  [PATH_ORDER_COMPOSER]: "orders",
+  [PATH_ORDER_EDIT]: "orders",
+  [PATH_BILLING]: "billing",
+};
+
+const PublicRoute = ({ children, isAuthenticated,permissionDashboard }) => {
   if (isAuthenticated) {
+    if(!permissionDashboard){
+      return <Navigate to={PATH_SETTINGS} replace />;
+    }
     return <Navigate to={PATH_DASHBOARD} replace />;
   }
 
@@ -30,14 +58,25 @@ const PrivateRoute = ({ children, isAuthenticated }) => {
 };
 
 const AppRouter = () => {
-  const { token, userData } = useOrgData();
+  const { token, userData, permission } = useOrgData();
   const isAuthenticated = !!token && !!userData;
+
+  const filteredPrivateChildren = privateChildren.filter((item) => {
+    if (!permission) return true;
+    const permKey = ROUTE_PERMISSION_MAP[item.path];
+    if (!permKey) return true;
+    const itemPerm = permission[permKey];
+    if (itemPerm && itemPerm.view === false) {
+      return false;
+    }
+    return true;
+  });
 
   const router = createBrowserRouter([
     // Public Layout
     {
       element: (
-        <PublicRoute isAuthenticated={isAuthenticated}>
+        <PublicRoute isAuthenticated={isAuthenticated} >
           <Layout type={layoutType.public} />
         </PublicRoute>
       ),
@@ -48,11 +87,11 @@ const AppRouter = () => {
     // Private Layout
     {
       element: (
-        <PrivateRoute isAuthenticated={isAuthenticated}>
+        <PrivateRoute isAuthenticated={isAuthenticated} permissionDashboard={permission?.dashboard?.view}>
           <Layout type={layoutType.private} />
         </PrivateRoute>
       ),
-      children: privateChildren,
+      children: filteredPrivateChildren,
       errorElement: <ErrorElement />,
     },
 
@@ -61,7 +100,7 @@ const AppRouter = () => {
       element: (
         <PrivateRoute isAuthenticated={isAuthenticated}>
           <Layout type={layoutType.withoutSidebar} />
-  
+
         </PrivateRoute>
       ),
       children: withoutSidenave,

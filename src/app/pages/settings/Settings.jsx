@@ -6,6 +6,7 @@ import {
   LockOutlined,
   ShopOutlined,
   SettingOutlined,
+  PrinterOutlined,
 } from "@ant-design/icons";
 import useOrgData from "../../hooks/useOrgData";
 import InstallPWA from "../../../components/InstallPWA";
@@ -16,6 +17,7 @@ import {
   PATH_CHANGE_PASSWORD,
   PATH_SETTINGS_BUSINESS,
   PATH_SETTINGS_PROFILE,
+  PATH_SETTINGS_PRINT,
 } from "../../routes/pathname";
 
 const settingsTabs = [
@@ -30,6 +32,12 @@ const settingsTabs = [
     label: "Business Details",
     icon: <ShopOutlined />,
     badge: "Org",
+  },
+  {
+    path: PATH_SETTINGS_PRINT,
+    label: "Print Setting",
+    icon: <PrinterOutlined />,
+    badge: "Print",
   },
   {
     path: PATH_CHANGE_PASSWORD,

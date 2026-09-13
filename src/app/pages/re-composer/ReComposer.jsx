@@ -10,6 +10,7 @@ import {
   SaveOutlined,
 } from "@ant-design/icons";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useDispatch } from "react-redux";
 import useOrderEdit from "../../hooks/useOrderEdit";
 import useItemStore from "../../hooks/useItemStore";
 import TabHeader from "../../../components/TabHeader";
@@ -19,6 +20,7 @@ import CategorySelecter from "../../../components/CategorySelecter";
 import * as service from "../../../services";
 import OrderInvoiceModal from "../../print/OrderInvoiceModal";
 import KOT from "../../print/KOT";
+import { fetchPrintSettings } from "../../store/slices/printSettingSlice";
 
 const { Option } = Select;
 
@@ -28,6 +30,7 @@ const OrderEditPage = () => {
   const canUpdate = ordersPerm?.update ?? false;
   const navigate = useNavigate();
   const location = useLocation();
+  const dispatch = useDispatch();
 
   const orderId = location.state?.orderId;
 
@@ -44,8 +47,9 @@ const OrderEditPage = () => {
       service.getSettings(org_id).then((res) => {
         if (res) setSettings(res);
       });
+      dispatch(fetchPrintSettings(org_id));
     }
-  }, [org_id]);
+  }, [org_id, dispatch]);
 
   // Fetch the order to edit
   useEffect(() => {

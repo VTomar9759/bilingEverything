@@ -4,6 +4,7 @@ import useOrgData from "../../hooks/useOrgData";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button, Select, InputNumber, Form, Skeleton, Empty, message } from "antd";
 import dayjs from "dayjs";
+import { useDispatch } from "react-redux";
 
 import TabHeader from "../../../components/TabHeader";
 import { PageWrapper } from "../../styles/commonstyle";
@@ -18,11 +19,13 @@ import {
   GlobalOutlined,
 } from "@ant-design/icons";
 import { PAYMENT_MODE } from "../../utils/constant";
+import { fetchPrintSettings } from "../../store/slices/printSettingSlice";
 
 const { Option } = Select;
 
 const BillingSection = () => {
   const { org_id, userData, hasGst, permission } = useOrgData();
+  const dispatch = useDispatch();
   const billingPerm = permission?.billing;
   const canCreate = billingPerm?.create ?? false;
   const canUpdate = billingPerm?.update ?? false;
@@ -56,8 +59,9 @@ const BillingSection = () => {
       service.getSettings(org_id).then((res) => {
         if (res) setSettings(res);
       });
+      dispatch(fetchPrintSettings(org_id));
     }
-  }, [org_id]);
+  }, [org_id, dispatch]);
 
   useEffect(() => {
     if (activeOrder) {
