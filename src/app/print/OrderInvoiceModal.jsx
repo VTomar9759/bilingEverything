@@ -55,34 +55,48 @@ const PrintGlobalStyles = createGlobalStyle`
       border-radius: 0 !important;
     }
 
-    .printable-receipt-container .receipt-header {
+    .printable-receipt-container .receipt-header,
+    .printable-receipt-container .receipt-header *,
+    div[class*="ReceiptHeader"],
+    div[class*="ReceiptHeader"] * {
       text-align: center !important;
       width: 100% !important;
       display: flex !important;
       flex-direction: column !important;
       align-items: center !important;
       justify-content: center !important;
+      margin-left: auto !important;
+      margin-right: auto !important;
     }
 
     .printable-receipt-container .receipt-header h3,
     .printable-receipt-container .receipt-header p,
-    .printable-receipt-container .receipt-header img {
+    .printable-receipt-container .receipt-header img,
+    div[class*="ReceiptHeader"] h3,
+    div[class*="ReceiptHeader"] p,
+    div[class*="ReceiptHeader"] img {
       text-align: center !important;
       margin-left: auto !important;
       margin-right: auto !important;
-      width: auto !important;
+      width: 100% !important;
     }
 
-    .printable-receipt-container .receipt-footer {
+    .printable-receipt-container .receipt-footer,
+    .printable-receipt-container .receipt-footer *,
+    div[class*="ReceiptFooter"],
+    div[class*="ReceiptFooter"] * {
       text-align: center !important;
       width: 100% !important;
       display: flex !important;
       flex-direction: column !important;
       align-items: center !important;
       justify-content: center !important;
+      margin-left: auto !important;
+      margin-right: auto !important;
     }
 
-    .printable-receipt-container .receipt-footer p {
+    .printable-receipt-container .receipt-footer p,
+    div[class*="ReceiptFooter"] p {
       text-align: center !important;
       width: 100% !important;
       margin-left: auto !important;
@@ -321,19 +335,19 @@ const OrderInvoiceModal = ({ visible, onClose, order, settings }) => {
                 />
               )}
               {ps?.business_name_visible !== false && (
-                <h3>{businessName}</h3>
+                <h3 style={{ textAlign: "center", width: "100%", margin: "0 0 2px 0" }}>{businessName}</h3>
               )}
               {ps?.address_visible !== false && (
-                <p>{address}</p>
+                <p style={{ textAlign: "center", width: "100%", margin: "1px 0" }}>{address}</p>
               )}
               {ps?.phone_visible !== false && phone && (
-                <p>Phone: {phone}</p>
+                <p style={{ textAlign: "center", width: "100%", margin: "1px 0" }}>Phone: {phone}</p>
               )}
               {ps?.email_visible !== false && email && (
-                <p>Email: {email}</p>
+                <p style={{ textAlign: "center", width: "100%", margin: "1px 0" }}>Email: {email}</p>
               )}
               {ps?.gst_number_visible !== false && hasGst && gstNumber && (
-                <p style={{ fontWeight: 700 }}>GSTIN: {gstNumber}</p>
+                <p style={{ textAlign: "center", width: "100%", margin: "1px 0", fontWeight: 700 }}>GSTIN: {gstNumber}</p>
               )}
             </ReceiptHeader>
 
@@ -525,8 +539,8 @@ const OrderInvoiceModal = ({ visible, onClose, order, settings }) => {
 
             {/* ─── FOOTER ─── */}
             {ps?.footer_visible !== false && (
-              <ReceiptFooter className="receipt-footer">
-                <p style={{ fontWeight: 600, fontStyle: "italic", color: "#d97706" }}>
+              <ReceiptFooter className="receipt-footer" style={{ textAlign: "center", width: "100%" }}>
+                <p style={{ fontWeight: 600, fontStyle: "italic", color: "#d97706", textAlign: "center", width: "100%", margin: "2px 0" }}>
                   {invoiceFooter}
                 </p>
               </ReceiptFooter>

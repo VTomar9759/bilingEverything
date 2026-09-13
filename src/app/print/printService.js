@@ -297,13 +297,13 @@ export const generateReceiptHTML = (order, settings = {}) => {
       <body>
         <div class="receipt-wrapper">
           <div id="receipt" class="receipt">
-            <div class="receipt-header">
-              ${ps?.logo_visible !== false && logoImage ? `<img src="${logoImage}" alt="Logo" />` : ""}
-              ${ps?.business_name_visible !== false ? `<h3>${restaurantName}</h3>` : ""}
-              ${ps?.address_visible !== false ? `<p>${address}</p>` : ""}
-              ${ps?.phone_visible !== false && phone ? `<p>Phone: ${phone}</p>` : ""}
-              ${ps?.email_visible !== false && email ? `<p>Email: ${email}</p>` : ""}
-              ${ps?.gst_number_visible !== false && hasGst && gstin ? `<p style="font-weight: 700;">GSTIN: ${gstin}</p>` : ""}
+            <div class="receipt-header" style="text-align: center; width: 100%;">
+              ${ps?.logo_visible !== false && logoImage ? `<img src="${logoImage}" alt="Logo" style="display: block; margin: 0 auto 6px auto; max-height: ${Math.min(logoSize, 120)}px; max-width: 140px;" />` : ""}
+              ${ps?.business_name_visible !== false ? `<h3 style="text-align: center; width: 100%; margin: 0 0 2px 0;">${restaurantName}</h3>` : ""}
+              ${ps?.address_visible !== false ? `<p style="text-align: center; width: 100%; margin: 1px 0;">${address}</p>` : ""}
+              ${ps?.phone_visible !== false && phone ? `<p style="text-align: center; width: 100%; margin: 1px 0;">Phone: ${phone}</p>` : ""}
+              ${ps?.email_visible !== false && email ? `<p style="text-align: center; width: 100%; margin: 1px 0;">Email: ${email}</p>` : ""}
+              ${ps?.gst_number_visible !== false && hasGst && gstin ? `<p style="text-align: center; width: 100%; margin: 1px 0; font-weight: 700;">GSTIN: ${gstin}</p>` : ""}
             </div>
 
             <div class="dotted-divider"></div>
@@ -391,8 +391,8 @@ export const generateReceiptHTML = (order, settings = {}) => {
             <div class="dotted-divider"></div>
 
             ${ps?.footer_visible !== false ? `
-            <div class="receipt-footer">
-              <p style="font-weight: 600; font-style: italic;">${footerNote}</p>
+            <div class="receipt-footer" style="text-align: center; width: 100%;">
+              <p style="text-align: center; width: 100%; margin: 2px 0; font-weight: 600; font-style: italic; color: #d97706;">${footerNote}</p>
             </div>` : ""}
           </div>
         </div>
@@ -405,7 +405,73 @@ export const generateReceiptHTML = (order, settings = {}) => {
  * Print thermal invoice directly via QZ Tray
  */
 export const printInvoiceSilent = async ({ order, settings = {}, copies = 2, receiptElement = null }) => {
-  const receiptData = receiptElement ? receiptElement.outerHTML : generateReceiptHTML(order, settings);
+  let receiptData;
+  if (receiptElement) {
+    const rawHtml = receiptElement.outerHTML;
+    const paperWidth = settings?.paper_width || settings?.printSettings?.paper_width || "80mm";
+    receiptData = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8" />
+          <title>Invoice</title>
+          <style>
+            @page {
+              size: ${paperWidth} auto;
+              margin: 0mm;
+            }
+            html, body {
+              width: 100%;
+              margin: 0;
+              padding: 0;
+              background: #ffffff;
+              color: #000000;
+              font-family: 'Segoe UI', 'Inter', 'Helvetica Neue', Arial, sans-serif;
+              font-size: 11px;
+              line-height: 1.4;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
+            }
+            .receipt-header, .receipt-header *, div[class*="ReceiptHeader"], div[class*="ReceiptHeader"] * {
+              text-align: center !important;
+              width: 100% !important;
+              margin-left: auto !important;
+              margin-right: auto !important;
+            }
+            .receipt-header img, div[class*="ReceiptHeader"] img {
+              display: block !important;
+              margin-left: auto !important;
+              margin-right: auto !important;
+            }
+            .receipt-footer, .receipt-footer *, div[class*="ReceiptFooter"], div[class*="ReceiptFooter"] * {
+              text-align: center !important;
+              width: 100% !important;
+              margin-left: auto !important;
+              margin-right: auto !important;
+            }
+            .dotted-divider {
+              border-top: 1.5px dashed #999999 !important;
+              margin: 6px 0 !important;
+              width: 100% !important;
+              display: block !important;
+            }
+            .items-table, .totals-table {
+              width: 100% !important;
+              border-collapse: collapse !important;
+              font-size: 11px !important;
+            }
+          </style>
+        </head>
+        <body>
+          <div style="width: 100%; display: flex; justify-content: center;">
+            ${rawHtml}
+          </div>
+        </body>
+      </html>
+    `;
+  } else {
+    receiptData = generateReceiptHTML(order, settings);
+  }
 
   try {
     await connectPrinter();

@@ -75,8 +75,8 @@ const KOT = ({ visible, onClose, order, settings }) => {
           $paperWidth={paperWidth}
         >
           {businessName && (
-            <ReceiptHeader className="receipt-header">
-              <p style={{ fontWeight: 600 }}>{businessName}</p>
+            <ReceiptHeader className="receipt-header" style={{ textAlign: "center", width: "100%" }}>
+              <p style={{ fontWeight: 600, textAlign: "center", width: "100%" }}>{businessName}</p>
             </ReceiptHeader>
           )}
 
