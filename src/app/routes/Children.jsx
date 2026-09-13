@@ -11,8 +11,11 @@ import {
   PATH_DASHBOARD,
   PATH_ORDERS,
   PATH_ORDER_COMPOSER,
+  PATH_ORDER_EDIT,
   PATH_TABLES,
   PATH_BILLING,
+  PATH_ORDER_QUEUE,
+  PATH_ONLY_QUEUE,
   PATH_SETTINGS,
   PATH_SETTINGS_PROFILE,
   PATH_CHANGE_PASSWORD,
@@ -33,7 +36,10 @@ import BillingSection from "../pages/billing/BillingSection";
 
 import OrdersListing from "../pages/orders/OrdersListing";
 import PosOrderComposer from "../pages/orders/PosOrderComposer";
+import OrderEditPage from "../pages/re-composer/ReComposer";
 import TablesListing from "../pages/tables/TablesListing";
+import Queue from "../pages/order-queue/Queue";
+import OnlyQueue from "../only-queue/OnlyQueue";
 
 import SettingsLayout from "../pages/settings/Settings";
 import ProfileUpdate from "../pages/settings/componests/profileUpdate";
@@ -54,6 +60,13 @@ export const publicChildren = [
     element: <SignUp />,
   },
 ];
+
+export const withoutSidenave =[
+  {
+    path: PATH_ONLY_QUEUE,
+    element: <OnlyQueue/>,
+  }
+]
 
 export const privateChildren = [
   {
@@ -85,12 +98,20 @@ export const privateChildren = [
     element: <PosOrderComposer />,
   },
   {
+    path: PATH_ORDER_EDIT,
+    element: <OrderEditPage />,
+  },
+  {
     path: PATH_TABLES,
     element: <TablesListing />,
   },
   {
     path: PATH_BILLING,
     element: <BillingSection />,
+  },
+  {
+    path: PATH_ORDER_QUEUE,
+    element: <Queue />,
   },
   {
     path: PATH_SETTINGS,

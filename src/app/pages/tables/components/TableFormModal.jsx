@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Modal,
   Form,
@@ -9,12 +10,37 @@ import {
   Row,
   Col,
 } from "antd";
+import { EditOutlined } from "@ant-design/icons";
 import { floorOptions } from "../../../utils/constOption";
+import { PATH_ORDER_EDIT } from "../../../routes/pathname";
+import { TABLE_STATUS } from "../../../utils/constant";
 
 const { Option } = Select;
 
 const TableFormModal = ({ open, onCancel, onFinish, editingTable }) => {
+  const navigate = useNavigate();
   const [form] = Form.useForm();
+
+  const isOccupied =
+    editingTable &&
+    (editingTable.status === TABLE_STATUS.occupied ||
+      editingTable.status === "occupied" ||
+      editingTable.current_order_id ||
+      editingTable.active_order?.id ||
+      editingTable.order_id);
+
+  const handleReComposerClick = () => {
+    const orderId =
+      editingTable?.current_order_id ||
+      editingTable?.active_order?.id ||
+      editingTable?.order_id;
+    navigate(PATH_ORDER_EDIT, {
+      state: { orderId },
+    });
+    if (onCancel) {
+      onCancel();
+    }
+  };
 
   // Load values if in editing mode
   useEffect(() => {
@@ -169,21 +195,38 @@ const TableFormModal = ({ open, onCancel, onFinish, editingTable }) => {
           </Select>
         </Form.Item>
 
-        <Button
-          type="primary"
-          block
-          htmlType="submit"
-          style={{
-            height: 42,
-            borderRadius: 8,
-            marginTop: 12,
-            fontWeight: 700,
-          }}
-        >
-          {editingTable
-            ? "Save Dining Table Changes"
-            : "Create Floor Dining Table"}
-        </Button>
+        {isOccupied ? (
+          <Button
+            type="primary"
+            block
+            icon={<EditOutlined />}
+            onClick={handleReComposerClick}
+            style={{
+              height: 42,
+              borderRadius: 8,
+              marginTop: 12,
+              fontWeight: 700,
+            }}
+          >
+            Recomposer
+          </Button>
+        ) : (
+          <Button
+            type="primary"
+            block
+            htmlType="submit"
+            style={{
+              height: 42,
+              borderRadius: 8,
+              marginTop: 12,
+              fontWeight: 700,
+            }}
+          >
+            {editingTable
+              ? "Save Dining Table Changes"
+              : "Create Floor Dining Table"}
+          </Button>
+        )}
       </Form>
     </Modal>
   );

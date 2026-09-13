@@ -2,6 +2,7 @@ export * from "./itemService";
 export * from "./categoryService";
 export * from "./tableService";
 export * from "./orderService";
+export * from "./orderEditService";
 export * from "./settingsService";
 export * from "./adminService";
 export * from "../app/print/printService";

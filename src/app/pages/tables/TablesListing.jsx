@@ -23,11 +23,12 @@ import {
   DeleteOutlined,
   ReloadOutlined,
   ClearOutlined,
+  AppstoreOutlined,
 } from "@ant-design/icons";
 
 import TabHeader from "../../../components/TabHeader";
 import { PageWrapper } from "../../styles/commonstyle";
-import { PATH_BILLING, PATH_ORDERS } from "../../routes/pathname";
+import { PATH_BILLING, PATH_ORDERS, PATH_ORDER_EDIT } from "../../routes/pathname";
 import useTables from "../../hooks/useTables";
 import TableCard from "./components/TableCard";
 import TableFormModal from "./components/TableFormModal";
@@ -187,6 +188,40 @@ const TablesListing = () => {
     return matchesStatus && matchesFloor;
   });
 
+  const filterOptions = [
+    {
+      key: TABLE_STATUS.all,
+      label: "All Tables",
+      count: tables.length,
+      icon: <AppstoreOutlined style={{ fontSize: "12px" }} />,
+    },
+    {
+      key: TABLE_STATUS.available,
+      label: "Available",
+      count: tables.filter((t) => t.status === TABLE_STATUS.available).length,
+    },
+    {
+      key: TABLE_STATUS.occupied,
+      label: "Occupied",
+      count: tables.filter((t) => t.status === TABLE_STATUS.occupied).length,
+    },
+    {
+      key: TABLE_STATUS.billed,
+      label: "Billed",
+      count: tables.filter((t) => t.status === TABLE_STATUS.billed).length,
+    },
+    {
+      key: TABLE_STATUS.reserved,
+      label: "Reserved",
+      count: tables.filter((t) => t.status === TABLE_STATUS.reserved).length,
+    },
+    {
+      key: TABLE_STATUS.cleaning,
+      label: "Cleaning",
+      count: tables.filter((t) => t.status === TABLE_STATUS.cleaning).length,
+    },
+  ];
+
   return (
     <PageWrapper>
       {/* Page Header */}
@@ -234,37 +269,16 @@ const TablesListing = () => {
       {/* Combined Filter Bar */}
       <FilterBarContainer>
         <FilterLeftArea>
-          <Radio.Group
-            value={activeFilter}
-            onChange={(e) => setActiveFilter(e.target.value)}
-            buttonStyle="solid"
-            size="middle"
-          >
-            <Radio.Button value={TABLE_STATUS.all}>
-              All Tables ({tables.length})
-            </Radio.Button>
-            <Radio.Button value={TABLE_STATUS.available}>
-              Available (
-              {tables.filter((t) => t.status === TABLE_STATUS.available).length}
-              )
-            </Radio.Button>
-            <Radio.Button value={TABLE_STATUS.occupied}>
-              Occupied (
-              {tables.filter((t) => t.status === TABLE_STATUS.occupied).length})
-            </Radio.Button>
-            <Radio.Button value={TABLE_STATUS.billed}>
-              Billed (
-              {tables.filter((t) => t.status === TABLE_STATUS.billed).length})
-            </Radio.Button>
-            <Radio.Button value={TABLE_STATUS.reserved}>
-              Reserved (
-              {tables.filter((t) => t.status === TABLE_STATUS.reserved).length})
-            </Radio.Button>
-            <Radio.Button value={TABLE_STATUS.cleaning}>
-              Cleaning (
-              {tables.filter((t) => t.status === TABLE_STATUS.cleaning).length})
-            </Radio.Button>
-          </Radio.Group>
+          {filterOptions.map((opt) => (
+            <FilterButton
+              key={opt.key}
+              $active={activeFilter === opt.key}
+              onClick={() => setActiveFilter(opt.key)}
+            >
+              {opt.icon}
+              {opt.label} ({opt.count})
+            </FilterButton>
+          ))}
         </FilterLeftArea>
 
         {floors?.length > 0 && (
@@ -463,10 +477,32 @@ const TablesListing = () => {
                 {selectedTable.status === TABLE_STATUS.occupied && (
                   <>
                     <Button
+                      type="primary"
+                      block
+                      icon={<EditOutlined />}
+                      onClick={() =>
+                        navigate(PATH_ORDER_EDIT, {
+                          state: {
+                            orderId:
+                              activeOrder?.id ||
+                              selectedTable.current_order_id ||
+                              selectedTable.active_order?.id ||
+                              selectedTable.order_id,
+                          },
+                        })
+                      }
+                    >
+                      Recomposer
+                    </Button>
+                    <Button
                       block
                       icon={<FileTextOutlined />}
                       style={{ color: "#f59e0b", borderColor: "#f59e0b" }}
-                      onClick={() => navigate(PATH_BILLING, { state: { orderId: selectedTable.current_order_id } })}
+                      onClick={() =>
+                        navigate(PATH_BILLING, {
+                          state: { orderId: selectedTable.current_order_id },
+                        })
+                      }
                     >
                       Generate Bill / Invoice
                     </Button>
@@ -529,7 +565,12 @@ const FilterBarContainer = styled.div`
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 10px;
+  padding: 8px;
+  width: 100%;
+  background-color: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xs);
   transition: all 0.3s ease;
   @media (max-width: 720px) {
     flex-direction: column;
@@ -542,6 +583,44 @@ const FilterLeftArea = styled.div`
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
+`;
+
+const FilterButton = styled.button`
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-family: "Plus Jakarta Sans", "Inter", sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid
+    ${(props) =>
+      props.$active ? "var(--color-primary)" : "var(--color-border)"};
+  background: ${(props) =>
+    props.$active ? "var(--color-primary)" : "var(--color-surface)"};
+  color: ${(props) =>
+    props.$active ? "#ffffff" : "var(--color-text-secondary)"};
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease-in-out;
+  box-shadow: ${(props) =>
+    props.$active ? "0 4px 12px rgba(1, 81, 75, 0.15)" : "var(--shadow-xs)"};
+
+  &:hover {
+    border-color: var(--color-primary-light);
+    color: ${(props) => (props.$active ? "#ffffff" : "var(--color-primary)")};
+    background: ${(props) =>
+      props.$active ? "var(--color-primary)" : "var(--color-primary-50)"};
+    box-shadow: ${(props) =>
+      props.$active
+        ? "0 6px 16px rgba(1, 81, 75, 0.22)"
+        : "0 4px 8px rgba(1, 81, 75, 0.05)"};
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
 `;
 
 const FilterRightArea = styled.div`
@@ -568,7 +647,7 @@ const FilterLabel = styled.span`
 
 const FloorGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   gap: 12px;
   width: 100%;
   margin-top: 10px;

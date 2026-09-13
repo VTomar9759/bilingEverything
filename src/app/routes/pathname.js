@@ -14,8 +14,11 @@ export const PATH_ADMINS = "/settings/admins";
 export const PATH_DASHBOARD = "/dashboard";
 export const PATH_ORDERS = "/orders";
 export const PATH_ORDER_COMPOSER = "/composer";
+export const PATH_ORDER_EDIT = "/order-edit";
 export const PATH_TABLES = "/tables";
 export const PATH_BILLING = "/billing";
+export const PATH_ORDER_QUEUE = "/order-queue";
+export const PATH_ONLY_QUEUE = "/only-queue";
 
 // setting
 export const PATH_SETTINGS = "/settings";
@@ -63,6 +66,12 @@ export const navItems = [
     icon: "Billing",
     activePath: [PATH_BILLING],
     path: PATH_BILLING,
+  },
+  {
+    label: "Order Queue",
+    icon: "OrderQueue",
+    activePath: [PATH_ORDER_QUEUE],
+    path: PATH_ORDER_QUEUE,
   },
   {
     label: "Settings",

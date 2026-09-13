@@ -1,7 +1,9 @@
 import React from "react";
 import styled from "styled-components";
-import { UserOutlined, EnvironmentOutlined } from "@ant-design/icons";
+import { useNavigate } from "react-router-dom";
+import { UserOutlined, EnvironmentOutlined, EditOutlined } from "@ant-design/icons";
 import { TABLE_STATUS } from "../../../utils/constant";
+import { PATH_ORDER_EDIT } from "../../../routes/pathname";
 
 const getStatusColor = (status) => {
   switch (status) {
@@ -27,10 +29,18 @@ const getColorFromCode = (code) => {
   return themes[code.toLowerCase()] || code;
 };
 
-const TableCardComponent = ({ table, onClick }) => {
+const TableCardComponent = ({ table, onClick, activeOrder }) => {
+  const navigate = useNavigate();
   const customColor = getColorFromCode(table.color_code);
   const statusColor = getStatusColor(table.status);
   const activeColor = customColor || statusColor;
+
+  const handleReComposerClick = (e) => {
+    e?.stopPropagation();
+    navigate(PATH_ORDER_EDIT, {
+      state: { orderId: activeOrder?.id || table?.current_order_id || table?.active_order?.id || table?.order_id },
+    });
+  };
 
   return (
     <CardContainer $status={table.status} $activeColor={activeColor} onClick={onClick}>
@@ -67,6 +77,10 @@ const TableCardComponent = ({ table, onClick }) => {
             Rs. {Number(table.current_bill_amount).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
           </BillTag>
         )}
+
+        <RecomposerButton onClick={handleReComposerClick}>
+          <EditOutlined /> Recomposer
+        </RecomposerButton>
       </CardFooter>
     </CardContainer>
   );
@@ -205,3 +219,34 @@ const BillTag = styled.div`
   padding: 2px 7px;
   border-radius: 6px;
 `;
+
+const RecomposerButton = styled.button`
+  margin-top: 6px;
+  width: 100%;
+  padding: 5px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 6px;
+  border: 1px solid var(--color-primary-100, rgba(1, 81, 75, 0.2));
+  background: var(--color-primary-50, #f0faf9);
+  color: var(--color-primary, #01514b);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+
+  &:hover {
+    background: var(--color-primary, #01514b);
+    border-color: var(--color-primary, #01514b);
+    color: #ffffff;
+  }
+
+  &:active {
+    background: var(--color-primary-dark, #013d38);
+    border-color: var(--color-primary-dark, #013d38);
+    color: #ffffff;
+  }
+`;
+

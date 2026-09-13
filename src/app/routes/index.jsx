@@ -8,9 +8,10 @@ import useOrgData from "../hooks/useOrgData";
 import Loading from "../../loader/Loading";
 import Layout, { layoutType } from "../layout";
 import PageNotFound from "../utils/pagenotFound";
-import { privateChildren, publicChildren } from "./Children";
+import { privateChildren, publicChildren, withoutSidenave } from "./Children";
 import { PATH_DASHBOARD, PATH_LOGIN } from "./pathname";
 import ErrorElement from "../utils/ErrorElement";
+import OnlyQueue from "../only-queue/OnlyQueue";
 
 const PublicRoute = ({ children, isAuthenticated }) => {
   if (isAuthenticated) {
@@ -52,6 +53,18 @@ const AppRouter = () => {
         </PrivateRoute>
       ),
       children: privateChildren,
+      errorElement: <ErrorElement />,
+    },
+
+    // Without Sidebar Layout (Header-only)
+    {
+      element: (
+        <PrivateRoute isAuthenticated={isAuthenticated}>
+          <Layout type={layoutType.withoutSidebar} />
+  
+        </PrivateRoute>
+      ),
+      children: withoutSidenave,
       errorElement: <ErrorElement />,
     },
 

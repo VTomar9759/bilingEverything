@@ -1,0 +1,808 @@
+import React, { useState, useEffect, useRef } from "react";
+import styled from "styled-components";
+import useOrgData from "../../hooks/useOrgData";
+import { Input, Select, Button, Empty, message, Spin } from "antd";
+import {
+  SearchOutlined,
+  CoffeeOutlined,
+  PrinterOutlined,
+  EditOutlined,
+  SaveOutlined,
+} from "@ant-design/icons";
+import { useNavigate, useLocation } from "react-router-dom";
+import useOrderEdit from "../../hooks/useOrderEdit";
+import useItemStore from "../../hooks/useItemStore";
+import TabHeader from "../../../components/TabHeader";
+import { PageWrapper } from "../../styles/commonstyle";
+import { PATH_BILLING } from "../../routes/pathname";
+import CategorySelecter from "../../../components/CategorySelecter";
+import * as service from "../../../services";
+import OrderInvoiceModal from "../../print/OrderInvoiceModal";
+import KOT from "../../print/KOT";
+
+const { Option } = Select;
+
+const OrderEditPage = () => {
+  const { org_id, userData, permission } = useOrgData();
+  const ordersPerm = permission?.orders;
+  const canUpdate = ordersPerm?.update ?? false;
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const orderId = location.state?.orderId;
+
+  const { order, loading: orderLoading, fetchOrder, editItems } = useOrderEdit();
+  const [settings, setSettings] = useState({});
+  const [catalogItems, catalogLoading] = useItemStore();
+  const [printModalVisible, setPrintModalVisible] = useState(false);
+  const [kotModalVisible, setKotModalVisible] = useState(false);
+  const [createdOrderForPrint, setCreatedOrderForPrint] = useState(null);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (org_id) {
+      service.getSettings(org_id).then((res) => {
+        if (res) setSettings(res);
+      });
+    }
+  }, [org_id]);
+
+  // Fetch the order to edit
+  useEffect(() => {
+    if (org_id && orderId) {
+      fetchOrder(orderId);
+    }
+  }, [org_id, orderId, fetchOrder]);
+
+  const [selectedPosItems, setSelectedPosItems] = useState([]);
+  const [posSearchText, setPosSearchText] = useState("");
+  const isPrintSubmitRef = useRef(false);
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [initialized, setInitialized] = useState(false);
+
+  const handleCategoryFilter = (category) => {
+    setSelectedCategory(category);
+  };
+
+  // Pre-populate items from fetched order
+  useEffect(() => {
+    if (order && order.items && !initialized) {
+      const mapped = order.items.map((item) => ({
+        item: {
+          id: item.id,
+          name: item.name,
+          price: item.price,
+          category: item.category,
+          gst_status: item.gst_status,
+          code: item.code || "",
+          image: item.image || "",
+        },
+        quantity: item.quantity,
+      }));
+      setSelectedPosItems(mapped);
+      setInitialized(true);
+    }
+  }, [order, initialized]);
+
+  const handleAddPosItem = (item) => {
+    setSelectedPosItems((prev) => {
+      const existing = prev.find((i) => i.item.id === item.id);
+      if (existing) {
+        return prev.map((i) =>
+          i.item.id === item.id ? { ...i, quantity: i.quantity + 1 } : i,
+        );
+      }
+      return [...prev, { item, quantity: 1 }];
+    });
+  };
+
+  const handleRemovePosItem = (itemId) => {
+    setSelectedPosItems(selectedPosItems.filter((i) => i.item.id !== itemId));
+  };
+
+  const handleAdjustPosQty = (itemId, delta) => {
+    setSelectedPosItems((prev) =>
+      prev
+        .map((i) => {
+          if (i.item.id === itemId) {
+            const newQty = i.quantity + delta;
+            return newQty > 0 ? { ...i, quantity: newQty } : null;
+          }
+          return i;
+        })
+        .filter(Boolean),
+    );
+  };
+
+  const hasGst = Boolean(
+    userData?.gst_number && String(userData.gst_number).trim().length > 0,
+  );
+
+  const handleSaveOrder = async () => {
+    if (!canUpdate) {
+      message.error("You do not have permission to edit orders.");
+      return;
+    }
+    if (selectedPosItems.length === 0) {
+      message.error("Please add at least one product to the order.");
+      return;
+    }
+
+    const itemsPayload = selectedPosItems.map((i) => {
+      const isItemGst =
+        hasGst && i.item.gst_status !== false && String(i.item.gst_status) !== "false";
+      const itemSubtotal = Number(i.item.price || 0) * i.quantity;
+      const itemTax = isItemGst ? itemSubtotal * 0.05 : 0;
+      return {
+        id: i.item.id,
+        name: i.item.name,
+        price: i.item.price,
+        quantity: i.quantity,
+        category: i.item.category || "Food",
+        gst_status: i.item.gst_status ?? true,
+        tax: itemTax,
+      };
+    });
+
+    setSaving(true);
+    try {
+      const updatedOrder = await editItems(orderId, itemsPayload);
+      message.success("Order updated successfully!");
+
+      if (isPrintSubmitRef.current === "invoice") {
+        setCreatedOrderForPrint(updatedOrder);
+        setPrintModalVisible(true);
+      } else {
+        navigate(PATH_BILLING, {
+          state: { orderId },
+        });
+      }
+    } catch (err) {
+      message.error("Failed to update order.");
+      console.error(err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleOpenKotModal = () => {
+    if (selectedPosItems.length === 0) {
+      message.error("Please add at least one item to print KOT.");
+      return;
+    }
+
+    const tableName = order?.table_name || "Takeaway";
+    const draftKotOrder = {
+      order_number: order?.order_number || `KOT-${Math.floor(100000 + Math.random() * 900000)}`,
+      table_name: tableName,
+      table_number: order?.table_number,
+      items: selectedPosItems.map((i) => ({
+        name: i.item.name,
+        quantity: i.quantity,
+      })),
+      created_at: new Date().toISOString(),
+    };
+
+    setCreatedOrderForPrint(draftKotOrder);
+    setKotModalVisible(true);
+  };
+
+  const menuFilteredCatalog = catalogItems?.filter(
+    (item) =>
+      item.status === true &&
+      (selectedCategory === item.category_id || selectedCategory === "all") &&
+      (item.name?.toLowerCase().includes(posSearchText.toLowerCase()) ||
+        item.code?.toLowerCase().includes(posSearchText.toLowerCase())),
+  );
+
+  const subtotalSum = selectedPosItems.reduce(
+    (acc, curr) => acc + Number(curr.item.price || 0) * curr.quantity,
+    0,
+  );
+
+  const taxSum = selectedPosItems.reduce((acc, curr) => {
+    const isItemGst =
+      hasGst && curr.item.gst_status !== false && String(curr.item.gst_status) !== "false";
+    const itemSubtotal = Number(curr.item.price || 0) * curr.quantity;
+    return acc + (isItemGst ? itemSubtotal * 0.05 : 0);
+  }, 0);
+
+  const grandTotal = subtotalSum + taxSum;
+
+  const checkIsItemGst = (item) => {
+    return (
+      hasGst &&
+      item?.gst_status !== false &&
+      String(item?.gst_status) !== "false"
+    );
+  };
+
+  const orderTitle = order
+    ? `Edit Order #${order.order_number || orderId}`
+    : "Edit Order";
+
+  if (!orderId) {
+    return (
+      <PageWrapper>
+        <HeaderBox>
+          <TabHeader title="Edit Order" />
+          <Button
+            type="primary"
+            onClick={() => navigate(PATH_BILLING)}
+            style={{ height: 32, fontWeight: 600, borderRadius: 8 }}
+          >
+            Back to Billing
+          </Button>
+        </HeaderBox>
+        <EmptyCard>
+          <Empty description="No order selected. Please go to Billing and select an order to edit." />
+        </EmptyCard>
+      </PageWrapper>
+    );
+  }
+
+  if (orderLoading && !initialized) {
+    return (
+      <PageWrapper>
+        <HeaderBox>
+          <TabHeader title="Loading Order..." />
+        </HeaderBox>
+        <LoadingWrapper>
+          <Spin size="large" />
+        </LoadingWrapper>
+      </PageWrapper>
+    );
+  }
+
+  return (
+    <PageWrapper>
+      <HeaderBox>
+        <TabHeader title={orderTitle} />
+        <Button
+          type="primary"
+          onClick={() => navigate(PATH_BILLING, { state: { orderId } })}
+          style={{ height: 32, fontWeight: 600, borderRadius: 8 }}
+        >
+          Back to Billing
+        </Button>
+      </HeaderBox>
+      <CategorySelecter
+        onChange={handleCategoryFilter}
+        value={selectedCategory}
+      />
+
+      <ComposerCard>
+        <PosContainer>
+          {/* Left Column - Menu Grid */}
+          <PosLeftPanel>
+            <FilterRow>
+              {order && (
+                <OrderInfoBadge>
+                  <EditOutlined /> Editing: {order.table_name || "Takeaway"} •
+                  Order #{order.order_number}
+                </OrderInfoBadge>
+              )}
+
+              <Input
+                placeholder="Filter menu dishes..."
+                prefix={<SearchOutlined />}
+                value={posSearchText}
+                onChange={(e) => setPosSearchText(e.target.value)}
+                style={{ height: 38, borderRadius: 8, flex: 1 }}
+                allowClear
+              />
+            </FilterRow>
+
+            <MenuGrid>
+              {catalogLoading ? (
+                <p>Loading items catalog...</p>
+              ) : menuFilteredCatalog?.length === 0 ? (
+                <Empty description="No menu items in catalog" />
+              ) : (
+                menuFilteredCatalog?.map((item) => (
+                  <MenuItemCard
+                    key={item.id}
+                    onClick={() => handleAddPosItem(item)}
+                  >
+                    {item.image ? (
+                      <MenuImg src={item.image} alt={item.name} />
+                    ) : (
+                      <MenuAvatar>{item.name[0]}</MenuAvatar>
+                    )}
+                    <CodeBadge>{item.code}</CodeBadge>
+
+                    <MenuCardContent>
+                      <MenuMeta>
+                        <MenuName>{item.name}</MenuName>
+
+                        <MenuPrice>
+                          {settings.currency || "Rs."} {item.price}
+                        </MenuPrice>
+                      </MenuMeta>
+                    </MenuCardContent>
+                  </MenuItemCard>
+                ))
+              )}
+            </MenuGrid>
+          </PosLeftPanel>
+
+          {/* Right Column - Edit Ticket */}
+          <PosRightPanel>
+            <ComposerTitle>Edit Order Ticket</ComposerTitle>
+            <ComposerList>
+              {selectedPosItems.length === 0 ? (
+                <ComposerEmpty>
+                  <CoffeeOutlined
+                    style={{
+                      fontSize: 40,
+                      color: "var(--color-text-secondary)",
+                    }}
+                  />
+                  <p>
+                    No items in order.
+                    <br />
+                    Click items on the left to add.
+                  </p>
+                </ComposerEmpty>
+              ) : (
+                selectedPosItems.map(({ item, quantity }) => (
+                  <ComposedItem key={item.id}>
+                    <div>
+                      <CompNameRow>
+                        <CompName>{item.name}</CompName>
+                        {hasGst && checkIsItemGst(item) && (
+                          <GstText>(5% GST)</GstText>
+                        )}
+                      </CompNameRow>
+                      <CompPrice>
+                        {settings.currency || "Rs."} {item.price}
+                      </CompPrice>
+                    </div>
+                    <QtyControls>
+                      <Button
+                        size="small"
+                        onClick={() => handleAdjustPosQty(item.id, -1)}
+                      >
+                        -
+                      </Button>
+                      <span>{quantity}</span>
+                      <Button
+                        size="small"
+                        onClick={() => handleAdjustPosQty(item.id, 1)}
+                      >
+                        +
+                      </Button>
+                    </QtyControls>
+                  </ComposedItem>
+                ))
+              )}
+            </ComposerList>
+
+            <ComposerSummary>
+              <SummaryRow>
+                <span>Subtotal</span>
+                <span>
+                  {settings.currency || "Rs."} {subtotalSum.toFixed(2)}
+                </span>
+              </SummaryRow>
+              {hasGst && (
+                <SummaryRow>
+                  <span>GST (5%)</span>
+                  <span>
+                    {settings.currency || "Rs."} {taxSum.toFixed(2)}
+                  </span>
+                </SummaryRow>
+              )}
+              <DashedLine />
+              <SummaryRow
+                style={{
+                  fontSize: 15,
+                  fontWeight: 800,
+                  color: "var(--color-primary)",
+                }}
+              >
+                <span>Grand Total</span>
+                <span>
+                  {settings.currency || "Rs."} {grandTotal.toFixed(2)}
+                </span>
+              </SummaryRow>
+
+              <div
+                style={{
+                  display: "flex",
+                  gap: 8,
+                  width: "100%",
+                  marginTop: 12,
+                }}
+              >
+                <Button
+                  type="primary"
+                  block
+                  disabled={selectedPosItems.length === 0}
+                  loading={saving}
+                  onClick={() => {
+                    isPrintSubmitRef.current = false;
+                    handleSaveOrder();
+                  }}
+                  icon={<SaveOutlined />}
+                  style={{
+                    flex: 1,
+                    height: 42,
+                    fontWeight: 700,
+                    borderRadius: 10,
+                    fontSize: 12,
+                    padding: "0 4px",
+                  }}
+                >
+                  Save Changes
+                </Button>
+                <Button
+                  type="default"
+                  block
+                  disabled={selectedPosItems.length === 0}
+                  loading={saving}
+                  onClick={() => {
+                    isPrintSubmitRef.current = "invoice";
+                    handleSaveOrder();
+                  }}
+                  icon={<PrinterOutlined />}
+                  style={{
+                    flex: 1,
+                    height: 42,
+                    fontWeight: 700,
+                    borderRadius: 10,
+                    borderColor: "var(--color-primary-light)",
+                    color: "var(--color-primary)",
+                    fontSize: 12,
+                    padding: "0 4px",
+                  }}
+                >
+                  Save & Print Invoice
+                </Button>
+                <Button
+                  type="default"
+                  block
+                  disabled={selectedPosItems.length === 0}
+                  onClick={handleOpenKotModal}
+                  icon={<PrinterOutlined />}
+                  style={{
+                    flex: 1,
+                    height: 42,
+                    fontWeight: 700,
+                    borderRadius: 10,
+                    borderColor: "#ff9800",
+                    color: "#d97706",
+                    fontSize: 12,
+                    padding: "0 4px",
+                  }}
+                >
+                  KOT
+                </Button>
+              </div>
+            </ComposerSummary>
+          </PosRightPanel>
+        </PosContainer>
+      </ComposerCard>
+      <OrderInvoiceModal
+        visible={printModalVisible}
+        onClose={() => setPrintModalVisible(false)}
+        order={createdOrderForPrint}
+        settings={settings}
+      />
+      <KOT
+        visible={kotModalVisible}
+        onClose={() => setKotModalVisible(false)}
+        order={createdOrderForPrint}
+        settings={settings}
+      />
+    </PageWrapper>
+  );
+};
+
+export default OrderEditPage;
+
+/* ─── Styled Components ─── */
+const HeaderBox = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+`;
+
+const EmptyCard = styled.div`
+  background: var(--color-surface);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-border-light);
+  padding: 60px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 20px;
+`;
+
+const LoadingWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+`;
+
+const OrderInfoBadge = styled.div`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-primary);
+  background: rgba(var(--color-primary-rgb, 99, 102, 241), 0.08);
+  border: 1px solid var(--color-primary-light);
+  border-radius: 8px;
+  padding: 0 12px;
+  height: 38px;
+  box-sizing: border-box;
+  white-space: nowrap;
+  flex-shrink: 0;
+`;
+
+const ComposerCard = styled.div`
+  background: var(--color-surface);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-border-light);
+  box-shadow: var(--shadow-sm);
+  padding: 14px;
+`;
+
+const CodeBadge = styled.div`
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(15, 17, 23, 0.7);
+  backdrop-filter: blur(6px);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-size: 10.5px;
+  font-weight: 400;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+`;
+
+const PosContainer = styled.div`
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: 16px;
+  height: calc(100vh - 100px);
+  min-height: 520px;
+
+  @media (max-width: 720px) {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+`;
+
+const PosLeftPanel = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow: hidden;
+  :where(.css-dev-only-do-not-override-mncuj7).ant-form-item {
+    margin-bottom: 0;
+  }
+`;
+
+const FilterRow = styled.div`
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  align-items: center;
+
+  .ant-form-item {
+    margin-bottom: 0;
+  }
+
+  @media (max-width: 600px) {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+`;
+
+const MenuGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  grid-auto-rows: max-content;
+  align-content: start;
+  gap: 8px;
+  overflow-y: auto;
+  flex: 1;
+  padding-right: 4px;
+`;
+
+const MenuItemCard = styled.div`
+  position: relative;
+  height: 100px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  &:hover {
+    border-color: var(--color-primary);
+    box-shadow: var(--shadow-sm);
+  }
+`;
+
+const MenuImg = styled.img`
+  width: 100%;
+  height: 50px;
+  object-fit: cover;
+  border-top-left-radius: var(--radius-lg);
+  border-top-right-radius: var(--radius-lg);
+`;
+
+const MenuAvatar = styled.div`
+  width: 100%;
+  height: 50px;
+  background: linear-gradient(
+    135deg,
+    var(--color-primary) 0%,
+    var(--color-primary-light) 100%
+  );
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 800;
+`;
+
+const MenuCardContent = styled.div`
+  padding: 5px 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+`;
+
+const MenuName = styled.div`
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+const MenuMeta = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: start;
+  align-items: center;
+`;
+
+const MenuPrice = styled.strong`
+  font-size: 10.5px;
+  color: var(--color-text-primary);
+`;
+
+const PosRightPanel = styled.div`
+  background: var(--color-bg);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-border);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+`;
+
+const ComposerTitle = styled.h4`
+  font-family: var(--font-display);
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0 0 10px;
+  border-bottom: 1.5px solid var(--color-border);
+  padding-bottom: 6px;
+`;
+
+const ComposerList = styled.div`
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-right: 4px;
+`;
+
+const ComposerEmpty = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 12px;
+  text-align: center;
+  p {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    margin: 0;
+    line-height: 1.6;
+  }
+`;
+
+const ComposedItem = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px;
+  border-radius: 8px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+`;
+
+const CompNameRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+`;
+
+const GstText = styled.span`
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+`;
+
+const CompName = styled.div`
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+`;
+
+const CompPrice = styled.span`
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+`;
+
+const QtyControls = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  span {
+    font-size: 11.5px;
+    font-weight: 700;
+  }
+  .ant-btn {
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+  }
+`;
+
+const ComposerSummary = styled.div`
+  margin-top: 12px;
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  padding: 10px;
+  border: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+`;
+
+const SummaryRow = styled.div`
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--color-text-secondary);
+`;
+
+const DashedLine = styled.div`
+  border-top: 1px dashed var(--color-border);
+  margin: 4px 0;
+`;

@@ -9,7 +9,7 @@ import TabHeader from "../../../components/TabHeader";
 import { PageWrapper } from "../../styles/commonstyle";
 import * as service from "../../../services";
 import OrderInvoiceModal from "../../print/OrderInvoiceModal";
-import { PATH_ORDERS } from "../../routes/pathname";
+import { PATH_ORDERS, PATH_ORDER_EDIT } from "../../routes/pathname";
 import {
   ShoppingCartOutlined,
   ClockCircleOutlined,
@@ -248,7 +248,7 @@ const BillingSection = () => {
     };
 
     try {
-      await service.updateOrder(org_id, activeOrder.id, modePayload);
+      await service.updateOrderPaymentMode(org_id, activeOrder.id, modePayload);
       setActiveOrder((prev) => (prev ? { ...prev, ...modePayload } : prev));
       setOrders((prev) =>
         prev.map((o) => (o.id === activeOrder.id ? { ...o, ...modePayload } : o)),
@@ -307,6 +307,12 @@ const BillingSection = () => {
     }
   };
 
+  const handleReComposerClick = () => {
+    navigate(PATH_ORDER_EDIT, {
+      state: { orderId: activeOrder?.id },
+    });
+  };
+
   /**
    * Currency
    */
@@ -324,7 +330,7 @@ const BillingSection = () => {
 
         <Button
           type="primary"
-          onClick={() => navigate(PATH_ORDERS)}
+          onClick={handleReComposerClick}
           style={{
             height: 32,
             fontWeight: 600,
@@ -468,23 +474,48 @@ const BillingSection = () => {
                 />
               </Form.Item>
 
-              {/* GENERATE INVOICE */}
-              <Button
-                type="primary"
-                block
-                size="large"
-                disabled={!activeOrder}
-                loading={submitting}
-                onClick={handleSettleSubmit}
+              {/* ACTIONS */}
+              <div
                 style={{
-                  height: 45,
-                  fontWeight: 700,
-                  borderRadius: 10,
+                  display: "flex",
+                  gap: "10px",
                   marginTop: 12,
                 }}
               >
-                Generate Invoice
-              </Button>
+                <Button
+                  type="default"
+                  size="large"
+                  disabled={!activeOrder}
+                  onClick={() =>
+                    navigate(PATH_ORDER_EDIT, {
+                      state: { orderId: activeOrder?.id, order: activeOrder },
+                    })
+                  }
+                  style={{
+                    flex: 1,
+                    height: 45,
+                    fontWeight: 700,
+                    borderRadius: 10,
+                  }}
+                >
+                  ReComposer
+                </Button>
+                <Button
+                  type="primary"
+                  size="large"
+                  disabled={!activeOrder}
+                  loading={submitting}
+                  onClick={handleSettleSubmit}
+                  style={{
+                    flex: 1,
+                    height: 45,
+                    fontWeight: 700,
+                    borderRadius: 10,
+                  }}
+                >
+                  Generate Invoice
+                </Button>
+              </div>
             </Form>
           </POSControlCard>
 

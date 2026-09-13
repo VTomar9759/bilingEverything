@@ -9,6 +9,7 @@ import publicBackground from "../../assets/pubicbackground.jpg";
 export const layoutType = {
   public: "public",
   private: "private",
+  withoutSidebar:"withoutSidebar"
 };
 
 export const SIDEBAR_OPEN_WIDTH = 230;
@@ -19,6 +20,11 @@ const index = ({ type }) => {
   const { userData } = useOrgData();
 
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
+
+  if(type === layoutType.withoutSidebar)
+  {
+    return <Outlet />;
+  }
 
   return type === layoutType.public ? (
     <PublicLayoutStyle>
