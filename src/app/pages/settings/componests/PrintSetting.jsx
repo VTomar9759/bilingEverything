@@ -695,13 +695,6 @@ const PrintSetting = () => {
               {/* Bottom Sticky Action Bar */}
               <BottomActionBar>
                 <Button
-                  icon={<ReloadOutlined />}
-                  onClick={handleResetDefaults}
-                  disabled={loading || saving}
-                >
-                  Reset Defaults
-                </Button>
-                <Button
                   type="primary"
                   icon={<SaveOutlined />}
                   htmlType="submit"
