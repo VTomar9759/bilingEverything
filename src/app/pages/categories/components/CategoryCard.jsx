@@ -75,8 +75,9 @@ const CardContainer = styled.div`
     background: var(--color-primary-50);
   }
 
-  @media (max-width: 480px) {
-    min-width: 130px;
+  @media (max-width: 720px) {
+    width: 100%;
+    min-width: unset;
   }
 `;
 
@@ -120,6 +121,8 @@ const CategoryName = styled.div`
   font-weight: 600;
   color: var(--color-text-primary);
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   padding-right: 12px;
   line-height: 1.3;
 `;

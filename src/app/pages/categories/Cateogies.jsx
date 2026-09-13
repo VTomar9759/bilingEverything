@@ -214,8 +214,9 @@ const AddCardContainer = styled.div`
     transform: translateY(-2px);
   }
 
-  @media (max-width: 480px) {
-    min-width: 130px;
+  @media (max-width: 720px) {
+    width: 100%;
+    min-width: unset;
   }
 `;
 
@@ -255,7 +256,13 @@ const CardGrid = styled.div`
   flex-wrap: wrap;
   gap: 12px;
 
-  @media (max-width: 480px) {
+  @media (max-width: 720px) {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (max-width: 520px) {
+    grid-template-columns: 1fr;
     gap: 10px;
   }
 `;
@@ -265,7 +272,13 @@ const SkeletonGrid = styled.div`
   flex-wrap: wrap;
   gap: 12px;
 
-  @media (max-width: 480px) {
+  @media (max-width: 720px) {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (max-width: 520px) {
+    grid-template-columns: 1fr;
     gap: 10px;
   }
 `;
@@ -287,7 +300,8 @@ const SkeletonCard = styled.div`
     width: 100px;
   }
 
-  @media (max-width: 480px) {
-    min-width: 130px;
+  @media (max-width: 720px) {
+    width: 100%;
+    min-width: unset;
   }
 `;
