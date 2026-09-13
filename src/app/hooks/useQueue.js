@@ -6,7 +6,11 @@ import { supabase } from "../../lib/supabaseClients";
 const QUEUE_STATUSES = ["Preparing", "Ready"];
 
 const useQueue = () => {
-  const { org_id } = useOrgData();
+  const { org_id, userData } = useOrgData();
+  const user_role = userData?.role;
+  const user_id = userData?.id;
+  console.log(user_role, "user_role");
+  console.log(user_id, "user_id");
   const [queueListing, setQueueListing] = useState([]);
   const [loading, setLoading] = useState(false);
   const lastFetchRef = useRef(0);
@@ -27,27 +31,37 @@ const useQueue = () => {
       try {
         const tenHoursAgo = new Date(Date.now() - 10 * 60 * 60 * 1000).toISOString();
 
-        let { data, error } = await supabase
+        let query = supabase
           .from("orders")
           .select("*")
           .eq("org_id", org_id)
           .not("table_name", "is", null)
           .neq("table_name", "")
           .in("status", QUEUE_STATUSES)
-          .gte("created_at", tenHoursAgo)
-          .order("created_at", { ascending: false });
+          .gte("created_at", tenHoursAgo);
+
+        if (user_role === "admin" && user_id) {
+          query = query.eq("created_by", user_id);
+        }
+
+        let { data, error } = await query.order("created_at", { ascending: false });
 
         // Fallback to user_id if org_id column doesn't exist
         if (error) {
-          const res = await supabase
+          let fallbackQuery = supabase
             .from("orders")
             .select("*")
             .eq("user_id", org_id)
             .not("table_name", "is", null)
             .neq("table_name", "")
             .in("status", QUEUE_STATUSES)
-            .gte("created_at", tenHoursAgo)
-            .order("created_at", { ascending: false });
+            .gte("created_at", tenHoursAgo);
+
+          if (user_role !== "admin" && user_id) {
+            fallbackQuery = fallbackQuery.eq("created_by", user_id);
+          }
+
+          const res = await fallbackQuery.order("created_at", { ascending: false });
 
           if (res.error) throw res.error;
           data = res.data;

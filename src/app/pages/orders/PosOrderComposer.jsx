@@ -9,7 +9,6 @@ import {
   CreditCardOutlined,
   DollarOutlined,
   GlobalOutlined,
-  CheckCircleFilled,
   ClockCircleOutlined,
   UserOutlined,
   PhoneOutlined,
@@ -19,6 +18,7 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import useOrders from "../../hooks/useOrders";
 import useTables from "../../hooks/useTables";
+import { generateOrderNumber } from "../../../services/orderService";
 import useItemStore from "../../hooks/useItemStore";
 import TabHeader from "../../../components/TabHeader";
 import { PageWrapper } from "../../styles/commonstyle";
@@ -189,7 +189,7 @@ const PosOrderComposer = () => {
     }
   };
 
-  const handleOpenKotModal = () => {
+  const handleOpenKotModal = async() => {
     if (selectedPosItems.length === 0) {
       message.error("Please add at least one item to print KOT.");
       return;
@@ -201,9 +201,10 @@ const PosOrderComposer = () => {
         ? `Table ${selectedTable.table_number} (${selectedTable.table_name})`
         : selectedTable.table_name
       : "Takeaway";
+    const order_number = await generateOrderNumber(org_id);
 
     const draftKotOrder = {
-      order_number: `KOT-${Math.floor(100000 + Math.random() * 900000)}`,
+      order_number: order_number,
       table_name: tableName,
       table_number: selectedTable?.table_number,
       customer_name: form.getFieldValue("customer_name") ? form.getFieldValue("customer_name").trim() : null,
@@ -312,13 +313,15 @@ const PosOrderComposer = () => {
                 </Form.Item>
               </FilterRow>
 
-              <MenuGrid>
                 {catalogLoading ? (
                   <p>Loading items catalog...</p>
                 ) : menuFilteredCatalog?.length === 0 ? (
-                  <Empty description="No menu items in catalog" />
+                  <div style={{ display: "flex", width: "100%", justifyContent: "center", alignItems: "center", height: "100%" }}>
+                    <Empty description="No menu items found" />
+                  </div>
                 ) : (
-                  menuFilteredCatalog?.map((item) => (
+                  <MenuGrid>
+                  {menuFilteredCatalog?.map((item) => (
                     <MenuItemCard
                       key={item.id}
                       onClick={() => handleAddPosItem(item)}
@@ -340,9 +343,9 @@ const PosOrderComposer = () => {
                         </MenuMeta>
                       </MenuCardContent>
                     </MenuItemCard>
-                  ))
-                )}
+              ))}
               </MenuGrid>
+                )}
             </PosLeftPanel>
 
             {/* Right Column - Composition List */}

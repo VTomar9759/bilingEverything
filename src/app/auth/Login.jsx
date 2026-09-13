@@ -155,7 +155,7 @@ const handleSubmit = async (values) => {
           </Form.Item>
 
           <ForgotRow>
-            <ForgotLink onClick={() => navigate("/forgot-password")}>
+            <ForgotLink type="button" onClick={() => navigate("/forgot-password")}>
               Forgot password?
             </ForgotLink>
           </ForgotRow>

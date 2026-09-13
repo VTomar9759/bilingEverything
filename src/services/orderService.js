@@ -16,7 +16,7 @@ const formatEndDate = (endDate) => {
 };
 
 export const getOrders = async (params) => {
-  let org_id, page, limit, startDate, endDate, status, orderId;
+  let org_id, page, limit, startDate, endDate, status, orderId, user_id, user_role;
   let isPaginated = false;
 
   if (typeof params === "string") {
@@ -29,6 +29,8 @@ export const getOrders = async (params) => {
     endDate = params.endDate;
     status = params.status;
     orderId = params.orderId || params.orderId;
+    user_id = params.user_id;
+    user_role = params.user_role;
     isPaginated = true;
   }
 
@@ -36,8 +38,13 @@ export const getOrders = async (params) => {
     let query = supabase
       .from("orders")
       .select("*", { count: "exact" })
-      .eq("org_id", org_id)
-      .order("created_at", { ascending: false });
+      .eq("org_id", org_id);
+
+    if (user_role === "admin" && user_id) {
+      query = query.eq("created_by", user_id);
+    }
+
+    query = query.order("created_at", { ascending: false });
 
     if (isPaginated) {
       const from = (page - 1) * limit;
@@ -74,8 +81,13 @@ export const getOrders = async (params) => {
       let fallbackQuery = supabase
         .from("orders")
         .select("*", { count: "exact" })
-        .eq("user_id", org_id)
-        .order("created_at", { ascending: false });
+        .eq("user_id", org_id);
+
+      if (user_role !== "admin" && user_id) {
+        fallbackQuery = fallbackQuery.eq("created_by", user_id);
+      }
+
+      fallbackQuery = fallbackQuery.order("created_at", { ascending: false });
 
       if (isPaginated) {
         const from = (page - 1) * limit;
@@ -144,7 +156,7 @@ export const generateOrderNumber = async (org_id) => {
   return `${prefix}${next}`;
 };
 
-export const createOrder = async (org_id, orderData) => {
+export const createOrder = async (org_id, orderData, user_id) => {
   let targetOrgId = org_id;
   let targetOrderData = orderData;
 
@@ -155,7 +167,7 @@ export const createOrder = async (org_id, orderData) => {
 
   const baseOrder = {
     org_id: targetOrgId,
-    created_by: targetOrgId,
+    created_by: user_id,
     created_at: new Date().toISOString(),
     status: "Pending",
     payment_status: "Unpaid",
@@ -220,11 +232,15 @@ export const createOrder = async (org_id, orderData) => {
       if (!error && data && data.length > 0) {
         const createdOrder = data[0];
         if (createdOrder.table_id) {
-          await updateTABLE_STATUS(
-            createdOrder.table_id,
-            "Occupied",
-            createdOrder.id,
-          );
+          try {
+            await updateTABLE_STATUS(
+              createdOrder.table_id,
+              "Occupied",
+              createdOrder.id,
+            );
+          } catch (tblErr) {
+            console.warn("Could not update table status on order creation:", tblErr);
+          }
         }
         return createdOrder;
       }

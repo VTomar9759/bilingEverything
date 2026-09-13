@@ -97,12 +97,16 @@ const BillingSection = () => {
         ordersList = await service.getOrders({
           org_id,
           orderId: targetOrderId,
+          user_id: userData?.id,
+          user_role: userData?.role,
         });
       } else {
         ordersList = await service.getOrders({
           org_id,
           startDate: yesterdayStr,
           endDate: todayStr,
+          user_id: userData?.id,
+          user_role: userData?.role,
         });
       }
 
@@ -334,7 +338,7 @@ const BillingSection = () => {
 
         <Button
           type="primary"
-          onClick={handleReComposerClick}
+          onClick={() => navigate(PATH_ORDERS)}
           style={{
             height: 32,
             fontWeight: 600,

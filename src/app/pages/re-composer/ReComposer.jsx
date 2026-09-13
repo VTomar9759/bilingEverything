@@ -326,12 +326,14 @@ const OrderEditPage = () => {
               />
             </FilterRow>
 
-            <MenuGrid>
               {catalogLoading ? (
                 <p>Loading items catalog...</p>
               ) : menuFilteredCatalog?.length === 0 ? (
-                <Empty description="No menu items in catalog" />
+                <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%" }}>
+                  <Empty description="No menu items found" />
+                </div>
               ) : (
+                <MenuGrid>{
                 menuFilteredCatalog?.map((item) => (
                   <MenuItemCard
                     key={item.id}
@@ -354,9 +356,9 @@ const OrderEditPage = () => {
                       </MenuMeta>
                     </MenuCardContent>
                   </MenuItemCard>
-                ))
+                ))}
+                </MenuGrid>
               )}
-            </MenuGrid>
           </PosLeftPanel>
 
           {/* Right Column - Edit Ticket */}

@@ -59,11 +59,15 @@ const PorgotPassword = () => {
 
 export default PorgotPassword;
 const Wrapper = styled.div`
-  width: 513px;
+  width: 100%;
+  max-width: 513px;
   border-radius: 16px;
   padding: 40px;
   background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(10px);
+  @media (max-width: 480px) {
+    padding: 20px;
+  }
 `;
 const BackButton = styled.button`
   display: flex;

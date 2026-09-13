@@ -13,7 +13,8 @@ const useOrders = ({
   endDate,
   status,
 } = {}) => {
-  const { org_id } = useOrgData();
+  const { org_id, userData } = useOrgData();
+  const user_id = userData?.id;
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [total, setTotal] = useState(0);
@@ -23,7 +24,7 @@ const useOrders = ({
     if (!org_id) return;
     setLoading(true);
     try {
-      const data = await getOrders({ org_id, page, limit, startDate, endDate, status });
+      const data = await getOrders({ org_id, page, limit, startDate, endDate, status, user_id, user_role: userData?.role });
       setOrders(data || []);
       setTotal(data?.total || 0);
       setTotalPages(data?.totalPages || 0);
@@ -41,7 +42,7 @@ const useOrders = ({
   const createOrder = async (orderData) => {
     if (!org_id) return;
     try {
-      const newOrder = await apiCreateOrder(org_id, orderData);
+      const newOrder = await apiCreateOrder(org_id, orderData, user_id);
       setOrders((prev) => [newOrder, ...prev]);
       return newOrder;
     } catch (err) {

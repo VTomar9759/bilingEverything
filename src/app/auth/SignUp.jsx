@@ -323,7 +323,8 @@ const Wrapper = styled.div`
 `;
 
 const Card = styled.div`
-  width: 600px;
+  width: 100%;
+  max-width: 600px;
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(16px);
   border-radius: var(--radius-xl);

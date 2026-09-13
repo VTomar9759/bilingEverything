@@ -692,6 +692,7 @@ const StatRow = styled.div`
 const StatusTag = styled.span`
   padding: 2px 8px;
   border-radius: 999px;
+  text-transform: uppercase;
   font-size: 11px;
   font-weight: 700;
   background: white;

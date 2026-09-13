@@ -220,6 +220,7 @@ const PublicLayoutStyle = styled.div`
 const PublicCard = styled.div`
   position: relative;
   z-index: 1;
+  width: 100%;
   max-width: 1000px;
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -294,4 +295,5 @@ const RightSection = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
+  width: 100%;
 `;
