@@ -6,6 +6,13 @@ import { PersistGate } from "redux-persist/integration/react";
 import { store, persistor } from "./app/store";
 import { registerSW } from "virtual:pwa-register";
 
+// Capture PWA install prompt globally
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  window.deferredPwaPrompt = e;
+  window.dispatchEvent(new CustomEvent("pwa-prompt-available", { detail: e }));
+});
+
 // Register Service Worker for PWA
 registerSW({ immediate: true });
 
