@@ -39,18 +39,10 @@ import {
   selectPrintSettingsSaving,
 } from "../../../store/slices/printSettingSlice";
 import { DEFAULT_PRINT_SETTINGS } from "../../../../services/printSettingsService";
+import { PRINT_SIZE_OPTIONS } from "../../../utils/constant";
 
 const { Option } = Select;
 const { TextArea } = Input;
-
-const PRINT_SIZE_OPTIONS = [
-  { label: "A4 (Standard Sheet)", value: "A4" },
-  { label: "Modern (80mm Thermal)", value: "Modern" },
-  { label: "3 Inch A (80mm)", value: "3 Inch A" },
-  { label: "3 Inch B (80mm)", value: "3 Inch B" },
-  { label: "2 Inch A (58mm)", value: "2 Inch A" },
-  { label: "2 Inch B (58mm)", value: "2 Inch B" },
-];
 
 const PrintSetting = () => {
   const [form] = Form.useForm();

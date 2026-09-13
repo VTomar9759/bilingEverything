@@ -1,6 +1,6 @@
 import React from "react";
 import styled from "styled-components";
-import { ClockCircleOutlined } from "@ant-design/icons";
+import { ClockCircleOutlined, UserOutlined } from "@ant-design/icons";
 
 const getStatusConfig = (status) => {
   switch (status?.toLowerCase()) {
@@ -49,6 +49,7 @@ const QueueCard = ({ order }) => {
   const items = order.items || order.order_items || [];
   const itemCount = Array.isArray(items) ? items.length : 0;
   const total = order.total || order.grand_total || order.subtotal || 0;
+  const customerName = (order.customer_name || order.customer?.name || order.customerName || "").trim();
 
   const createdAt = order.created_at
     ? new Date(order.created_at).toLocaleTimeString("en-IN", {
@@ -72,25 +73,36 @@ const QueueCard = ({ order }) => {
         </StatusPill>
       </CardHeader>
 
-      {/* Table Badge */}
-      <TableBadge>
-        <TableIcon>
-          <svg
-            width="12"
-            height="12"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <circle cx="12" cy="12" r="6" />
-            <path d="M12 2v4M12 18v4M2 12h4M18 12h4" />
-          </svg>
-        </TableIcon>
-        <span>{order.table_name}</span>
-      </TableBadge>
+      {/* Badges Row */}
+      <BadgesRow>
+        {order.table_name && (
+          <TableBadge>
+            <TableIcon>
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <circle cx="12" cy="12" r="6" />
+                <path d="M12 2v4M12 18v4M2 12h4M18 12h4" />
+              </svg>
+            </TableIcon>
+            <span>{order.table_name}</span>
+          </TableBadge>
+        )}
+
+        {customerName && (
+          <CustomerBadge>
+            <UserOutlined />
+            <span>{customerName}</span>
+          </CustomerBadge>
+        )}
+      </BadgesRow>
 
       {/* Info Row */}
       <InfoRow>
@@ -230,6 +242,56 @@ const StatusDot = styled.span`
   @media (min-width: 1400px) {
     width: 8px;
     height: 8px;
+  }
+`;
+
+const BadgesRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+`;
+
+const CustomerBadge = styled.div`
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--color-surface-hover, #f8fafc);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  width: fit-content;
+
+  .anticon {
+    font-size: 11px;
+    color: var(--color-text-secondary);
+  }
+
+  @media (min-width: 1000px) {
+    font-size: 13px;
+    padding: 4px 10px;
+    .anticon {
+      font-size: 12px;
+    }
+  }
+
+  @media (min-width: 1400px) {
+    font-size: 14px;
+    padding: 5px 12px;
+    .anticon {
+      font-size: 13px;
+    }
+  }
+
+  @media (min-width: 1800px) {
+    font-size: 15px;
+    padding: 6px 14px;
+    .anticon {
+      font-size: 14px;
+    }
   }
 `;
 

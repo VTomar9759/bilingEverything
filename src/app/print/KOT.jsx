@@ -1,5 +1,5 @@
 import React, { useRef, useState } from "react";
-import styled from "styled-components";
+import styled, { createGlobalStyle } from "styled-components";
 import { Modal, Button, Space } from "antd";
 import {
   PrinterOutlined,
@@ -7,6 +7,79 @@ import {
 } from "@ant-design/icons";
 import { printKOTSilent } from "../../services";
 import useOrgData from "../hooks/useOrgData";
+import { PRINT_TYPE, PRINT_SIZE } from "../utils/constant";
+
+const PrintGlobalStyles = createGlobalStyle`
+  @media print {
+    @page {
+      size: ${({ $paperWidth }) => $paperWidth || "80mm"} auto;
+      margin: 0mm;
+    }
+
+    html, body {
+      width: 100% !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      background: #ffffff !important;
+      color: #000000 !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    body * {
+      visibility: hidden !important;
+    }
+
+    .printable-receipt-container,
+    .printable-receipt-container * {
+      visibility: visible !important;
+    }
+
+    .printable-receipt-container {
+      position: relative !important;
+      margin: 0 auto !important;
+      left: 0 !important;
+      right: 0 !important;
+      top: 0 !important;
+      width: ${({ $paperWidth }) => $paperWidth || "80mm"} !important;
+      max-width: ${({ $paperWidth }) => $paperWidth || "80mm"} !important;
+      padding: 4mm 3mm !important;
+      box-sizing: border-box !important;
+      background: #ffffff !important;
+      color: #000000 !important;
+      font-family: "Courier New", Courier, monospace !important;
+      box-shadow: none !important;
+      border: none !important;
+      border-radius: 0 !important;
+    }
+
+    .printable-receipt-container .receipt-header,
+    .printable-receipt-container .receipt-header *,
+    div[class*="ReceiptHeader"],
+    div[class*="ReceiptHeader"] * {
+      text-align: center !important;
+      width: 100% !important;
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: center !important;
+      justify-content: center !important;
+      margin-left: auto !important;
+      margin-right: auto !important;
+    }
+
+    .printable-receipt-container .dotted-divider {
+      border-top: 1.5px dashed #000000 !important;
+      margin: 6px 0 !important;
+      width: 100% !important;
+      display: block !important;
+    }
+
+    tr, .receipt-header, .receipt-meta, .dotted-divider {
+      break-inside: avoid !important;
+      page-break-inside: avoid !important;
+    }
+  }
+`;
 
 const KOT = ({ visible, onClose, order, settings }) => {
   const receiptRef = useRef();
@@ -29,7 +102,10 @@ const KOT = ({ visible, onClose, order, settings }) => {
 
   const businessName = getCleanName(rawBusinessName);
 
-  const paperWidth = settings?.paper_width || userData?.paper_width || "80mm";
+  const printType = userData?.print_type || settings?.print_type || PRINT_TYPE.MODERN;
+  const printConfig = PRINT_SIZE[printType] || PRINT_SIZE[PRINT_TYPE.MODERN];
+  const paperWidth = settings?.paper_width || userData?.paper_width || printConfig.width;
+  const modalWidth = printConfig.widthPx + 78;
 
   const getFormattedOrderNo = () => {
     if (!order) return "";
@@ -52,10 +128,12 @@ const KOT = ({ visible, onClose, order, settings }) => {
   };
 
   return (
-    <Modal
-      open={visible}
-      onCancel={onClose}
-      width={360}
+    <>
+      <PrintGlobalStyles $paperWidth={paperWidth} />
+      <Modal
+        open={visible}
+        onCancel={onClose}
+      width={modalWidth}
       centered
       footer={false}
       title={
@@ -148,6 +226,7 @@ const KOT = ({ visible, onClose, order, settings }) => {
         </Button>
       </Space>
     </Modal>
+    </>
   );
 };
 
@@ -171,7 +250,7 @@ const ReceiptOuter = styled.div`
 
 const ReceiptPaper = styled.div`
   background: white;
-  width: ${({ $paperWidth }) => ($paperWidth === "58mm" ? "220px" : "280px")};
+  width: ${({ $paperWidth }) => ($paperWidth === "58mm" ? "220px" : "300px")};
   max-width: 100%;
   padding: 0 6px;
   font-family: "Courier New", Courier, monospace;

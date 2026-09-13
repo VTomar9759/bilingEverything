@@ -288,9 +288,9 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         </NavSection>
         {/* Brand Watermark */}
         <WatermarkContainer $isOpen={isOpen} title="BillingEveryThing">
-          <WatermarkLogo src={logo} alt="BillingEveryThing" />
+          <WatermarkLogo src={logo} alt="BillingEveryThing"/>
           {isOpen && (
-            <BrandTitle fontSize="12px">
+            <BrandTitle fontSize="12px" color="#fff">
               Billing <span className="highlight">Every Thing</span>
             </BrandTitle>
           )}

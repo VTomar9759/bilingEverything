@@ -44,7 +44,7 @@ const useOrderEdit = () => {
    * @param {Array} items - Array of { id, name, price, quantity, category, gst_status, tax }
    */
   const editItems = useCallback(
-    async (orderId, items) => {
+    async (orderId, items, extraPayload = {}) => {
       if (!org_id || !orderId) return null;
       try {
         const subtotal = items.reduce(
@@ -68,6 +68,7 @@ const useOrderEdit = () => {
           subtotal,
           tax,
           total,
+          ...extraPayload,
         });
 
         if (updatedOrder) {

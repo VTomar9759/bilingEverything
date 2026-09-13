@@ -85,6 +85,7 @@ const useOrgData = () => {
     userData: userData || null,
     permission: permission,
     print_type: effectivePrintType,
+    show_customer_details: authState?.show_customer_details ?? false,
     printSettings,
     printSettingsFetched,
   };

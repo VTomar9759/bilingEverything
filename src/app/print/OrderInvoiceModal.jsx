@@ -316,6 +316,9 @@ const OrderInvoiceModal = ({ visible, onClose, order, settings }) => {
         centered
         footer={false}
         title={null}
+        maskClosable={false}
+
+
       >
         <ReceiptOuter>
           <ReceiptPaper ref={receiptRef} id="receipt" className="printable-receipt-container" $paperWidth={paperWidth}>
@@ -380,21 +383,21 @@ const OrderInvoiceModal = ({ visible, onClose, order, settings }) => {
             {/* ─── CUSTOMER ─── */}
             {(ps?.customer_name_visible || ps?.customer_phone_visible || ps?.customer_address_visible) &&
               (customerName || customerPhone || customerAddress) && (
-              <>
-                <DottedDivider className="dotted-divider" />
-                <ReceiptMeta className="receipt-meta">
-                  {ps?.customer_name_visible && customerName && (
-                    <div><strong>Customer:</strong> {customerName}</div>
-                  )}
-                  {ps?.customer_phone_visible && customerPhone && (
-                    <div><strong>Contact:</strong> {customerPhone}</div>
-                  )}
-                  {ps?.customer_address_visible && customerAddress && (
-                    <div><strong>Address:</strong> {customerAddress}</div>
-                  )}
-                </ReceiptMeta>
-              </>
-            )}
+                <>
+                  <DottedDivider className="dotted-divider" />
+                  <ReceiptMeta className="receipt-meta">
+                    {ps?.customer_name_visible && customerName && (
+                      <div><strong>Customer:</strong> {customerName}</div>
+                    )}
+                    {ps?.customer_phone_visible && customerPhone && (
+                      <div><strong>Contact:</strong> {customerPhone}</div>
+                    )}
+                    {ps?.customer_address_visible && customerAddress && (
+                      <div><strong>Address:</strong> {customerAddress}</div>
+                    )}
+                  </ReceiptMeta>
+                </>
+              )}
 
             <DottedDivider className="dotted-divider" />
 
@@ -547,12 +550,12 @@ const OrderInvoiceModal = ({ visible, onClose, order, settings }) => {
             )}
           </ReceiptPaper>
         </ReceiptOuter>
-        <Space
+        <div
           style={{
             display: "flex",
             marginTop: "12px",
-            justifyContent: "end",
-            alignItems: "end",
+            gap: "12px",
+            width: "100%",
           }}
         >
           <Button
@@ -561,6 +564,7 @@ const OrderInvoiceModal = ({ visible, onClose, order, settings }) => {
             icon={<DownloadOutlined />}
             onClick={handleDownloadText}
             style={{
+              flex: 1,
               borderColor: "var(--color-primary-light)",
               color: "var(--color-primary)",
             }}
@@ -573,11 +577,14 @@ const OrderInvoiceModal = ({ visible, onClose, order, settings }) => {
             loading={loadingPrint}
             icon={<PrinterOutlined />}
             onClick={handlePrint}
-            style={{ background: "var(--color-primary-light)" }}
+            style={{
+              flex: 1,
+              background: "var(--color-primary-light)"
+            }}
           >
             Print Invoice
           </Button>
-        </Space>
+        </div>
       </Modal>
     </>
   );

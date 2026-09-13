@@ -1,6 +1,6 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { emptyStore } from "../actions";
-import { PRINT_TYPE } from "../../utils/constant";
+
 
 const initialisation = {
   token: null,
@@ -10,7 +10,7 @@ const initialisation = {
   gst_status: null,
   created_by: null,
   userData: null,
-  print_type: PRINT_TYPE.MODERN,
+  show_customer_details: false,
 };
 
 const authSlice = createSlice({
@@ -25,15 +25,18 @@ const authSlice = createSlice({
       state.gst_number = action?.payload?.userData?.gst_number;
       state.gst_status = action?.payload?.userData?.gst_status;
       state.created_by = action?.payload?.userData?.created_by;
-      state.print_type = action?.payload?.userData?.print_type || PRINT_TYPE.MODERN;
     },
     udpateProfile: (state, action) => {
       state.userData = {
         ...state.userData,
         ...action?.payload
       };
-      if (action?.payload?.print_type) {
-        state.print_type = action.payload.print_type;
+    },
+    setShowCustomerDetails: (state, action) => {
+      if (typeof action?.payload === "boolean") {
+        state.show_customer_details = action.payload;
+      } else {
+        state.show_customer_details = !state.show_customer_details;
       }
     },
   },
@@ -44,5 +47,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { logingAuth, udpateProfile } = authSlice.actions;
+export const { logingAuth, udpateProfile, setShowCustomerDetails } = authSlice.actions;
 export default authSlice.reducer;

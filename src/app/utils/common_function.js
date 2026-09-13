@@ -86,6 +86,7 @@ export const getPaymentModeBadge = (mode) => {
     "span",
     {
       style: {
+        width:"50px",
         fontSize: "11px",
         fontWeight: 600,
         color,
@@ -93,6 +94,7 @@ export const getPaymentModeBadge = (mode) => {
         border: `1px solid ${borderColor}`,
         padding: "1px 6px",
         borderRadius: "4px",
+        textAlign:"center",
         display: "inline-flex",
         alignItems: "center",
       },

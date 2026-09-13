@@ -18,7 +18,7 @@ export async function connectPrinter() {
 /**
  * Print fallback via browser print dialog (iframe)
  */
-export const printViaBrowser = (htmlContent) => {
+export const printViaBrowser = (htmlContent, copies = 1) => {
   return new Promise((resolve) => {
     let iframe = document.getElementById("thermal-print-iframe");
     if (iframe) {
@@ -36,7 +36,20 @@ export const printViaBrowser = (htmlContent) => {
 
     const doc = iframe.contentWindow.document;
     doc.open();
-    doc.write(htmlContent);
+
+    let finalContent = htmlContent;
+    if (copies > 1) {
+      const bodyMatch = htmlContent.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+      if (bodyMatch && bodyMatch[1]) {
+        const bodyContent = bodyMatch[1];
+        const duplicated = Array(copies)
+          .fill(`<div style="page-break-after: always;">${bodyContent}</div>`)
+          .join('');
+        finalContent = htmlContent.replace(bodyMatch[0], `<body>${duplicated}</body>`);
+      }
+    }
+
+    doc.write(finalContent);
     doc.close();
 
     setTimeout(() => {
@@ -156,6 +169,14 @@ export const generateReceiptHTML = (order, settings = {}) => {
     customerHTML += `</div>`;
   }
 
+  const isA4 = paperWidth === "210mm" || printType === PRINT_TYPE.A4;
+  const pageCss = isA4
+    ? `@page { size: A4; margin: 10mm; }`
+    : `@page { size: ${paperWidth} auto; margin: 0mm; }`;
+  const baseFontSize = isA4 ? "14px" : "11px";
+  const headerFontSize = isA4 ? "20px" : "15px";
+  const subFontSize = isA4 ? "12px" : "10.5px";
+
   return `
     <!DOCTYPE html>
     <html>
@@ -163,10 +184,7 @@ export const generateReceiptHTML = (order, settings = {}) => {
         <meta charset="utf-8" />
         <title>Receipt #${orderNum}</title>
         <style>
-          @page {
-            size: ${paperWidth} auto;
-            margin: 0mm;
-          }
+          ${pageCss}
           html, body {
             width: 100%;
             margin: 0;
@@ -174,7 +192,7 @@ export const generateReceiptHTML = (order, settings = {}) => {
             background: #ffffff;
             color: #000000;
             font-family: 'Segoe UI', 'Inter', 'Helvetica Neue', Arial, sans-serif;
-            font-size: 11px;
+            font-size: ${baseFontSize};
             line-height: 1.4;
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
@@ -188,7 +206,7 @@ export const generateReceiptHTML = (order, settings = {}) => {
             width: ${paperWidth};
             max-width: 100%;
             margin: 0 auto;
-            padding: 4mm 3mm;
+            padding: 4mm 3mm 15mm 3mm;
             box-sizing: border-box;
             background: #ffffff;
           }
@@ -210,7 +228,7 @@ export const generateReceiptHTML = (order, settings = {}) => {
           }
           .receipt-header h3 {
             font-family: 'Segoe UI', 'Inter', 'Helvetica Neue', Arial, sans-serif !important;
-            font-size: 15px !important;
+            font-size: ${headerFontSize} !important;
             font-weight: 800 !important;
             margin: 0 0 2px 0 !important;
             text-align: center !important;
@@ -219,7 +237,7 @@ export const generateReceiptHTML = (order, settings = {}) => {
             width: 100% !important;
           }
           .receipt-header p {
-            font-size: 10.5px !important;
+            font-size: ${subFontSize} !important;
             margin: 1px 0 !important;
             text-align: center !important;
             color: #555555 !important;
@@ -232,7 +250,7 @@ export const generateReceiptHTML = (order, settings = {}) => {
             display: block !important;
           }
           .receipt-meta {
-            font-size: 11px !important;
+            font-size: ${baseFontSize} !important;
             display: flex !important;
             flex-direction: column !important;
             gap: 2px !important;
@@ -245,26 +263,26 @@ export const generateReceiptHTML = (order, settings = {}) => {
           .items-table {
             width: 100% !important;
             border-collapse: collapse !important;
-            font-size: 11px !important;
+            font-size: ${baseFontSize} !important;
             table-layout: fixed !important;
             color: #000000 !important;
             margin: 4px 0 !important;
           }
           .items-table th {
             font-weight: 700 !important;
-            font-size: 11px !important;
+            font-size: ${baseFontSize} !important;
             padding-bottom: 4px !important;
             border-bottom: 1.5px dashed #999999 !important;
             color: #000000 !important;
           }
           .items-table td {
-            font-size: 11px !important;
+            font-size: ${baseFontSize} !important;
             color: #000000 !important;
           }
           .totals-table {
             width: 100% !important;
             border-collapse: collapse !important;
-            font-size: 11px !important;
+            font-size: ${baseFontSize} !important;
             color: #000000 !important;
             margin-top: 2px !important;
           }
@@ -274,7 +292,7 @@ export const generateReceiptHTML = (order, settings = {}) => {
           }
           .receipt-footer {
             text-align: center !important;
-            font-size: 11px !important;
+            font-size: ${baseFontSize} !important;
             color: #000000 !important;
             margin-top: 6px !important;
             width: 100% !important;
@@ -463,7 +481,7 @@ export const printInvoiceSilent = async ({ order, settings = {}, copies = 2, rec
           </style>
         </head>
         <body>
-          <div style="width: 100%; display: flex; justify-content: center;">
+          <div style="width: 100%; display: flex; justify-content: center; padding-bottom: 15mm;">
             ${rawHtml}
           </div>
         </body>
@@ -507,7 +525,7 @@ export const printInvoiceSilent = async ({ order, settings = {}, copies = 2, rec
     return { success: true, method: "qz-tray" };
   } catch (qzError) {
     console.warn("QZ Tray connection failed, falling back to browser print:", qzError);
-    await printViaBrowser(receiptData);
+    await printViaBrowser(receiptData, copies);
     message.info("Printed invoice using browser print dialog (QZ Tray app not active).");
     return { success: true, method: "browser" };
   }
@@ -580,7 +598,7 @@ export const generateKOTHTML = (order, settings = {}) => {
           }
           .kot {
             width: ${paperWidth};
-            padding: 4mm 3mm;
+            padding: 4mm 3mm 15mm 3mm;
             box-sizing: border-box;
             background: #ffffff;
           }
@@ -672,9 +690,57 @@ export const printKOTSilent = async ({
   copies = 1,
   receiptElement = null,
 }) => {
-  const kotData = receiptElement
-    ? receiptElement.outerHTML
-    : generateKOTHTML(order, settings);
+  let kotData;
+  if (receiptElement) {
+    const rawHtml = receiptElement.outerHTML;
+    const paperWidth = settings?.paper_width || "80mm";
+    kotData = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8" />
+          <title>KOT</title>
+          <style>
+            @page {
+              size: ${paperWidth} auto;
+              margin: 0mm;
+            }
+            html, body {
+              width: 100%;
+              margin: 0;
+              padding: 0;
+              background: #ffffff;
+              color: #000000;
+              font-family: 'Courier New', Courier, monospace;
+              font-size: 11px;
+              line-height: 1.3;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
+            }
+            .receipt-header, .receipt-header *, div[class*="ReceiptHeader"], div[class*="ReceiptHeader"] * {
+              text-align: center !important;
+              width: 100% !important;
+              margin-left: auto !important;
+              margin-right: auto !important;
+            }
+            .dotted-divider {
+              border-top: 1.5px dashed #000000 !important;
+              margin: 6px 0 !important;
+              width: 100% !important;
+              display: block !important;
+            }
+          </style>
+        </head>
+        <body>
+          <div style="width: 100%; display: flex; justify-content: center; padding-bottom: 15mm;">
+            ${rawHtml}
+          </div>
+        </body>
+      </html>
+    `;
+  } else {
+    kotData = generateKOTHTML(order, settings);
+  }
 
   try {
     await connectPrinter();
@@ -708,7 +774,7 @@ export const printKOTSilent = async ({
     return { success: true, method: "qz-tray" };
   } catch (qzError) {
     console.warn("QZ Tray connection failed, falling back to browser print:", qzError);
-    await printViaBrowser(kotData);
+    await printViaBrowser(kotData, copies);
     message.info("Printed KOT using browser print dialog (QZ Tray app not active).");
     return { success: true, method: "browser" };
   }

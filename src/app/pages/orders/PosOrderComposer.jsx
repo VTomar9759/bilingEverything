@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import styled from "styled-components";
 import useOrgData from "../../hooks/useOrgData";
-import { Form, Input, Select, Button, Empty, message, Space } from "antd";
+import { Form, Input, Select, Button, Empty, message, Space, Switch } from "antd";
 import {
   SearchOutlined,
   CoffeeOutlined,
@@ -11,6 +11,9 @@ import {
   GlobalOutlined,
   CheckCircleFilled,
   ClockCircleOutlined,
+  UserOutlined,
+  PhoneOutlined,
+  HomeOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
@@ -26,11 +29,12 @@ import * as service from "../../../services";
 import OrderInvoiceModal from "../../print/OrderInvoiceModal";
 import KOT from "../../print/KOT";
 import { fetchPrintSettings } from "../../store/slices/printSettingSlice";
+import { setShowCustomerDetails } from "../../store/slices/authSlices";
 
 const { Option } = Select;
 
 const PosOrderComposer = () => {
-  const { org_id, userData, permission } = useOrgData();
+  const { org_id, userData, permission, show_customer_details } = useOrgData();
   const ordersPerm = permission?.orders;
   const canCreate = ordersPerm?.create ?? false;
   const navigate = useNavigate();
@@ -42,6 +46,7 @@ const PosOrderComposer = () => {
   const [printModalVisible, setPrintModalVisible] = useState(false);
   const [kotModalVisible, setKotModalVisible] = useState(false);
   const [createdOrderForPrint, setCreatedOrderForPrint] = useState(null);
+  
 
   useEffect(() => {
     if (org_id) {
@@ -86,9 +91,7 @@ const PosOrderComposer = () => {
     });
   };
 
-  const handleRemovePosItem = (itemId) => {
-    setSelectedPosItems(selectedPosItems.filter((i) => i.item.id !== itemId));
-  };
+
 
   const handleAdjustPosQty = (itemId, delta) => {
     setSelectedPosItems((prev) =>
@@ -159,6 +162,9 @@ const PosOrderComposer = () => {
       payment_status: isPaid ? "Paid" : "Unpaid",
       payment_mode: isPaid ? paymentMode : PAYMENT_MODE.unpaid,
       payment_method: isPaid ? paymentMode : PAYMENT_MODE.unpaid,
+      customer_name: values.customer_name ? values.customer_name.trim() : null,
+      customer_phone: values.customer_phone ? values.customer_phone.trim() : null,
+      customer_address: values.customer_address ? values.customer_address.trim() : null,
     };
 
     try {
@@ -200,6 +206,9 @@ const PosOrderComposer = () => {
       order_number: `KOT-${Math.floor(100000 + Math.random() * 900000)}`,
       table_name: tableName,
       table_number: selectedTable?.table_number,
+      customer_name: form.getFieldValue("customer_name") ? form.getFieldValue("customer_name").trim() : null,
+      customer_phone: form.getFieldValue("customer_phone") ? form.getFieldValue("customer_phone").trim() : null,
+      customer_address: form.getFieldValue("customer_address") ? form.getFieldValue("customer_address").trim() : null,
       items: selectedPosItems.map((i) => ({
         name: i.item.name,
         quantity: i.quantity,
@@ -240,6 +249,7 @@ const PosOrderComposer = () => {
       String(item?.gst_status) !== "false"
     );
   };
+  console.log(show_customer_details, "customer details")
 
   return (
     <PageWrapper>
@@ -337,7 +347,64 @@ const PosOrderComposer = () => {
 
             {/* Right Column - Composition List */}
             <PosRightPanel>
-              <ComposerTitle>Composition Ticket</ComposerTitle>
+              <HeaderBoxCustomerDetails >
+                <ComposerTitle style={{ margin: 0 }}>Composition Ticket</ComposerTitle>
+                <Space size="small" align="center">
+                  <span style={{ fontSize: 13, color: "var(--color-text-secondary)", fontWeight: 500 }}>
+                    Customer Details
+                  </span>
+                  <Switch
+                    checked={show_customer_details}
+                    onChange={(checked) => dispatch(setShowCustomerDetails(checked))}
+                    size="small"
+                  />
+                </Space>
+              </HeaderBoxCustomerDetails>
+
+              {/* Customer Info (Address, Name & Phone - Toggled via Switch) */}
+              {show_customer_details && (
+                <>
+                  <Form.Item
+                    name="customer_address"
+                    style={{ marginBottom: 8 }}
+                    rules={[{ required: false }]}
+                  >
+                    <Input
+                      placeholder="Customer Address (Optional)"
+                      prefix={<HomeOutlined />}
+                      style={{ height: 34, borderRadius: 8 }}
+                      allowClear
+                    />
+                  </Form.Item>
+
+                  <FilterRow style={{ marginBottom: 8 }}>
+                    <Form.Item
+                      name="customer_name"
+                      style={{ marginBottom: 0 }}
+                      rules={[{ required: false }]}
+                    >
+                      <Input
+                        placeholder="Customer Name (Optional)"
+                        prefix={<UserOutlined />}
+                        style={{ height: 34, borderRadius: 8 }}
+                        allowClear
+                      />
+                    </Form.Item>
+                    <Form.Item
+                      name="customer_phone"
+                      style={{ marginBottom: 0 }}
+                      rules={[{ required: false }]}
+                    >
+                      <Input
+                        placeholder="Customer Phone (Optional)"
+                        prefix={<PhoneOutlined />}
+                        style={{ height: 34, borderRadius: 8 }}
+                        allowClear
+                      />
+                    </Form.Item>
+                  </FilterRow>
+                </>
+              )}
               <ComposerList>
                 {selectedPosItems.length === 0 ? (
                   <ComposerEmpty>
@@ -736,14 +803,20 @@ const PosRightPanel = styled.div`
   overflow: hidden;
 `;
 
+const HeaderBoxCustomerDetails = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+`;
+
 const ComposerTitle = styled.h4`
   font-family: var(--font-display);
   font-size: 12.5px;
   font-weight: 700;
   color: var(--color-text-primary);
-  margin: 0 0 10px;
-  border-bottom: 1.5px solid var(--color-border);
-  padding-bottom: 6px;
 `;
 
 const ComposerList = styled.div`

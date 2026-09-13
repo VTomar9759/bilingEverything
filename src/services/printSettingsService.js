@@ -32,7 +32,7 @@ export const DEFAULT_PRINT_SETTINGS = {
   payment_method_visible: true,
   payment_status_visible: false,
   footer_visible: true,
-  footer_text: "Thank you for dining with us! Please visit again.",
+  footer_text: "Thank you! Please visit again.",
   qr_code_visible: false,
   barcode_visible: false,
   printer_name: "",

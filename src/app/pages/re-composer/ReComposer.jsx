@@ -1,13 +1,16 @@
 import React, { useState, useEffect, useRef } from "react";
 import styled from "styled-components";
 import useOrgData from "../../hooks/useOrgData";
-import { Input, Select, Button, Empty, message, Spin } from "antd";
+import { Input, Select, Button, Empty, message, Spin, Space, Switch } from "antd";
 import {
   SearchOutlined,
   CoffeeOutlined,
   PrinterOutlined,
   EditOutlined,
   SaveOutlined,
+  UserOutlined,
+  PhoneOutlined,
+  HomeOutlined,
 } from "@ant-design/icons";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useDispatch } from "react-redux";
@@ -21,11 +24,12 @@ import * as service from "../../../services";
 import OrderInvoiceModal from "../../print/OrderInvoiceModal";
 import KOT from "../../print/KOT";
 import { fetchPrintSettings } from "../../store/slices/printSettingSlice";
+import { setShowCustomerDetails } from "../../store/slices/authSlices";
 
 const { Option } = Select;
 
 const OrderEditPage = () => {
-  const { org_id, userData, permission } = useOrgData();
+  const { org_id, userData, permission, show_customer_details } = useOrgData();
   const ordersPerm = permission?.orders;
   const canUpdate = ordersPerm?.update ?? false;
   const navigate = useNavigate();
@@ -41,6 +45,10 @@ const OrderEditPage = () => {
   const [kotModalVisible, setKotModalVisible] = useState(false);
   const [createdOrderForPrint, setCreatedOrderForPrint] = useState(null);
   const [saving, setSaving] = useState(false);
+
+  const [customerName, setCustomerName] = useState("");
+  const [customerPhone, setCustomerPhone] = useState("");
+  const [customerAddress, setCustomerAddress] = useState("");
 
   useEffect(() => {
     if (org_id) {
@@ -68,25 +76,33 @@ const OrderEditPage = () => {
     setSelectedCategory(category);
   };
 
-  // Pre-populate items from fetched order
+  // Pre-populate items and customer fields from fetched order
   useEffect(() => {
-    if (order && order.items && !initialized) {
-      const mapped = order.items.map((item) => ({
-        item: {
-          id: item.id,
-          name: item.name,
-          price: item.price,
-          category: item.category,
-          gst_status: item.gst_status,
-          code: item.code || "",
-          image: item.image || "",
-        },
-        quantity: item.quantity,
-      }));
-      setSelectedPosItems(mapped);
+    if (order && !initialized) {
+      if (order.items) {
+        const mapped = order.items.map((item) => ({
+          item: {
+            id: item.id,
+            name: item.name,
+            price: item.price,
+            category: item.category,
+            gst_status: item.gst_status,
+            code: item.code || "",
+            image: item.image || "",
+          },
+          quantity: item.quantity,
+        }));
+        setSelectedPosItems(mapped);
+      }
+      setCustomerName(order.customer_name || "");
+      setCustomerPhone(order.customer_phone || "");
+      setCustomerAddress(order.customer_address || "");
+      if (order.customer_name || order.customer_phone || order.customer_address) {
+        dispatch(setShowCustomerDetails(true));
+      }
       setInitialized(true);
     }
-  }, [order, initialized]);
+  }, [order, initialized, dispatch]);
 
   const handleAddPosItem = (item) => {
     setSelectedPosItems((prev) => {
@@ -148,13 +164,23 @@ const OrderEditPage = () => {
       };
     });
 
+    const customerFields = {
+      customer_name: customerName ? customerName.trim() : null,
+      customer_phone: customerPhone ? customerPhone.trim() : null,
+      customer_address: customerAddress ? customerAddress.trim() : null,
+    };
+
     setSaving(true);
     try {
-      const updatedOrder = await editItems(orderId, itemsPayload);
+      const updatedOrder = await editItems(orderId, itemsPayload, customerFields);
       message.success("Order updated successfully!");
 
       if (isPrintSubmitRef.current === "invoice") {
-        setCreatedOrderForPrint(updatedOrder);
+        setCreatedOrderForPrint(updatedOrder || {
+          ...order,
+          items: itemsPayload,
+          ...customerFields,
+        });
         setPrintModalVisible(true);
       } else {
         navigate(PATH_BILLING, {
@@ -180,6 +206,9 @@ const OrderEditPage = () => {
       order_number: order?.order_number || `KOT-${Math.floor(100000 + Math.random() * 900000)}`,
       table_name: tableName,
       table_number: order?.table_number,
+      customer_name: customerName ? customerName.trim() : null,
+      customer_phone: customerPhone ? customerPhone.trim() : null,
+      customer_address: customerAddress ? customerAddress.trim() : null,
       items: selectedPosItems.map((i) => ({
         name: i.item.name,
         quantity: i.quantity,
@@ -332,7 +361,55 @@ const OrderEditPage = () => {
 
           {/* Right Column - Edit Ticket */}
           <PosRightPanel>
-            <ComposerTitle>Edit Order Ticket</ComposerTitle>
+            <HeaderBoxCustomerDetails>
+              <ComposerTitle style={{ margin: 0 }}>Edit Order Ticket</ComposerTitle>
+              <Space size="small" align="center">
+                <span style={{ fontSize: 13, color: "var(--color-text-secondary)", fontWeight: 500 }}>
+                  Customer Details
+                </span>
+                <Switch
+                  checked={show_customer_details}
+                  onChange={(checked) => dispatch(setShowCustomerDetails(checked))}
+                  size="small"
+                />
+              </Space>
+            </HeaderBoxCustomerDetails>
+
+            {/* Customer Info (Address, Name & Phone - Toggled via Switch) */}
+            {show_customer_details && (
+              <>
+                <div style={{ marginBottom: 8 }}>
+                  <Input
+                    placeholder="Customer Address (Optional)"
+                    prefix={<HomeOutlined />}
+                    value={customerAddress}
+                    onChange={(e) => setCustomerAddress(e.target.value)}
+                    style={{ height: 34, borderRadius: 8 }}
+                    allowClear
+                  />
+                </div>
+
+                <FilterRow style={{ marginBottom: 8 }}>
+                  <Input
+                    placeholder="Customer Name (Optional)"
+                    prefix={<UserOutlined />}
+                    value={customerName}
+                    onChange={(e) => setCustomerName(e.target.value)}
+                    style={{ height: 34, borderRadius: 8 }}
+                    allowClear
+                  />
+                  <Input
+                    placeholder="Customer Phone (Optional)"
+                    prefix={<PhoneOutlined />}
+                    value={customerPhone}
+                    onChange={(e) => setCustomerPhone(e.target.value)}
+                    style={{ height: 34, borderRadius: 8 }}
+                    allowClear
+                  />
+                </FilterRow>
+              </>
+            )}
+
             <ComposerList>
               {selectedPosItems.length === 0 ? (
                 <ComposerEmpty>
@@ -700,14 +777,20 @@ const PosRightPanel = styled.div`
   overflow: hidden;
 `;
 
+const HeaderBoxCustomerDetails = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+`;
+
 const ComposerTitle = styled.h4`
   font-family: var(--font-display);
   font-size: 12.5px;
   font-weight: 700;
   color: var(--color-text-primary);
-  margin: 0 0 10px;
-  border-bottom: 1.5px solid var(--color-border);
-  padding-bottom: 6px;
 `;
 
 const ComposerList = styled.div`

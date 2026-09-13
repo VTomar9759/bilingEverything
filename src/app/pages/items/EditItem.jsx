@@ -374,7 +374,7 @@ const EditItem = () => {
                 <Form.Item
                   label="Short Title"
                   name="title"
-                  rules={[{ required: true, message: "Short title is required" }]}
+                 
                 >
                   <StyledInput prefix={<AlignLeftOutlined />} placeholder="e.g. Premium Quality" />
                 </Form.Item>
@@ -383,7 +383,7 @@ const EditItem = () => {
               <Form.Item
                 label="Description"
                 name="description"
-                rules={[{ required: true, message: "Description is required" }]}
+              
               >
                 <StyledTextArea
                   rows={4}

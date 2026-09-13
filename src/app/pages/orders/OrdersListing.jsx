@@ -8,17 +8,19 @@ import {
   ClockCircleOutlined,
   CheckOutlined,
   FileTextOutlined,
+  EditOutlined,
 } from "@ant-design/icons";
 import { message } from "antd";
 import dayjs from "dayjs";
 
 import { useNavigate } from "react-router-dom";
-import { PATH_BILLING } from "../../routes/pathname";
+import { PATH_BILLING, PATH_ORDER_COMPOSER, PATH_ORDER_EDIT } from "../../routes/pathname";
 import TabHeader from "../../../components/TabHeader";
 import { PageWrapper } from "../../styles/commonstyle";
 import useOrders from "../../hooks/useOrders";
 import OrderDetailDrawer from "./components/OrderDetailDrawer";
-import { getStatusBadge, getPaymentStatusBadge, getPaymentModeBadge, getPaymentBadge } from "../../utils/common_function";
+import { getStatusBadge, getPaymentStatusBadge, getPaymentModeBadge } from "../../utils/common_function";
+import { ORDER_STATUS } from "../../utils/constant";
 import * as service from "../../../services";
 
 const { TabPane } = Tabs;
@@ -114,7 +116,7 @@ const OrdersListing = () => {
       ),
     },
     {
-      title: "Table / Destination",
+      title: "Table",
       dataIndex: "table_name",
       key: "table_name",
       render: (name) => name || "Takeaway",
@@ -129,12 +131,7 @@ const OrdersListing = () => {
           timeStyle: "short",
         }),
     },
-    {
-      title: "Status",
-      dataIndex: "status",
-      key: "status",
-      render: (status) => getStatusBadge(status),
-    },
+
     {
       title: "Bill Amount",
       dataIndex: "total",
@@ -157,33 +154,39 @@ const OrdersListing = () => {
       render: (_, record) =>
         getPaymentModeBadge(record.payment_mode || record.payment_method) || "-",
     },
+        {
+      title: "Status",
+      dataIndex: "status",
+      key: "status",
+      render: (status) => getStatusBadge(status),
+    },
     {
       title: "Actions",
       key: "actions",
       align: "right",
       render: (_, record) => (
         <Space size={6}>
-        
-          {canUpdate && record.status === "Pending" && (
-            <Button
-              size="small"
-              type="primary"
-              icon={<ClockCircleOutlined />}
-              style={{ fontSize: "12.5px" }}
-              onClick={() => handleStatusChange(record.id, "Preparing")}
-            >
-              Cook
-            </Button>
-          )}
+  
           {canUpdate && record.status === "Preparing" && (
             <Button
+              width="80px"
               size="small"
-              type="primary"
               icon={<CheckOutlined />}
-              style={{ background: "#10b981", borderColor: "#10b981", fontSize: "12.5px" }}
+              style={{ background: "rgba(245, 158, 11, 0.1)", borderColor: "rgba(245, 158, 11, 0.1)", fontSize: "12.5px", color: "#f59e0b" }}
               onClick={() => handleStatusChange(record.id, "Ready")}
             >
               Ready
+            </Button>
+          )}
+          {canUpdate && record.status === "Ready" && (
+            <Button
+              width="80px"
+              size="small"
+              icon={<CheckOutlined />}
+              style={{ background: " #01514b", borderColor:  "#01514b", fontSize: "12.5px", color: "#fff" }}
+              onClick={() => handleStatusChange(record.id, "Served")}
+            >
+              Serve
             </Button>
           )}
           {record.status !== "Cancelled" && (
@@ -203,11 +206,24 @@ const OrdersListing = () => {
               Generate Invoice
             </Button>
           )}
-            <Button
+   
+          <Button
+            size="small"
+            type="default"
+            icon={<EditOutlined />}
+            style={{
+              borderColor: "var(--color-primary-light)",
+              color: "var(--color-primary)",
+              fontSize: "12.5px",
+            }}
+            onClick={() => navigate(PATH_ORDER_EDIT, { state: { orderId: record.id } })}
+          >
+            Recomposer
+          </Button>
+                   <Button
             size="small"
             icon={<EyeOutlined />}
             style={{ fontSize: "12.5px" }}
-            title="View Details"
             onClick={() => {
               setSelectedOrder(record);
               setDetailsVisible(true);
@@ -246,27 +262,12 @@ const OrdersListing = () => {
             style={{ marginBottom: 0, margin: 0 }}
           >
             <TabPane tab={<span>{getStatusBadge("All")}</span>} key="All" />
-            {/* <TabPane
-              tab={<span>{getStatusBadge("Pending")}</span>}
-              key="Pending"
-            /> */}
-            {/* <TabPane
-              tab={<span>{getStatusBadge("Pending")}</span>}
-              key="Pending"
-            /> */}
-            <TabPane
-              tab={<span>{getStatusBadge("Preparing")}</span>}
-              key="Preparing"
-            />
-            <TabPane tab={<span>{getStatusBadge("Ready")}</span>} key="Ready" />
-            {/* <TabPane
-              tab={<span>{getStatusBadge("Served")}</span>}
-              key="Served"
-            /> */}
-            <TabPane
-              tab={<span>{getStatusBadge("Cancelled")}</span>}
-              key="Cancelled"
-            />
+            {Object.values(ORDER_STATUS).map((status) => (
+              <TabPane
+                tab={<span>{getStatusBadge(status)}</span>}
+                key={status}
+              />
+            ))}
           </Tabs>
 
           <Space wrap size="small" style={{ alignItems: "center" }}>

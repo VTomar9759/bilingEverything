@@ -34,13 +34,10 @@ export const getOrderById = async (org_id, orderId) => {
 /**
  * Update order items (add/remove/adjust quantities) and recalculate totals
  */
-export const updateOrderItems = async (org_id, orderId, { items, subtotal, tax, total }) => {
+export const updateOrderItems = async (org_id, orderId, payloadData) => {
   try {
     const payload = {
-      items,
-      subtotal,
-      tax,
-      total,
+      ...payloadData,
       updated_at: new Date().toISOString(),
     };
 
