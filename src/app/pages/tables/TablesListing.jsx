@@ -98,14 +98,14 @@ const TablesListing = () => {
     try {
       if (editingTable) {
         if (!canUpdate) {
-          message.error("You do not have permission to update tables.");
+          message.error("You do not have permission to edit tables.");
           return;
         }
         await updateTable(editingTable.id, values);
         message.success(`Table ${values.table_number} modified successfully!`);
       } else {
         if (!canCreate) {
-          message.error("You do not have permission to create tables.");
+          message.error("You do not have permission to add tables.");
           return;
         }
         await addTable(values);
@@ -121,10 +121,7 @@ const TablesListing = () => {
 
   const handleStatusUpdate = async (status) => {
     if (!selectedTable) return;
-    if (!canUpdate) {
-      message.error("You do not have permission to update table status.");
-      return;
-    }
+
     try {
       let orderId = selectedTable.current_order_id;
       if (
@@ -161,10 +158,6 @@ const TablesListing = () => {
   };
 
   const handleClearAll = async () => {
-    if (!canDelete) {
-      message.error("You do not have permission to clear tables.");
-      return;
-    }
     try {
       await clearAllTables();
       message.success("All tables cleared and set to available successfully!");
@@ -245,26 +238,24 @@ const TablesListing = () => {
               Add Table
             </Button>
           )}
-         
-          {canUpdate && (
-            <Popconfirm
-              title="Clear all tables?"
-              description="Are you sure you want to set all tables status to available? This will clear all active orders from the tables."
-              onConfirm={handleClearAll}
-              okText="Clear All"
-              cancelText="Cancel"
-              okButtonProps={{ danger: true }}
+
+          <Popconfirm
+            title="Clear all tables?"
+            description="Are you sure you want to set all tables status to available? This will clear all active orders from the tables."
+            onConfirm={handleClearAll}
+            okText="Clear All"
+            cancelText="Cancel"
+            okButtonProps={{ danger: true }}
+          >
+            <Button
+              danger
+              icon={<ClearOutlined />}
+              style={{ height: 32, fontWeight: 600, borderRadius: 8 }}
             >
-              <Button
-                danger
-                icon={<ClearOutlined />}
-                style={{ height: 32, fontWeight: 600, borderRadius: 8 }}
-              >
-                Clear All
-              </Button>
-            </Popconfirm>
-          )}
-          
+              Clear All
+            </Button>
+          </Popconfirm>
+
         </Space>
       </HeaderBox>
 
@@ -317,8 +308,8 @@ const TablesListing = () => {
         </LoadingWrapper>
       ) : filteredTables.length === 0 ? (
         <div style={{ height: "60vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
-  <Empty description="No tables found" />
-</div>
+          <Empty description="No tables found" />
+        </div>
       ) : (
         <FloorGrid>
           {filteredTables.map((t) => (
@@ -605,7 +596,7 @@ const FilterButton = styled.button`
   font-weight: 600;
   border: 1px solid
     ${(props) =>
-      props.$active ? "var(--color-primary)" : "var(--color-border)"};
+    props.$active ? "var(--color-primary)" : "var(--color-border)"};
   background: ${(props) =>
     props.$active ? "var(--color-primary)" : "var(--color-surface)"};
   color: ${(props) =>
@@ -620,11 +611,11 @@ const FilterButton = styled.button`
     border-color: var(--color-primary-light);
     color: ${(props) => (props.$active ? "#ffffff" : "var(--color-primary)")};
     background: ${(props) =>
-      props.$active ? "var(--color-primary)" : "var(--color-primary-50)"};
+    props.$active ? "var(--color-primary)" : "var(--color-primary-50)"};
     box-shadow: ${(props) =>
-      props.$active
-        ? "0 6px 16px rgba(1, 81, 75, 0.22)"
-        : "0 4px 8px rgba(1, 81, 75, 0.05)"};
+    props.$active
+      ? "0 6px 16px rgba(1, 81, 75, 0.22)"
+      : "0 4px 8px rgba(1, 81, 75, 0.05)"};
   }
 
   &:active {

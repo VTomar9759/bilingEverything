@@ -157,6 +157,7 @@ export const generateOrderNumber = async (org_id) => {
 };
 
 export const createOrder = async (org_id, orderData, user_id) => {
+  console.log("createdOrder", orderData);
   let targetOrgId = org_id;
   let targetOrderData = orderData;
 
@@ -231,11 +232,13 @@ export const createOrder = async (org_id, orderData, user_id) => {
 
       if (!error && data && data.length > 0) {
         const createdOrder = data[0];
-        if (createdOrder.table_id) {
+        console.log("createdOrder", createdOrder);
+        const targetTableId = createdOrder.table_id || targetOrderData?.table_id;
+        if (targetTableId) {
           try {
             await updateTABLE_STATUS(
-              createdOrder.table_id,
-              "Occupied",
+              targetTableId,
+              "occupied",
               createdOrder.id,
             );
           } catch (tblErr) {

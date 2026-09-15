@@ -96,7 +96,7 @@ const AdminModal = ({
                 prefix={<UserOutlined style={{ color: "var(--color-primary)" }} />}
                 placeholder="e.g. John Doe"
                 maxLength={60}
-                disabled={!!editingAdmin}
+                
               />
             </Form.Item>
           </Col>

@@ -315,11 +315,6 @@ const BillingSection = () => {
     }
   };
 
-  const handleReComposerClick = () => {
-    navigate(PATH_ORDER_EDIT, {
-      state: { orderId: activeOrder?.id },
-    });
-  };
 
   /**
    * Currency

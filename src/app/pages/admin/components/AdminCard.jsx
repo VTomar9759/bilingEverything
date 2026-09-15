@@ -1,24 +1,48 @@
 import React from "react";
 import styled from "styled-components";
-import { Button, Tooltip, Popconfirm } from "antd";
+import { Button, Tooltip, Popconfirm, Badge } from "antd";
 import {
   DeleteOutlined,
   EditOutlined,
   MailOutlined,
   SafetyCertificateOutlined,
+  TableOutlined,
 } from "@ant-design/icons";
 import RolePermissions from "./RolePermissions";
 
-const AdminCard = ({ admin, onEdit, onDelete }) => {
+const AdminCard = ({
+  admin,
+  onEdit,
+  onDelete,
+  assignedTables = [],
+  isSelectedForTables = false,
+  onSelectForTables,
+}) => {
+  const tableCount = assignedTables.length;
+
   return (
-    <CardContainer>
+    <CardContainer $isSelected={isSelectedForTables}>
       <CardTopRow>
         <HeaderInfo>
           <AdminName>{admin.name}</AdminName>
-          <AdminTag>
-            <SafetyCertificateOutlined />
-            <span>Admin</span>
-          </AdminTag>
+          <TagsRow>
+            <AdminTag>
+              <SafetyCertificateOutlined />
+              <span>Admin</span>
+            </AdminTag>
+            {onSelectForTables && (
+              <Tooltip title={tableCount > 0 ? `Assigned to ${tableCount} dining table(s)` : "Assign dining tables"}>
+                <TablePermissionTag
+                  $hasTables={tableCount > 0}
+                  $active={isSelectedForTables}
+                  onClick={() => onSelectForTables(admin.id)}
+                >
+                  <TableOutlined />
+                  <span>{tableCount > 0 ? `${tableCount} Table(s)` : "Assign Tables"}</span>
+                </TablePermissionTag>
+              </Tooltip>
+            )}
+          </TagsRow>
         </HeaderInfo>
 
         <ActionButtons>
@@ -66,10 +90,9 @@ const AdminCard = ({ admin, onEdit, onDelete }) => {
 
 export default AdminCard;
 
-/* ─── Styled Components ─── */
 const CardContainer = styled.div`
   background: var(--color-surface, #ffffff);
-  border: 1px solid var(--color-border-light, #f1f5f9);
+  border: 1px solid ${(props) => (props.$isSelected ? "var(--color-primary, #01514b)" : "var(--color-border-light, #f1f5f9)")};
   border-radius: var(--radius-lg, 12px);
   padding: 16px;
   min-width: 280px;
@@ -80,7 +103,7 @@ const CardContainer = styled.div`
     min-width: 100%;
     max-width: 100%;
   }
-  box-shadow: var(--shadow-sm, 0 1px 2px 0 rgba(0, 0, 0, 0.05));
+  box-shadow: ${(props) => (props.$isSelected ? "0 0 0 2px rgba(1, 81, 75, 0.15)" : "var(--shadow-sm, 0 1px 2px 0 rgba(0, 0, 0, 0.05))")};
   transition: all var(--transition-base, 0.2s ease);
   display: flex;
   flex-direction: column;
@@ -119,6 +142,13 @@ const AdminName = styled.h3`
   text-overflow: ellipsis;
 `;
 
+const TagsRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+`;
+
 const AdminTag = styled.div`
   display: inline-flex;
   align-items: center;
@@ -131,6 +161,42 @@ const AdminTag = styled.div`
   font-size: 12px;
   font-weight: 600;
   width: fit-content;
+`;
+
+const TablePermissionTag = styled.div`
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 6px;
+  background: ${(props) =>
+    props.$active
+      ? "var(--color-primary-50, #e6f4f2)"
+      : props.$hasTables
+      ? "#eff6ff"
+      : "#f8fafc"};
+  border: 1px solid
+    ${(props) =>
+      props.$active
+        ? "var(--color-primary, #01514b)"
+        : props.$hasTables
+        ? "#bfdbfe"
+        : "#e2e8f0"};
+  color: ${(props) =>
+    props.$active
+      ? "var(--color-primary, #01514b)"
+      : props.$hasTables
+      ? "#2563eb"
+      : "#64748b"};
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: var(--color-primary, #01514b);
+    color: var(--color-primary, #01514b);
+  }
 `;
 
 const ActionButtons = styled.div`

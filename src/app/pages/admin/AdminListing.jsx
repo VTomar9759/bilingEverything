@@ -7,8 +7,10 @@ import TabHeader from "../../../components/TabHeader";
 import { PageWrapper } from "../../styles/commonstyle";
 import useAdmins from "../../hooks/useAdmins";
 import useOrgData from "../../hooks/useOrgData";
+import useTables from "../../hooks/useTables";
 import AdminCard from "./components/AdminCard";
 import AdminModal from "./components/AdminModal";
+import TableAssignmentSection from "./components/TableAssignmentSection";
 
 const AdminListing = () => {
   const { permission } = useOrgData();
@@ -29,9 +31,16 @@ const AdminListing = () => {
     deleteAdmin,
   } = useAdmins();
 
+  const {
+    tables,
+    loading: loadingTables,
+    updateTable,
+  } = useTables();
+
   const [modalVisible, setModalVisible] = useState(false);
   const [editingAdmin, setEditingAdmin] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedAdminIdForTables, setSelectedAdminIdForTables] = useState(null);
 
   const handleOpenAddModal = () => {
     if (!canCreate) {
@@ -196,13 +205,24 @@ const AdminListing = () => {
                 admin={admin}
                 onEdit={canUpdate ? handleOpenEditModal : undefined}
                 onDelete={canDelete ? handleDelete : undefined}
+                assignedTables={tables.filter((t) => t.branch_permission === admin.id)}
+                isSelectedForTables={selectedAdminIdForTables === admin.id}
+                onSelectForTables={(adminId) => setSelectedAdminIdForTables(adminId)}
               />
             ))}
-            
           </CardGrid>
         )}
       </ContentArea>
 
+      {/* Dining Table Branch Permission Assignment Section */}
+      <TableAssignmentSection
+        admins={admins}
+        tables={tables}
+        loadingTables={loadingTables}
+        onUpdateTable={updateTable}
+        selectedAdminId={selectedAdminIdForTables}
+        onSelectAdmin={setSelectedAdminIdForTables}
+      />
       {/* Create / Edit Admin Modal */}
       <AdminModal
         open={modalVisible}

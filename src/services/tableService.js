@@ -5,7 +5,17 @@ import { TABLE_STATUS } from "../app/utils/constant";
 /**
  * Fetch all active dining tables from Supabase dining_tables.
  */
-export const getTables = async (org_id) => {
+export const getTables = async (org_id, options = {}) => {
+  let user_role, user_id;
+
+  if (typeof options === "object" && options !== null) {
+    user_role = options.user_role;
+    user_id = options.user_id;
+  } else if (arguments.length > 1) {
+    user_role = arguments[1];
+    user_id = arguments[2];
+  }
+
   try {
     let query = supabase
       .from("dining_tables")
@@ -14,6 +24,10 @@ export const getTables = async (org_id) => {
 
     if (org_id) {
       query = query.eq("org_id", org_id);
+    }
+
+    if (user_role === "admin") {
+      query = query.eq("branch_permission", user_id);
     }
 
     const { data, error } = await query.order("table_number", { ascending: true });
@@ -30,12 +44,34 @@ export const getTables = async (org_id) => {
 /**
  * Create/Add a new dining table.
  */
-export const addTable = async (org_id, tableData) => {
+export const addTable = async (org_id, tableData, options = {}) => {
+  let targetOrgId = org_id;
+  let targetData = tableData;
+  let user_role, user_id;
+
+  if (typeof org_id === "object" && !tableData) {
+    targetData = org_id;
+    targetOrgId = targetData?.org_id || null;
+    user_role = options?.user_role;
+    user_id = options?.user_id;
+  } else if (typeof options === "object" && options !== null) {
+    user_role = options.user_role;
+    user_id = options.user_id;
+  } else if (arguments.length > 2) {
+    user_role = arguments[2];
+    user_id = arguments[3];
+  }
+
   const dbPayload = {
-    ...tableData,
-    org_id: org_id || null,
-    created_by: org_id || null,
+    ...targetData,
+    org_id: targetOrgId || null,
+    created_by: targetOrgId || null,
   };
+
+  if (user_role === "admin" && user_id && !dbPayload.branch_permission) {
+    dbPayload.branch_permission = user_id;
+  }
+
   try {
     const { data, error } = await supabase
       .from("dining_tables")
@@ -53,8 +89,16 @@ export const addTable = async (org_id, tableData) => {
 /**
  * Update the status of a dining table (e.g. available, occupied, reserved, billed, cleaning).
  */
-export const updateTABLE_STATUS = async (tableId, status, currentOrderId = null) => {
-  const dbStatus = status.toLowerCase();
+export const updateTABLE_STATUS = async (tableIdInput, status, currentOrderId = null) => {
+  if (!tableIdInput) return null;
+
+  let tableId = tableIdInput;
+  if (typeof tableIdInput === "object" && tableIdInput !== null) {
+    tableId = tableIdInput.id || tableIdInput.table_id || tableIdInput.table_number;
+  }
+  if (!tableId) return null;
+
+  const dbStatus = status ? String(status).toLowerCase() : TABLE_STATUS.available;
 
   try {
     const updates = {
@@ -70,15 +114,27 @@ export const updateTABLE_STATUS = async (tableId, status, currentOrderId = null)
       updates.reservation_time = null;
     }
 
-    const { data, error } = await supabase
+    // Try updating by table primary ID first
+    let { data, error } = await supabase
       .from("dining_tables")
       .update(updates)
       .eq("id", tableId)
       .select();
 
+    // Fallback: If no row updated by ID, try updating by table_number
+    if ((!data || data.length === 0) && !error) {
+      const res = await supabase
+        .from("dining_tables")
+        .update(updates)
+        .eq("table_number", String(tableId))
+        .select();
+      data = res.data;
+      error = res.error;
+    }
+
     if (error) throw error;
     if (data && data.length > 0) return data[0];
-    throw new Error("Table not found for status update");
+    return null;
   } catch (err) {
     console.error("Error updating table status in Supabase:", err);
     throw err;
@@ -89,7 +145,7 @@ export const updateTABLE_STATUS = async (tableId, status, currentOrderId = null)
  * Update full properties of a dining table (Full CRUD - Update).
  */
 export const updateTable = async (arg1, arg2, arg3) => {
-  let org_id, tableId, tableData;
+  let tableId, tableData, org_id;
 
   if (arg3 !== undefined) {
     org_id = arg1;
@@ -107,15 +163,27 @@ export const updateTable = async (arg1, arg2, arg3) => {
 
   const dbPayload = {
     ...tableData,
-    updated_by: org_id || null,
   };
+  if (org_id) {
+    dbPayload.updated_by = org_id;
+  }
 
   try {
-    const { data, error } = await supabase
+    let { data, error } = await supabase
       .from("dining_tables")
       .update(dbPayload)
       .eq("id", tableId)
       .select();
+
+    if ((!data || data.length === 0) && !error) {
+      const res = await supabase
+        .from("dining_tables")
+        .update(dbPayload)
+        .eq("table_number", String(tableId))
+        .select();
+      data = res.data;
+      error = res.error;
+    }
 
     if (error) throw error;
     if (data && data.length > 0) return data[0];
@@ -130,14 +198,12 @@ export const updateTable = async (arg1, arg2, arg3) => {
  * Delete a dining table (Full CRUD - Delete).
  */
 export const deleteTable = async (arg1, arg2) => {
-  let org_id, tableId;
+  let tableId;
 
   if (arg2 !== undefined) {
-    org_id = arg1;
     tableId = arg2;
   } else {
     tableId = arg1;
-    org_id = null;
   }
 
   if (!tableId) {
@@ -145,16 +211,10 @@ export const deleteTable = async (arg1, arg2) => {
   }
 
   try {
-    let query = supabase
+    const { error } = await supabase
       .from("dining_tables")
       .delete()
       .eq("id", tableId);
-
-    if (org_id) {
-      query = query.eq("org_id", org_id);
-    }
-
-    const { error } = await query;
 
     if (error) throw error;
     return true;
@@ -167,7 +227,17 @@ export const deleteTable = async (arg1, arg2) => {
 /**
  * Reset all active dining tables to status "available".
  */
-export const clearAllTables = async (org_id) => {
+export const clearAllTables = async (org_id, options = {}, roleArg) => {
+  let user_role, user_id;
+
+  if (typeof options === "object" && options !== null) {
+    user_role = options.user_role;
+    user_id = options.user_id;
+  } else {
+    user_id = options;
+    user_role = roleArg;
+  }
+
   try {
     const updates = {
       status: TABLE_STATUS.available,
@@ -185,6 +255,10 @@ export const clearAllTables = async (org_id) => {
 
     if (org_id) {
       query = query.eq("org_id", org_id);
+    }
+
+    if (user_role === "admin" && user_id) {
+      query = query.eq("branch_permission", user_id);
     }
 
     const { data, error } = await query.select();

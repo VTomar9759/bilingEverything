@@ -75,6 +75,8 @@ const useOrgData = () => {
   const permission = parsedPermission || defaultPermission;
 
   return {
+    user_role: userData?.role || null,
+    user_id: userData?.id || null,
     org_id: effectiveOrgId,
     created_by: effectiveCreatedBy,
     gst_number: effectiveGstNumber,
@@ -91,4 +93,4 @@ const useOrgData = () => {
   };
 };
 
-export default useOrgData;
+export default useOrgData;

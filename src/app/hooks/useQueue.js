@@ -6,11 +6,7 @@ import { supabase } from "../../lib/supabaseClients";
 const QUEUE_STATUSES = ["Preparing", "Ready"];
 
 const useQueue = () => {
-  const { org_id, userData } = useOrgData();
-  const user_role = userData?.role;
-  const user_id = userData?.id;
-  console.log(user_role, "user_role");
-  console.log(user_id, "user_id");
+  const { org_id, user_role, user_id } = useOrgData();
   const [queueListing, setQueueListing] = useState([]);
   const [loading, setLoading] = useState(false);
   const lastFetchRef = useRef(0);

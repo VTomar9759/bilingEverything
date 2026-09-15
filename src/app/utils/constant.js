@@ -1,3 +1,5 @@
+export const ADMIN_ROLES = "admin"
+
 export const TABLE_STATUS = {
   all: "All Tables",
   available: "available",

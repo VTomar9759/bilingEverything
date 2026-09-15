@@ -4,7 +4,7 @@ import { getTables, addTable, updateTABLE_STATUS, updateTable, deleteTable, clea
 
 
 const useTables = () => {
-  const { org_id } = useOrgData();
+  const { org_id, user_role, user_id } = useOrgData();
   const [tables, setTables] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -12,14 +12,14 @@ const useTables = () => {
     if (!org_id) return;
     setLoading(true);
     try {
-      const data = await getTables(org_id);
+      const data = await getTables(org_id, { user_role, user_id });
       setTables(data || []);
     } catch (err) {
       console.error("useTables error fetching:", err);
     } finally {
       setLoading(false);
     }
-  }, [org_id]);
+  }, [org_id, user_role, user_id]);
 
   useEffect(() => {
     fetchTables();
@@ -28,7 +28,7 @@ const useTables = () => {
   const handleAddTable = async (tableData) => {
     if (!org_id) return;
     try {
-      const newTable = await addTable(org_id, tableData);
+      const newTable = await addTable(org_id, tableData, { user_role, user_id });
       setTables((prev) => [...prev, newTable]);
       return newTable;
     } catch (err) {
@@ -50,7 +50,7 @@ const useTables = () => {
 
   const handleUpdateTable = async (tableId, tableData) => {
     try {
-      const updated = await updateTable(org_id, tableId, tableData);
+      const updated = await updateTable(tableId, tableData);
       setTables((prev) => prev.map((t) => (t.id === tableId ? updated : t)));
       return updated;
     } catch (err) {
@@ -61,7 +61,7 @@ const useTables = () => {
 
   const handleDeleteTable = async (tableId) => {
     try {
-      await deleteTable(org_id, tableId);
+      await deleteTable(tableId);
       setTables((prev) => prev.filter((t) => t.id !== tableId));
     } catch (err) {
       console.error("useTables error deleting:", err);
@@ -72,7 +72,7 @@ const useTables = () => {
   const handleClearAllTables = async () => {
     if (!org_id) return;
     try {
-      const updated = await clearAllTables(org_id);
+      const updated = await clearAllTables(org_id, { user_role, user_id });
       setTables(updated || []);
       return updated;
     } catch (err) {

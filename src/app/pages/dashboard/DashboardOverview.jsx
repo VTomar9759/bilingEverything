@@ -21,7 +21,7 @@ import { TABLE_STATUS } from "../../utils/constant";
 
 const DashboardOverview = () => {
   const navigate = useNavigate();
-  const { org_id, userData } = useOrgData();
+  const { org_id, user_role, user_id, userData } = useOrgData();
   const itemsCatalog = useSelector((state) => state.itemSlice);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({});
@@ -35,7 +35,7 @@ const DashboardOverview = () => {
       try {
         const [ordersList, tablesList] = await Promise.all([
           service.getOrders(org_id),
-          service.getTables(org_id),
+          service.getTables(org_id, { user_role, user_id }),
         ]);
 
         setOrdersList(ordersList || []);
