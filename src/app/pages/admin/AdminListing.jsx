@@ -35,7 +35,7 @@ const AdminListing = () => {
     tables,
     loading: loadingTables,
     updateTable,
-  } = useTables();
+  } = useTables({ fetchAll: true });
 
   const [modalVisible, setModalVisible] = useState(false);
   const [editingAdmin, setEditingAdmin] = useState(null);

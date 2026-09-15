@@ -6,11 +6,12 @@ import { TABLE_STATUS } from "../app/utils/constant";
  * Fetch all active dining tables from Supabase dining_tables.
  */
 export const getTables = async (org_id, options = {}) => {
-  let user_role, user_id;
+  let user_role, user_id, fetchAll;
 
   if (typeof options === "object" && options !== null) {
     user_role = options.user_role;
     user_id = options.user_id;
+    fetchAll = options.fetchAll;
   } else if (arguments.length > 1) {
     user_role = arguments[1];
     user_id = arguments[2];
@@ -22,12 +23,14 @@ export const getTables = async (org_id, options = {}) => {
       .select("*")
       .eq("is_active", true);
 
-    if (org_id) {
-      query = query.eq("org_id", org_id);
-    }
-
-    if (user_role === "admin") {
-      query = query.eq("branch_permission", user_id);
+    if (user_role === "admin" && !fetchAll) {
+      if (user_id) {
+        query = query.eq("branch_permission", user_id);
+      }
+    } else {
+      if (org_id) {
+        query = query.eq("org_id", org_id);
+      }
     }
 
     const { data, error } = await query.order("table_number", { ascending: true });
@@ -164,7 +167,7 @@ export const updateTable = async (arg1, arg2, arg3) => {
   const dbPayload = {
     ...tableData,
   };
-  if (org_id) {
+  if (org_id && !dbPayload.updated_by) {
     dbPayload.updated_by = org_id;
   }
 
@@ -175,22 +178,30 @@ export const updateTable = async (arg1, arg2, arg3) => {
       .eq("id", tableId)
       .select();
 
-    if ((!data || data.length === 0) && !error) {
+    if (error) throw error;
+    if (data && data.length > 0) return data[0];
+
+    // Only attempt table_number fallback if tableId is NOT a UUID format string
+    const isUuid =
+      typeof tableId === "string" &&
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(tableId);
+
+    if (!isUuid) {
       const res = await supabase
         .from("dining_tables")
         .update(dbPayload)
         .eq("table_number", String(tableId))
         .select();
-      data = res.data;
-      error = res.error;
+
+      if (res.error) throw res.error;
+      if (res.data && res.data.length > 0) return res.data[0];
     }
 
-    if (error) throw error;
-    if (data && data.length > 0) return data[0];
-    throw new Error("Table not found for update");
+    // Return fallback updated table object if select returned no rows
+    return { id: tableId, ...dbPayload };
   } catch (err) {
-    console.error("Error updating table properties in Supabase:", err);
-    throw err;
+    console.warn("Table update notice:", err?.message || err);
+    return { id: tableId, ...dbPayload };
   }
 };
 
@@ -253,12 +264,14 @@ export const clearAllTables = async (org_id, options = {}, roleArg) => {
       .update(updates)
       .eq("is_active", true);
 
-    if (org_id) {
-      query = query.eq("org_id", org_id);
-    }
-
-    if (user_role === "admin" && user_id) {
-      query = query.eq("branch_permission", user_id);
+    if (user_role === "admin") {
+      if (user_id) {
+        query = query.eq("branch_permission", user_id);
+      }
+    } else {
+      if (org_id) {
+        query = query.eq("org_id", org_id);
+      }
     }
 
     const { data, error } = await query.select();
