@@ -63,6 +63,7 @@ function SignUp() {
   const [loading, setLoading] = useState(false);
 
   const handleAuth = async (values) => {
+    if (loading) return;
     const {
       full_name,
       email,
@@ -288,7 +289,7 @@ function SignUp() {
               </Col>
             </Row>
 
-            <SubmitBtn htmlType="submit" loading={loading} block style={{ marginTop: 8 }}>
+            <SubmitBtn htmlType="submit" loading={loading} disabled={loading} block style={{ marginTop: 8 }}>
               Complete Sign Up ✓
             </SubmitBtn>
           </Form>

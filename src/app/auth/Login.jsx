@@ -1,3 +1,4 @@
+import React, { useState } from "react";
 import styled, { keyframes } from "styled-components";
 import { Input, Button, Form, message } from "antd";
 import { useNavigate } from "react-router-dom";
@@ -12,11 +13,14 @@ const Login = () => {
   const [form] = Form.useForm();
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const [loading, setLoading] = useState(false);
 
 
 const handleSubmit = async (values) => {
+  if (loading) return;
   const { email, password } = values;
 
+  setLoading(true);
   try {
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
@@ -108,6 +112,8 @@ const handleSubmit = async (values) => {
   } catch (err) {
     console.error("Login error:", err);
     message.error(err?.message || "Login failed");
+  } finally {
+    setLoading(false);
   }
 };
 
@@ -160,7 +166,7 @@ const handleSubmit = async (values) => {
             </ForgotLink>
           </ForgotRow>
 
-          <SubmitBtn htmlType="submit" block>
+          <SubmitBtn htmlType="submit" loading={loading} disabled={loading} block>
             Sign In →
           </SubmitBtn>
         </Form>

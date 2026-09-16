@@ -11,6 +11,10 @@ import {
   UserOutlined,
   PhoneOutlined,
   HomeOutlined,
+  CreditCardOutlined,
+  DollarOutlined,
+  GlobalOutlined,
+  ClockCircleOutlined,
 } from "@ant-design/icons";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useDispatch } from "react-redux";
@@ -19,6 +23,7 @@ import useItemStore from "../../hooks/useItemStore";
 import TabHeader from "../../../components/TabHeader";
 import { PageWrapper } from "../../styles/commonstyle";
 import { PATH_BILLING } from "../../routes/pathname";
+import { PAYMENT_MODE } from "../../utils/constant";
 import CategorySelecter from "../../../components/CategorySelecter";
 import * as service from "../../../services";
 import OrderInvoiceModal from "../../print/OrderInvoiceModal";
@@ -43,8 +48,13 @@ const OrderEditPage = () => {
   const [catalogItems, catalogLoading] = useItemStore();
   const [printModalVisible, setPrintModalVisible] = useState(false);
   const [kotModalVisible, setKotModalVisible] = useState(false);
+  const [isKotCombined, setIsKotCombined] = useState(true);
   const [createdOrderForPrint, setCreatedOrderForPrint] = useState(null);
   const [saving, setSaving] = useState(false);
+  const savingRef = useRef(false);
+  const [isKotLoading, setIsKotLoading] = useState(false);
+  const isKotLoadingRef = useRef(false);
+  const [paymentMode, setPaymentMode] = useState(PAYMENT_MODE.unpaid);
 
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
@@ -97,6 +107,13 @@ const OrderEditPage = () => {
       setCustomerName(order.customer_name || "");
       setCustomerPhone(order.customer_phone || "");
       setCustomerAddress(order.customer_address || "");
+      if (order.payment_mode) {
+        setPaymentMode(order.payment_mode);
+      } else if (order.payment_status === "Paid") {
+        setPaymentMode(PAYMENT_MODE.cash);
+      } else {
+        setPaymentMode(PAYMENT_MODE.unpaid);
+      }
       if (order.customer_name || order.customer_phone || order.customer_address) {
         dispatch(setShowCustomerDetails(true));
       }
@@ -139,6 +156,7 @@ const OrderEditPage = () => {
   );
 
   const handleSaveOrder = async () => {
+    if (savingRef.current || isKotLoadingRef.current) return;
     if (!canUpdate) {
       message.error("You do not have permission to edit orders.");
       return;
@@ -164,12 +182,18 @@ const OrderEditPage = () => {
       };
     });
 
+    const isPaid = paymentMode && paymentMode !== PAYMENT_MODE.unpaid;
+
     const customerFields = {
       customer_name: customerName ? customerName.trim() : null,
       customer_phone: customerPhone ? customerPhone.trim() : null,
       customer_address: customerAddress ? customerAddress.trim() : null,
+      payment_status: isPaid ? "Paid" : "Unpaid",
+      payment_mode: isPaid ? paymentMode : PAYMENT_MODE.unpaid,
+      payment_method: isPaid ? paymentMode : PAYMENT_MODE.unpaid,
     };
 
+    savingRef.current = true;
     setSaving(true);
     try {
       const updatedOrder = await editItems(orderId, itemsPayload, customerFields);
@@ -182,6 +206,15 @@ const OrderEditPage = () => {
           ...customerFields,
         });
         setPrintModalVisible(true);
+      } else if (isPrintSubmitRef.current === "both") {
+        setCreatedOrderForPrint(updatedOrder || {
+          ...order,
+          items: itemsPayload,
+          ...customerFields,
+        });
+        setIsKotCombined(true);
+        setPrintModalVisible(false);
+        setKotModalVisible(true);
       } else {
         navigate(PATH_BILLING, {
           state: { orderId },
@@ -191,33 +224,45 @@ const OrderEditPage = () => {
       message.error("Failed to update order.");
       console.error(err);
     } finally {
+      savingRef.current = false;
       setSaving(false);
     }
   };
 
-  const handleOpenKotModal = () => {
+  const handleOpenKotModal = async () => {
+    if (savingRef.current || isKotLoadingRef.current) return;
     if (selectedPosItems.length === 0) {
       message.error("Please add at least one item to print KOT.");
       return;
     }
 
-    const tableName = order?.table_name || "Takeaway";
-    const draftKotOrder = {
-      order_number: order?.order_number || `KOT-${Math.floor(100000 + Math.random() * 900000)}`,
-      table_name: tableName,
-      table_number: order?.table_number,
-      customer_name: customerName ? customerName.trim() : null,
-      customer_phone: customerPhone ? customerPhone.trim() : null,
-      customer_address: customerAddress ? customerAddress.trim() : null,
-      items: selectedPosItems.map((i) => ({
-        name: i.item.name,
-        quantity: i.quantity,
-      })),
-      created_at: new Date().toISOString(),
-    };
+    isKotLoadingRef.current = true;
+    setIsKotLoading(true);
+    try {
+      const tableName = order?.table_name || "Takeaway";
+      const draftKotOrder = {
+        order_number: order?.order_number || `KOT-${Math.floor(100000 + Math.random() * 900000)}`,
+        table_name: tableName,
+        table_number: order?.table_number,
+        customer_name: customerName ? customerName.trim() : null,
+        customer_phone: customerPhone ? customerPhone.trim() : null,
+        customer_address: customerAddress ? customerAddress.trim() : null,
+        items: selectedPosItems.map((i) => ({
+          name: i.item.name,
+          quantity: i.quantity,
+        })),
+        created_at: new Date().toISOString(),
+      };
 
-    setCreatedOrderForPrint(draftKotOrder);
-    setKotModalVisible(true);
+      setCreatedOrderForPrint(draftKotOrder);
+      setIsKotCombined(false);
+      setKotModalVisible(true);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      isKotLoadingRef.current = false;
+      setIsKotLoading(false);
+    }
   };
 
   const menuFilteredCatalog = catalogItems?.filter(
@@ -490,6 +535,65 @@ const OrderEditPage = () => {
                 </span>
               </SummaryRow>
 
+              <PaymentSection>
+                <PaymentButtonGroup>
+                  <PaymentOptionBtn
+                    type={paymentMode === PAYMENT_MODE.unpaid ? "primary" : "default"}
+                    htmlType="button"
+                    $selected={paymentMode === PAYMENT_MODE.unpaid}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setPaymentMode(PAYMENT_MODE.unpaid);
+                    }}
+                  >
+                    <ClockCircleOutlined /> {PAYMENT_MODE.unpaid}
+                  </PaymentOptionBtn>
+                  <PaymentOptionBtn
+                    type={paymentMode === PAYMENT_MODE.cash ? "primary" : "default"}
+                    htmlType="button"
+                    $selected={paymentMode === PAYMENT_MODE.cash}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setPaymentMode((prev) =>
+                        prev === PAYMENT_MODE.cash ? PAYMENT_MODE.unpaid : PAYMENT_MODE.cash
+                      );
+                    }}
+                  >
+                    <DollarOutlined /> {PAYMENT_MODE.cash}
+                  </PaymentOptionBtn>
+                  <PaymentOptionBtn
+                    type={paymentMode === PAYMENT_MODE.card ? "primary" : "default"}
+                    htmlType="button"
+                    $selected={paymentMode === PAYMENT_MODE.card}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setPaymentMode((prev) =>
+                        prev === PAYMENT_MODE.card ? PAYMENT_MODE.unpaid : PAYMENT_MODE.card
+                      );
+                    }}
+                  >
+                    <CreditCardOutlined /> {PAYMENT_MODE.card}
+                  </PaymentOptionBtn>
+                  <PaymentOptionBtn
+                    type={paymentMode === PAYMENT_MODE.online ? "primary" : "default"}
+                    htmlType="button"
+                    $selected={paymentMode === PAYMENT_MODE.online}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setPaymentMode((prev) =>
+                        prev === PAYMENT_MODE.online ? PAYMENT_MODE.unpaid : PAYMENT_MODE.online
+                      );
+                    }}
+                  >
+                    <GlobalOutlined /> {PAYMENT_MODE.online}
+                  </PaymentOptionBtn>
+                </PaymentButtonGroup>
+              </PaymentSection>
+
               <div
                 style={{
                   display: "flex",
@@ -501,9 +605,10 @@ const OrderEditPage = () => {
                 <Button
                   type="primary"
                   block
-                  disabled={selectedPosItems.length === 0}
-                  loading={saving}
+                  disabled={selectedPosItems.length === 0 || saving || isKotLoading}
+                  loading={saving && isPrintSubmitRef.current === false}
                   onClick={() => {
+                    if (savingRef.current || isKotLoadingRef.current) return;
                     isPrintSubmitRef.current = false;
                     handleSaveOrder();
                   }}
@@ -513,8 +618,8 @@ const OrderEditPage = () => {
                     height: 42,
                     fontWeight: 700,
                     borderRadius: 10,
-                    fontSize: 12,
-                    padding: "0 4px",
+                    fontSize: 11,
+                    padding: "0 2px",
                   }}
                 >
                   Save Changes
@@ -522,9 +627,10 @@ const OrderEditPage = () => {
                 <Button
                   type="default"
                   block
-                  disabled={selectedPosItems.length === 0}
-                  loading={saving}
+                  disabled={selectedPosItems.length === 0 || saving || isKotLoading}
+                  loading={saving && isPrintSubmitRef.current === "invoice"}
                   onClick={() => {
+                    if (savingRef.current || isKotLoadingRef.current) return;
                     isPrintSubmitRef.current = "invoice";
                     handleSaveOrder();
                   }}
@@ -536,17 +642,21 @@ const OrderEditPage = () => {
                     borderRadius: 10,
                     borderColor: "var(--color-primary-light)",
                     color: "var(--color-primary)",
-                    fontSize: 12,
-                    padding: "0 4px",
+                    fontSize: 11,
+                    padding: "0 2px",
                   }}
                 >
-                  Save & Print Invoice
+                  Save & Print
                 </Button>
                 <Button
                   type="default"
                   block
-                  disabled={selectedPosItems.length === 0}
-                  onClick={handleOpenKotModal}
+                  loading={isKotLoading}
+                  disabled={selectedPosItems.length === 0 || saving || isKotLoading}
+                  onClick={() => {
+                    if (savingRef.current || isKotLoadingRef.current) return;
+                    handleOpenKotModal();
+                  }}
                   icon={<PrinterOutlined />}
                   style={{
                     flex: 1,
@@ -555,11 +665,35 @@ const OrderEditPage = () => {
                     borderRadius: 10,
                     borderColor: "#ff9800",
                     color: "#d97706",
-                    fontSize: 12,
-                    padding: "0 4px",
+                    fontSize: 11,
+                    padding: "0 2px",
                   }}
                 >
                   KOT
+                </Button>
+                <Button
+                  type="default"
+                  block
+                  disabled={selectedPosItems.length === 0 || saving || isKotLoading}
+                  loading={saving && isPrintSubmitRef.current === "both"}
+                  onClick={() => {
+                    if (savingRef.current || isKotLoadingRef.current) return;
+                    isPrintSubmitRef.current = "both";
+                    handleSaveOrder();
+                  }}
+                  icon={<PrinterOutlined />}
+                  style={{
+                    flex: 1,
+                    height: 42,
+                    fontWeight: 700,
+                    borderRadius: 10,
+                    borderColor: "#7c3aed",
+                    color: "#7c3aed",
+                    fontSize: 11,
+                    padding: "0 2px",
+                  }}
+                >
+                  KOT & Order
                 </Button>
               </div>
             </ComposerSummary>
@@ -577,6 +711,7 @@ const OrderEditPage = () => {
         onClose={() => setKotModalVisible(false)}
         order={createdOrderForPrint}
         settings={settings}
+        isCombined={isKotCombined}
       />
     </PageWrapper>
   );
@@ -693,7 +828,7 @@ const FilterRow = styled.div`
 
 const MenuGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
   grid-auto-rows: max-content;
   align-content: start;
   gap: 8px;
@@ -704,7 +839,7 @@ const MenuGrid = styled.div`
 
 const MenuItemCard = styled.div`
   position: relative;
-  height: 100px;
+  height: 120px;
   background: var(--color-bg);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
@@ -719,7 +854,7 @@ const MenuItemCard = styled.div`
 
 const MenuImg = styled.img`
   width: 100%;
-  height: 50px;
+  height: 65px;
   object-fit: cover;
   border-top-left-radius: var(--radius-lg);
   border-top-right-radius: var(--radius-lg);
@@ -727,7 +862,7 @@ const MenuImg = styled.img`
 
 const MenuAvatar = styled.div`
   width: 100%;
-  height: 50px;
+  height: 65px;
   background: linear-gradient(
     135deg,
     var(--color-primary) 0%,
@@ -752,16 +887,16 @@ const MenuName = styled.div`
   font-size: 11px;
   font-weight: 700;
   color: var(--color-text-primary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.2;
 `;
 
 const MenuMeta = styled.div`
   display: flex;
   flex-direction: column;
-  justify-content: start;
-  align-items: center;
+  justify-content: flex-start;
+  align-items: flex-start;
 `;
 
 const MenuPrice = styled.strong`
@@ -894,4 +1029,39 @@ const SummaryRow = styled.div`
 const DashedLine = styled.div`
   border-top: 1px dashed var(--color-border);
   margin: 4px 0;
+`;
+
+const PaymentSection = styled.div`
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+`;
+
+const PaymentButtonGroup = styled.div`
+  display: flex;
+  gap: 6px;
+  width: 100%;
+`;
+
+const PaymentOptionBtn = styled(Button)`
+  flex: 1;
+  height: 36px;
+  font-size: 11.5px;
+  font-weight: 700;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  transition: all 0.2s ease;
+
+  ${(props) =>
+    props.$selected &&
+    `
+    background-color: #10b981 !important;
+    border-color: #10b981 !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);
+  `}
 `;

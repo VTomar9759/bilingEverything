@@ -45,6 +45,7 @@ const PosOrderComposer = () => {
   const [catalogItems, catalogLoading] = useItemStore();
   const [printModalVisible, setPrintModalVisible] = useState(false);
   const [kotModalVisible, setKotModalVisible] = useState(false);
+  const [isKotCombined, setIsKotCombined] = useState(true);
   const [createdOrderForPrint, setCreatedOrderForPrint] = useState(null);
   
 
@@ -61,6 +62,10 @@ const PosOrderComposer = () => {
   const [selectedPosItems, setSelectedPosItems] = useState([]); // Array of { item, quantity }
   const [posSearchText, setPosSearchText] = useState("");
   const isPrintSubmitRef = useRef(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isKotLoading, setIsKotLoading] = useState(false);
+  const isSubmittingRef = useRef(false);
+  const isKotLoadingRef = useRef(false);
   const [selectedCategory, setSelectedCategory] = useState("all");
   const handleCategoryFilter = (category) => {
     setSelectedCategory(category);
@@ -110,6 +115,7 @@ const PosOrderComposer = () => {
   const [paymentMode, setPaymentMode] = useState(PAYMENT_MODE.unpaid); // Default to "Unpaid"
 
   const handleFormFinish = async (values) => {
+    if (isSubmittingRef.current || isKotLoadingRef.current) return;
     if (!canCreate) {
       message.error("You do not have permission to create orders.");
       return;
@@ -118,6 +124,9 @@ const PosOrderComposer = () => {
       message.error("Please add at least one product to the order.");
       return;
     }
+
+    isSubmittingRef.current = true;
+    setIsSubmitting(true);
 
     const subtotal = selectedPosItems.reduce(
       (acc, curr) => acc + Number(curr.item.price || 0) * curr.quantity,
@@ -180,45 +189,67 @@ const PosOrderComposer = () => {
       if (isPrintSubmitRef.current === "invoice") {
         setCreatedOrderForPrint(newOrder);
         setPrintModalVisible(true);
+      } else if (isPrintSubmitRef.current === "both") {
+        setCreatedOrderForPrint(newOrder);
+        setIsKotCombined(true);
+        setPrintModalVisible(false);
+        setKotModalVisible(true);
       } else {
         navigate(PATH_ORDERS);
       }
     } catch (err) {
       message.error("Failed to compose order");
       console.error(err);
+    } finally {
+      isSubmittingRef.current = false;
+      setIsSubmitting(false);
     }
   };
 
-  const handleOpenKotModal = async() => {
+  const handleOpenKotModal = async () => {
+    if (isSubmittingRef.current || isKotLoadingRef.current) return;
     if (selectedPosItems.length === 0) {
       message.error("Please add at least one item to print KOT.");
       return;
     }
-    const tableId = form.getFieldValue("table_id");
-    const selectedTable = tables.find((t) => t.id === tableId);
-    const tableName = selectedTable
-      ? selectedTable.table_number
-        ? `Table ${selectedTable.table_number} (${selectedTable.table_name})`
-        : selectedTable.table_name
-      : "Takeaway";
-    const order_number = await generateOrderNumber(org_id);
 
-    const draftKotOrder = {
-      order_number: order_number,
-      table_name: tableName,
-      table_number: selectedTable?.table_number,
-      customer_name: form.getFieldValue("customer_name") ? form.getFieldValue("customer_name").trim() : null,
-      customer_phone: form.getFieldValue("customer_phone") ? form.getFieldValue("customer_phone").trim() : null,
-      customer_address: form.getFieldValue("customer_address") ? form.getFieldValue("customer_address").trim() : null,
-      items: selectedPosItems.map((i) => ({
-        name: i.item.name,
-        quantity: i.quantity,
-      })),
-      created_at: new Date().toISOString(),
-    };
+    isKotLoadingRef.current = true;
+    setIsKotLoading(true);
 
-    setCreatedOrderForPrint(draftKotOrder);
-    setKotModalVisible(true);
+    try {
+      const tableId = form.getFieldValue("table_id");
+      const selectedTable = tables.find((t) => t.id === tableId);
+      const tableName = selectedTable
+        ? selectedTable.table_number
+          ? `Table ${selectedTable.table_number} (${selectedTable.table_name})`
+          : selectedTable.table_name
+        : "Takeaway";
+      const order_number = await generateOrderNumber(org_id);
+
+      const draftKotOrder = {
+        order_number: order_number,
+        table_name: tableName,
+        table_number: selectedTable?.table_number,
+        customer_name: form.getFieldValue("customer_name") ? form.getFieldValue("customer_name").trim() : null,
+        customer_phone: form.getFieldValue("customer_phone") ? form.getFieldValue("customer_phone").trim() : null,
+        customer_address: form.getFieldValue("customer_address") ? form.getFieldValue("customer_address").trim() : null,
+        items: selectedPosItems.map((i) => ({
+          name: i.item.name,
+          quantity: i.quantity,
+        })),
+        created_at: new Date().toISOString(),
+      };
+
+      setCreatedOrderForPrint(draftKotOrder);
+      setIsKotCombined(false);
+      setKotModalVisible(true);
+    } catch (err) {
+      console.error(err);
+      message.error("Failed to generate KOT");
+    } finally {
+      isKotLoadingRef.current = false;
+      setIsKotLoading(false);
+    }
   };
 
   const menuFilteredCatalog = catalogItems?.filter(
@@ -278,7 +309,6 @@ const PosOrderComposer = () => {
               <FilterRow>
                 <Form.Item
                   name="table_id"
-                  label="Assign Dining Table"
                   rules={[
                     {
                       required: false,
@@ -302,7 +332,7 @@ const PosOrderComposer = () => {
                   </Select>
                 </Form.Item>
 
-                <Form.Item label="Filter Menu">
+                <Form.Item>
                   <Input
                     placeholder="Filter menu dishes..."
                     prefix={<SearchOutlined />}
@@ -557,7 +587,8 @@ const PosOrderComposer = () => {
                     type="primary"
                     block
                     htmlType="submit"
-                    disabled={selectedPosItems.length === 0}
+                    loading={isSubmitting && isPrintSubmitRef.current === false}
+                    disabled={selectedPosItems.length === 0 || isSubmitting || isKotLoading}
                     onClick={() => {
                       isPrintSubmitRef.current = false;
                     }}
@@ -566,17 +597,19 @@ const PosOrderComposer = () => {
                       height: 42,
                       fontWeight: 700,
                       borderRadius: 10,
-                      fontSize: 12,
-                      padding: "0 4px",
+                      fontSize: 11,
+                      padding: "0 2px",
+                      color: "white"
                     }}
                   >
-                    Place POS Order
+                    Place POS
                   </Button>
                   <Button
                     type="default"
                     block
                     htmlType="submit"
-                    disabled={selectedPosItems.length === 0}
+                    loading={isSubmitting && isPrintSubmitRef.current === "invoice"}
+                    disabled={selectedPosItems.length === 0 || isSubmitting || isKotLoading}
                     onClick={() => {
                       isPrintSubmitRef.current = "invoice";
                     }}
@@ -588,17 +621,17 @@ const PosOrderComposer = () => {
                       borderRadius: 10,
                       borderColor: "var(--color-primary-light)",
                       color: "var(--color-primary)",
-                      fontSize: 12,
-                      padding: "0 4px",
+                      fontSize: 11,
+                      padding: "0 2px",
                     }}
                   >
-                    Place & Print Invoice
+                    Place & Print
                   </Button>
                   <Button
                     type="default"
                     block
-                    
-                    disabled={selectedPosItems.length === 0}
+                    loading={isKotLoading}
+                    disabled={selectedPosItems.length === 0 || isSubmitting || isKotLoading}
                     onClick={handleOpenKotModal}
                     icon={<PrinterOutlined />}
                     style={{
@@ -608,11 +641,34 @@ const PosOrderComposer = () => {
                       borderRadius: 10,
                       borderColor: "#ff9800",
                       color: "#d97706",
-                      fontSize: 12,
-                      padding: "0 4px",
+                      fontSize: 11,
+                      padding: "0 2px",
                     }}
                   >
                     KOT
+                  </Button>
+                  <Button
+                    type="default"
+                    block
+                    htmlType="submit"
+                    loading={isSubmitting && isPrintSubmitRef.current === "both"}
+                    disabled={selectedPosItems.length === 0 || isSubmitting || isKotLoading}
+                    onClick={() => {
+                      isPrintSubmitRef.current = "both";
+                    }}
+                    icon={<PrinterOutlined />}
+                    style={{
+                      flex: 1,
+                      height: 42,
+                      fontWeight: 700,
+                      borderRadius: 10,
+                      borderColor: "#7c3aed",
+                      color: "#7c3aed",
+                      fontSize: 11,
+                      padding: "0 2px",
+                    }}
+                  >
+                    KOT & Print
                   </Button>
                 </div>
               </ComposerSummary>
@@ -631,6 +687,7 @@ const PosOrderComposer = () => {
         onClose={() => setKotModalVisible(false)}
         order={createdOrderForPrint}
         settings={settings}
+        isCombined={isKotCombined}
       />
 
     </PageWrapper>
@@ -720,7 +777,7 @@ const FilterRow = styled.div`
 
 const MenuGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
   grid-auto-rows: max-content;
   align-content: start;
   gap: 8px;
@@ -731,7 +788,7 @@ const MenuGrid = styled.div`
 
 const MenuItemCard = styled.div`
   position: relative;
-  height: 100px;
+  height: 120px;
   background: var(--color-bg);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
@@ -746,7 +803,7 @@ const MenuItemCard = styled.div`
 
 const MenuImg = styled.img`
   width: 100%;
-  height: 50px;
+  height: 65px;
   object-fit: cover;
   border-top-left-radius: var(--radius-lg);
   border-top-right-radius: var(--radius-lg);
@@ -754,7 +811,7 @@ const MenuImg = styled.img`
 
 const MenuAvatar = styled.div`
   width: 100%;
-  height: 50px;
+  height: 65px;
   background: linear-gradient(
     135deg,
     var(--color-primary) 0%,
@@ -779,16 +836,16 @@ const MenuName = styled.div`
   font-size: 11px;
   font-weight: 700;
   color: var(--color-text-primary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.2;
 `;
 
 const MenuMeta = styled.div`
   display: flex;
   flex-direction: column;
-  justify-content: start
-  align-items: center;
+  justify-content: flex-start;
+  align-items: flex-start;
 `;
 
 const MenuPrice = styled.strong`
