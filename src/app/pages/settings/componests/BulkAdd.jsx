@@ -137,7 +137,7 @@ const BulkAdd = () => {
             <strong>description</strong> — Product description (optional)
           </li>
           <li>
-            <strong>status</strong> — active or deactivated
+            <strong>status</strong> — active or deactivated (or boolean true / false)
           </li>
           <li>Do not change the column names</li>
         </RequirementsList>
