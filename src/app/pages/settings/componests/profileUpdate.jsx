@@ -1,6 +1,7 @@
 import React from "react";
 import styled from "styled-components";
 import LogoUpdate from "./logoUpdate";
+import BulkAdd from "./BulkAdd";
 
 const ProfileUpdate = () => {
   return (
@@ -15,6 +16,7 @@ const ProfileUpdate = () => {
       </SectionHeader>
 
       <LogoUpdate />
+      <BulkAdd/>
     </SectionContainer>
   );
 };
