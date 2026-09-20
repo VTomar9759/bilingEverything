@@ -74,27 +74,27 @@ export const getItemColWidths = (ps) => {
   const showDisc = ps?.item_discount_visible !== false;
 
   if (showQty && showRate && showDisc) {
-    return { item: "36%", qty: "12%", rate: "18%", disc: "14%", total: "20%" };
+    return { item: "34%", qty: "12%", rate: "18%", disc: "14%", total: "22%" };
   }
   if (showQty && showRate && !showDisc) {
-    return { item: "42%", qty: "14%", rate: "22%", disc: "0%", total: "22%" };
+    return { item: "38%", qty: "12%", rate: "24%", disc: "0%", total: "26%" };
   }
   if (showQty && !showRate && showDisc) {
-    return { item: "46%", qty: "14%", rate: "0%", disc: "16%", total: "24%" };
+    return { item: "44%", qty: "12%", rate: "0%", disc: "18%", total: "26%" };
   }
   if (showQty && !showRate && !showDisc) {
-    return { item: "55%", qty: "15%", rate: "0%", disc: "0%", total: "30%" };
+    return { item: "52%", qty: "16%", rate: "0%", disc: "0%", total: "32%" };
   }
   if (!showQty && showRate && showDisc) {
-    return { item: "48%", qty: "0%", rate: "20%", disc: "14%", total: "18%" };
+    return { item: "44%", qty: "0%", rate: "20%", disc: "14%", total: "22%" };
   }
   if (!showQty && showRate && !showDisc) {
-    return { item: "54%", qty: "0%", rate: "22%", disc: "0%", total: "24%" };
+    return { item: "50%", qty: "0%", rate: "24%", disc: "0%", total: "26%" };
   }
   if (!showQty && !showRate && showDisc) {
-    return { item: "58%", qty: "0%", rate: "0%", disc: "16%", total: "26%" };
+    return { item: "54%", qty: "0%", rate: "0%", disc: "18%", total: "28%" };
   }
-  return { item: "68%", qty: "0%", rate: "0%", disc: "0%", total: "32%" };
+  return { item: "65%", qty: "0%", rate: "0%", disc: "0%", total: "35%" };
 };
 
 /**
@@ -236,7 +236,7 @@ export const generateReceiptHTML = (order, settings = {}) => {
             width: 100%;
             max-width: ${paperWidth};
             margin: 0 auto;
-            padding: 4mm 9mm 25mm 6mm;
+            padding: 4mm 2mm 20mm 2mm;
             box-sizing: border-box;
             background: #ffffff;
           }
@@ -488,7 +488,7 @@ export const printInvoiceSilent = async ({ order, settings = {}, copies = 2, rec
             .printable-receipt-container, #receipt, #kot-receipt {
               width: 100% !important;
               max-width: ${paperWidth} !important;
-              padding: 4mm 9mm 25mm 6mm !important;
+              padding: 4mm 2mm 20mm 2mm !important;
               margin: 0 auto !important;
               box-sizing: border-box !important;
             }
@@ -651,7 +651,7 @@ export const generateKOTHTML = (order, settings = {}) => {
           }
           .kot {
             width: ${paperWidth};
-            padding: 4mm 7mm 25mm 7mm;
+            padding: 4mm 2mm 20mm 2mm;
             box-sizing: border-box;
             background: #ffffff;
           }
@@ -781,7 +781,7 @@ export const printKOTSilent = async ({
             .printable-receipt-container, #receipt, #kot-receipt {
               width: 100% !important;
               max-width: ${paperWidth} !important;
-              padding: 4mm 9mm 25mm 6mm !important;
+              padding: 4mm 2mm 20mm 2mm !important;
               margin: 0 auto !important;
               box-sizing: border-box !important;
             }

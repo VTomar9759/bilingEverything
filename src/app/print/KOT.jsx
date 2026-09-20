@@ -49,7 +49,7 @@ const PrintGlobalStyles = createGlobalStyle`
       top: 0 !important;
       width: 100% !important;
       max-width: ${({ $paperWidth }) => $paperWidth || "80mm"} !important;
-      padding: 4mm 9mm 25mm 6mm !important;
+      padding: 4mm 2mm 20mm 2mm !important;
       box-sizing: border-box !important;
       background: #ffffff !important;
       color: #000000 !important;
@@ -580,7 +580,7 @@ const ReceiptPaper = styled.div`
   background: white;
   width: ${({ $paperWidth }) => ($paperWidth === "58mm" ? "210px" : "280px")};
   max-width: 100%;
-  padding: 10px 16px 8px 10px;
+  padding: 10px 8px 8px 8px;
   font-family: 'Segoe UI', 'Inter', 'Helvetica Neue', Arial, sans-serif;
   color: #1e293b;
   border-radius: 4px;
