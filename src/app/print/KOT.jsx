@@ -5,7 +5,7 @@ import {
   PrinterOutlined,
   FileTextOutlined,
 } from "@ant-design/icons";
-import { printInvoiceSilent, printKOTSilent } from "../../services";
+import { printInvoiceSilent, printKOTSilent, getItemColWidths } from "./printService";
 import useOrgData from "../hooks/useOrgData";
 import { PRINT_TYPE, PRINT_SIZE } from "../utils/constant";
 import { useSelector } from "react-redux";
@@ -16,6 +16,10 @@ const PrintGlobalStyles = createGlobalStyle`
     @page {
       size: ${({ $paperWidth }) => $paperWidth || "80mm"} auto;
       margin: 0mm;
+    }
+
+    * {
+      box-sizing: border-box !important;
     }
 
     html, body {
@@ -43,9 +47,9 @@ const PrintGlobalStyles = createGlobalStyle`
       left: 0 !important;
       right: 0 !important;
       top: 0 !important;
-      width: ${({ $paperWidth }) => $paperWidth || "80mm"} !important;
+      width: 100% !important;
       max-width: ${({ $paperWidth }) => $paperWidth || "80mm"} !important;
-      padding: 4mm 7mm 25mm 7mm !important;
+      padding: 4mm 9mm 25mm 6mm !important;
       box-sizing: border-box !important;
       background: #ffffff !important;
       color: #000000 !important;
@@ -74,6 +78,14 @@ const PrintGlobalStyles = createGlobalStyle`
       margin: 6px 0 !important;
       width: 100% !important;
       display: block !important;
+    }
+
+    .printable-receipt-container .items-table,
+    .printable-receipt-container .items-table th,
+    .printable-receipt-container .items-table td {
+      font-size: 11px !important;
+      color: #000000 !important;
+      word-break: break-word !important;
     }
 
     tr, .receipt-header, .receipt-meta, .totals-table, .receipt-footer, .dotted-divider {
@@ -212,6 +224,7 @@ const KOT = ({ visible, onClose, order, settings, isCombined = true }) => {
   const halfTax = (taxAmount / 2).toFixed(2);
   const showGstBreakup = ps?.gst_breakup_visible !== false && hasGst && taxAmount > 0;
   const showTaxLine = ps?.tax_visible !== false && !showGstBreakup && taxAmount > 0;
+  const colWidths = getItemColWidths(ps);
 
   return (
     <>
@@ -312,17 +325,17 @@ const KOT = ({ visible, onClose, order, settings, isCombined = true }) => {
                 <ItemsTable className="items-table">
                   <thead>
                     <tr>
-                      <th align="left" style={{ width: "40%", textAlign: "left" }}>Item</th>
+                      <th align="left" style={{ width: colWidths.item, textAlign: "left" }}>Item</th>
                       {ps?.item_quantity_visible !== false && (
-                        <th align="center" style={{ width: "10%", textAlign: "center" }}>Qty</th>
+                        <th align="center" style={{ width: colWidths.qty, textAlign: "center" }}>Qty</th>
                       )}
                       {ps?.item_rate_visible !== false && (
-                        <th align="right" style={{ width: "18%", textAlign: "right" }}>Rate</th>
+                        <th align="right" style={{ width: colWidths.rate, textAlign: "right", paddingRight: "4px" }}>Rate</th>
                       )}
                       {ps?.item_discount_visible !== false && (
-                        <th align="right" style={{ width: "14%", textAlign: "right" }}>Disc</th>
+                        <th align="right" style={{ width: colWidths.disc, textAlign: "right", paddingRight: "4px" }}>Disc</th>
                       )}
-                      <th align="right" style={{ width: "18%", textAlign: "right" }}>Total</th>
+                      <th align="right" style={{ width: colWidths.total, textAlign: "right", paddingRight: "4px" }}>Total</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -343,14 +356,14 @@ const KOT = ({ visible, onClose, order, settings, isCombined = true }) => {
                             <td align="center" style={{ textAlign: "center" }}>{item.quantity}</td>
                           )}
                           {ps?.item_rate_visible !== false && (
-                            <td align="right" style={{ textAlign: "right" }}>{currency}{item.price}</td>
+                            <td align="right" style={{ textAlign: "right", paddingRight: "4px" }}>{currency}{item.price}</td>
                           )}
                           {ps?.item_discount_visible !== false && (
-                            <td align="right" style={{ textAlign: "right" }}>
+                            <td align="right" style={{ textAlign: "right", paddingRight: "4px" }}>
                               {disc > 0 ? `${currency}${disc}` : "-"}
                             </td>
                           )}
-                          <td align="right" style={{ textAlign: "right" }}>{currency}{total}</td>
+                          <td align="right" style={{ textAlign: "right", paddingRight: "4px" }}>{currency}{total}</td>
                         </tr>
                       );
                     })}
@@ -364,7 +377,7 @@ const KOT = ({ visible, onClose, order, settings, isCombined = true }) => {
                     {ps?.subtotal_visible !== false && (
                       <tr>
                         <td>Subtotal</td>
-                        <td align="right" style={{ textAlign: "right" }}>
+                        <td align="right" style={{ textAlign: "right", paddingRight: "4px" }}>
                           {currency}{Number(order.subtotal || 0).toFixed(2)}
                         </td>
                       </tr>
@@ -372,7 +385,7 @@ const KOT = ({ visible, onClose, order, settings, isCombined = true }) => {
                     {ps?.discount_visible !== false && order.discount > 0 && (
                       <tr>
                         <td>Discount</td>
-                        <td align="right" style={{ textAlign: "right" }}>
+                        <td align="right" style={{ textAlign: "right", paddingRight: "4px" }}>
                           -{currency}{Number(order.discount || 0).toFixed(2)}
                         </td>
                       </tr>
@@ -380,7 +393,7 @@ const KOT = ({ visible, onClose, order, settings, isCombined = true }) => {
                     {ps?.service_charge_visible && order.service_charge > 0 && (
                       <tr>
                         <td>Service Charge</td>
-                        <td align="right" style={{ textAlign: "right" }}>
+                        <td align="right" style={{ textAlign: "right", paddingRight: "4px" }}>
                           {currency}{Number(order.service_charge || 0).toFixed(2)}
                         </td>
                       </tr>
@@ -389,13 +402,13 @@ const KOT = ({ visible, onClose, order, settings, isCombined = true }) => {
                       <>
                         <tr>
                           <td>CGST (2.5%)</td>
-                          <td align="right" style={{ textAlign: "right" }}>
+                          <td align="right" style={{ textAlign: "right", paddingRight: "4px" }}>
                             {currency}{halfTax}
                           </td>
                         </tr>
                         <tr>
                           <td>SGST (2.5%)</td>
-                          <td align="right" style={{ textAlign: "right" }}>
+                          <td align="right" style={{ textAlign: "right", paddingRight: "4px" }}>
                             {currency}{halfTax}
                           </td>
                         </tr>
@@ -404,7 +417,7 @@ const KOT = ({ visible, onClose, order, settings, isCombined = true }) => {
                     {showTaxLine && (
                       <tr>
                         <td>Tax / GST (5%)</td>
-                        <td align="right" style={{ textAlign: "right" }}>
+                        <td align="right" style={{ textAlign: "right", paddingRight: "4px" }}>
                           {currency}{taxAmount.toFixed(2)}
                         </td>
                       </tr>
@@ -416,9 +429,9 @@ const KOT = ({ visible, onClose, order, settings, isCombined = true }) => {
                             <DottedDivider className="dotted-divider" style={{ margin: "3px 0" }} />
                           </td>
                         </tr>
-                        <tr className="totals grand-total" style={{ fontSize: 14, fontWeight: 800 }}>
+                        <tr className="totals grand-total" style={{ fontSize: 13, fontWeight: 800 }}>
                           <td>GRAND TOTAL</td>
-                          <td align="right" style={{ textAlign: "right" }}>
+                          <td align="right" style={{ textAlign: "right", paddingRight: "4px" }}>
                             {currency}{Number(order.total || 0).toFixed(2)}
                           </td>
                         </tr>
@@ -427,7 +440,7 @@ const KOT = ({ visible, onClose, order, settings, isCombined = true }) => {
                     {ps?.payment_method_visible !== false && (order.payment_mode || order.payment_method) && (
                       <tr>
                         <td>Payment Mode</td>
-                        <td align="right" style={{ textAlign: "right" }}>
+                        <td align="right" style={{ textAlign: "right", paddingRight: "4px" }}>
                           {order.payment_mode || order.payment_method}
                         </td>
                       </tr>
@@ -435,7 +448,7 @@ const KOT = ({ visible, onClose, order, settings, isCombined = true }) => {
                     {ps?.payment_status_visible && (
                       <tr>
                         <td>Status</td>
-                        <td align="right" style={{ textAlign: "right", color: "#16a34a", fontWeight: 700 }}>
+                        <td align="right" style={{ textAlign: "right", paddingRight: "4px", color: "#16a34a", fontWeight: 700 }}>
                           {order.payment_status || (order.status === "Served" ? "PAID" : "UNPAID")}
                         </td>
                       </tr>
@@ -567,9 +580,9 @@ const ReceiptOuter = styled.div`
 
 const ReceiptPaper = styled.div`
   background: white;
-  width: ${({ $paperWidth }) => ($paperWidth === "58mm" ? "220px" : "300px")};
+  width: ${({ $paperWidth }) => ($paperWidth === "58mm" ? "210px" : "280px")};
   max-width: 100%;
-  padding: 12px 14px 20px 14px;
+  padding: 10px 16px 20px 10px;
   font-family: 'Segoe UI', 'Inter', 'Helvetica Neue', Arial, sans-serif;
   color: #1e293b;
   border-radius: 4px;

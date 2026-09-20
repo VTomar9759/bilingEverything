@@ -66,6 +66,38 @@ export const printViaBrowser = (htmlContent, copies = 1) => {
 };
 
 /**
+ * Calculate dynamic column widths for receipt item table so percentages always sum to 100%
+ */
+export const getItemColWidths = (ps) => {
+  const showQty = ps?.item_quantity_visible !== false;
+  const showRate = ps?.item_rate_visible !== false;
+  const showDisc = ps?.item_discount_visible !== false;
+
+  if (showQty && showRate && showDisc) {
+    return { item: "36%", qty: "12%", rate: "18%", disc: "14%", total: "20%" };
+  }
+  if (showQty && showRate && !showDisc) {
+    return { item: "42%", qty: "14%", rate: "22%", disc: "0%", total: "22%" };
+  }
+  if (showQty && !showRate && showDisc) {
+    return { item: "46%", qty: "14%", rate: "0%", disc: "16%", total: "24%" };
+  }
+  if (showQty && !showRate && !showDisc) {
+    return { item: "55%", qty: "15%", rate: "0%", disc: "0%", total: "30%" };
+  }
+  if (!showQty && showRate && showDisc) {
+    return { item: "48%", qty: "0%", rate: "20%", disc: "14%", total: "18%" };
+  }
+  if (!showQty && showRate && !showDisc) {
+    return { item: "54%", qty: "0%", rate: "22%", disc: "0%", total: "24%" };
+  }
+  if (!showQty && !showRate && showDisc) {
+    return { item: "58%", qty: "0%", rate: "0%", disc: "16%", total: "26%" };
+  }
+  return { item: "68%", qty: "0%", rate: "0%", disc: "0%", total: "32%" };
+};
+
+/**
  * Generate formatted HTML string for thermal receipt
  * Uses print settings (ps) visibility flags to control what is shown
  */
@@ -126,6 +158,7 @@ export const generateReceiptHTML = (order, settings = {}) => {
   const showRate = ps?.item_rate_visible !== false;
   const showDisc = ps?.item_discount_visible !== false;
   const showDesc = ps?.item_description_visible === true;
+  const colWidths = getItemColWidths(ps);
 
   const itemsHTML = (order.items || [])
     .map((item) => {
@@ -138,19 +171,13 @@ export const generateReceiptHTML = (order, settings = {}) => {
           ${item.name}${showDesc && item.description ? `<br/><span style="font-size: 9px; color: #666;">${item.description}</span>` : ''}
         </td>
         ${showQty ? `<td style="text-align: center; vertical-align: top; padding: 4px 0; font-size: 11px; color: #000000;">${item.quantity}</td>` : ''}
-        ${showRate ? `<td style="text-align: right; vertical-align: top; padding: 4px 0; font-size: 11px; color: #000000;">${currency}${item.price}</td>` : ''}
-        ${showDisc ? `<td style="text-align: right; vertical-align: top; padding: 4px 0; font-size: 11px; color: #000000;">${disc > 0 ? `${currency}${disc}` : '-'}</td>` : ''}
-        <td style="text-align: right; vertical-align: top; padding: 4px 0; font-size: 11px; color: #000000;">${currency}${total}</td>
+        ${showRate ? `<td style="text-align: right; vertical-align: top; padding: 4px 4px 4px 0; font-size: 11px; color: #000000;">${currency}${item.price}</td>` : ''}
+        ${showDisc ? `<td style="text-align: right; vertical-align: top; padding: 4px 4px 4px 0; font-size: 11px; color: #000000;">${disc > 0 ? `${currency}${disc}` : '-'}</td>` : ''}
+        <td style="text-align: right; vertical-align: top; padding: 4px 4px 4px 0; font-size: 11px; color: #000000;">${currency}${total}</td>
       </tr>
     `;
     })
     .join("");
-
-  // Column count for table header
-  let colCount = 2; // Item + Total always
-  if (showQty) colCount++;
-  if (showRate) colCount++;
-  if (showDisc) colCount++;
 
   // Tax calculations
   const taxAmount = Number(order.tax || 0);
@@ -185,6 +212,9 @@ export const generateReceiptHTML = (order, settings = {}) => {
         <title>Receipt #${orderNum}</title>
         <style>
           ${pageCss}
+          * {
+            box-sizing: border-box !important;
+          }
           html, body {
             width: 100%;
             margin: 0;
@@ -203,10 +233,10 @@ export const generateReceiptHTML = (order, settings = {}) => {
             justify-content: center;
           }
           .receipt {
-            width: ${paperWidth};
-            max-width: 100%;
+            width: 100%;
+            max-width: ${paperWidth};
             margin: 0 auto;
-            padding: 4mm 7mm 25mm 7mm;
+            padding: 4mm 9mm 25mm 6mm;
             box-sizing: border-box;
             background: #ffffff;
           }
@@ -287,7 +317,7 @@ export const generateReceiptHTML = (order, settings = {}) => {
             margin-top: 2px !important;
           }
           .totals-table td {
-            padding: 2px 0 !important;
+            padding: 2px 4px 2px 0 !important;
             color: #000000 !important;
           }
           .receipt-footer {
@@ -340,11 +370,11 @@ export const generateReceiptHTML = (order, settings = {}) => {
             <table class="items-table">
               <thead>
                 <tr>
-                  <th style="text-align: left; width: 40%;">Item</th>
-                  ${showQty ? '<th style="text-align: center; width: 10%;">Qty</th>' : ''}
-                  ${showRate ? '<th style="text-align: right; width: 18%;">Rate</th>' : ''}
-                  ${showDisc ? '<th style="text-align: right; width: 14%;">Disc</th>' : ''}
-                  <th style="text-align: right; width: 18%;">Total</th>
+                  <th style="text-align: left; width: ${colWidths.item};">Item</th>
+                  ${showQty ? `<th style="text-align: center; width: ${colWidths.qty};">Qty</th>` : ''}
+                  ${showRate ? `<th style="text-align: right; width: ${colWidths.rate}; padding-right: 4px;">Rate</th>` : ''}
+                  ${showDisc ? `<th style="text-align: right; width: ${colWidths.disc}; padding-right: 4px;">Disc</th>` : ''}
+                  <th style="text-align: right; width: ${colWidths.total}; padding-right: 4px;">Total</th>
                 </tr>
               </thead>
               <tbody>
@@ -358,31 +388,31 @@ export const generateReceiptHTML = (order, settings = {}) => {
               ${ps?.subtotal_visible !== false ? `
               <tr>
                 <td style="text-align: left;">Subtotal</td>
-                <td style="text-align: right;">${currency}${Number(order.subtotal || 0).toFixed(2)}</td>
+                <td style="text-align: right; padding-right: 4px;">${currency}${Number(order.subtotal || 0).toFixed(2)}</td>
               </tr>` : ""}
               ${ps?.discount_visible !== false && order.discount > 0 ? `
               <tr>
                 <td style="text-align: left;">Discount</td>
-                <td style="text-align: right;">-${currency}${Number(order.discount || 0).toFixed(2)}</td>
+                <td style="text-align: right; padding-right: 4px;">-${currency}${Number(order.discount || 0).toFixed(2)}</td>
               </tr>` : ""}
               ${ps?.service_charge_visible && order.service_charge > 0 ? `
               <tr>
                 <td style="text-align: left;">Service Charge</td>
-                <td style="text-align: right;">${currency}${Number(order.service_charge || 0).toFixed(2)}</td>
+                <td style="text-align: right; padding-right: 4px;">${currency}${Number(order.service_charge || 0).toFixed(2)}</td>
               </tr>` : ""}
               ${showGstBreakup ? `
               <tr>
                 <td style="text-align: left;">CGST (2.5%)</td>
-                <td style="text-align: right;">${currency}${halfTax}</td>
+                <td style="text-align: right; padding-right: 4px;">${currency}${halfTax}</td>
               </tr>
               <tr>
                 <td style="text-align: left;">SGST (2.5%)</td>
-                <td style="text-align: right;">${currency}${halfTax}</td>
+                <td style="text-align: right; padding-right: 4px;">${currency}${halfTax}</td>
               </tr>` : ""}
               ${showTaxLine ? `
               <tr>
                 <td style="text-align: left;">Tax / GST (5%)</td>
-                <td style="text-align: right;">${currency}${taxAmount.toFixed(2)}</td>
+                <td style="text-align: right; padding-right: 4px;">${currency}${taxAmount.toFixed(2)}</td>
               </tr>` : ""}
               ${ps?.grand_total_visible !== false ? `
               <tr>
@@ -390,19 +420,19 @@ export const generateReceiptHTML = (order, settings = {}) => {
                   <div class="dotted-divider" style="margin: 3px 0;"></div>
                 </td>
               </tr>
-              <tr style="font-size: 14px; font-weight: 800;">
+              <tr style="font-size: 13px; font-weight: 800;">
                 <td style="text-align: left; padding: 2px 0;">GRAND TOTAL</td>
-                <td style="text-align: right; padding: 2px 0;">${currency}${Number(order.total || 0).toFixed(2)}</td>
+                <td style="text-align: right; padding: 2px 4px 2px 0;">${currency}${Number(order.total || 0).toFixed(2)}</td>
               </tr>` : ""}
               ${ps?.payment_method_visible !== false && (order.payment_mode || order.payment_method) ? `
               <tr>
                 <td style="text-align: left;">Payment Mode</td>
-                <td style="text-align: right;">${order.payment_mode || order.payment_method}</td>
+                <td style="text-align: right; padding-right: 4px;">${order.payment_mode || order.payment_method}</td>
               </tr>` : ""}
               ${ps?.payment_status_visible ? `
               <tr>
                 <td style="text-align: left;">Status</td>
-                <td style="text-align: right; font-weight: 700;">${order.payment_status || (order.status === "Served" ? "PAID" : "UNPAID")}</td>
+                <td style="text-align: right; padding-right: 4px; font-weight: 700;">${order.payment_status || (order.status === "Served" ? "PAID" : "UNPAID")}</td>
               </tr>` : ""}
             </table>
 
@@ -440,6 +470,9 @@ export const printInvoiceSilent = async ({ order, settings = {}, copies = 2, rec
               size: ${paperWidth} auto;
               margin: 0mm;
             }
+            * {
+              box-sizing: border-box !important;
+            }
             html, body {
               width: 100%;
               margin: 0;
@@ -451,6 +484,13 @@ export const printInvoiceSilent = async ({ order, settings = {}, copies = 2, rec
               line-height: 1.4;
               -webkit-print-color-adjust: exact;
               print-color-adjust: exact;
+            }
+            .printable-receipt-container, #receipt, #kot-receipt {
+              width: 100% !important;
+              max-width: ${paperWidth} !important;
+              padding: 4mm 9mm 25mm 6mm !important;
+              margin: 0 auto !important;
+              box-sizing: border-box !important;
             }
             .receipt-header, .receipt-header *, div[class*="ReceiptHeader"], div[class*="ReceiptHeader"] * {
               text-align: center !important;
@@ -479,6 +519,14 @@ export const printInvoiceSilent = async ({ order, settings = {}, copies = 2, rec
               width: 100% !important;
               border-collapse: collapse !important;
               font-size: 11px !important;
+              table-layout: fixed !important;
+            }
+            td, th {
+              word-break: break-word !important;
+            }
+            tr, .receipt-header, .receipt-meta, .totals-table, .receipt-footer, .dotted-divider {
+              break-inside: avoid !important;
+              page-break-inside: avoid !important;
             }
           </style>
         </head>
@@ -715,6 +763,9 @@ export const printKOTSilent = async ({
               size: ${paperWidth} auto;
               margin: 0mm;
             }
+            * {
+              box-sizing: border-box !important;
+            }
             html, body {
               width: 100%;
               margin: 0;
@@ -727,6 +778,13 @@ export const printKOTSilent = async ({
               -webkit-print-color-adjust: exact;
               print-color-adjust: exact;
             }
+            .printable-receipt-container, #receipt, #kot-receipt {
+              width: 100% !important;
+              max-width: ${paperWidth} !important;
+              padding: 4mm 9mm 25mm 6mm !important;
+              margin: 0 auto !important;
+              box-sizing: border-box !important;
+            }
             .receipt-header, .receipt-header *, div[class*="ReceiptHeader"], div[class*="ReceiptHeader"] * {
               text-align: center !important;
               width: 100% !important;
@@ -738,6 +796,15 @@ export const printKOTSilent = async ({
               margin: 6px 0 !important;
               width: 100% !important;
               display: block !important;
+            }
+            table {
+              width: 100% !important;
+              border-collapse: collapse !important;
+              font-size: 11px !important;
+              table-layout: fixed !important;
+            }
+            td, th {
+              word-break: break-word !important;
             }
           </style>
         </head>
