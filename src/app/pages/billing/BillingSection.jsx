@@ -93,81 +93,76 @@ const BillingSection = () => {
         location.state?.orderId ||
         new URLSearchParams(location.search).get("orderId");
 
-      let ordersList = [];
-      if (targetOrderId) {
-        ordersList = await service.getOrders({
-          org_id,
-          orderId: targetOrderId,
-          user_id: userData?.id,
-          user_role: userData?.role,
-        });
-      } else {
-        ordersList = await service.getOrders({
-          org_id,
-          startDate: yesterdayStr,
-          endDate: todayStr,
-          user_id: userData?.id,
-          user_role: userData?.role,
-        });
-      }
+      // Fetch pending orders list for billing sidebar
+      const pendingOrdersList = await service.getOrders({
+        org_id,
+        startDate: yesterdayStr,
+        endDate: todayStr,
+        user_id: userData?.id,
+        user_role: userData?.role,
+      });
 
-      // Only show orders that are not served/cancelled
-      const activePending = ordersList.filter(
-        (order) => order.status !== "Served" && order.status !== "Cancelled",
+      let activePending = pendingOrdersList.filter(
+        (order) => order.status !== "Served" && order.status !== "Cancelled"
       );
 
-      setOrders(activePending);
+      let targetOrder = null;
 
-      const autoSelect = isClearedRef.current ? false : shouldAutoSelect;
-      isClearedRef.current = false;
+      if (targetOrderId) {
+        // Find in fetched list or fetch specifically from DB
+        const foundInPending = pendingOrdersList.find(
+          (o) => o.id === targetOrderId || String(o.order_number) === String(targetOrderId)
+        );
 
-      if (autoSelect) {
-        if (targetOrderId) {
-          const targetOrder = activePending.find(
-            (order) => order.id === targetOrderId,
-          );
-
-          if (targetOrder) {
-            setSelectedOrderId(targetOrder.id);
-            setActiveOrder(targetOrder);
-            return;
+        if (foundInPending) {
+          targetOrder = foundInPending;
+        } else {
+          const specificOrderRes = await service.getOrders({
+            org_id,
+            orderId: targetOrderId,
+            user_id: userData?.id,
+            user_role: userData?.role,
+          });
+          if (specificOrderRes && specificOrderRes.length > 0) {
+            targetOrder = specificOrderRes[0];
           }
         }
+      }
 
-        /**
-         * Automatically select first order
-         */
-        if (activePending.length > 0) {
+      if (targetOrder) {
+        // Ensure targetOrder is included in orders list so it's selectable in sidebar
+        const existsInList = activePending.some((o) => o.id === targetOrder.id);
+        const finalOrders = existsInList ? activePending : [targetOrder, ...activePending];
+
+        setOrders(finalOrders);
+        setSelectedOrderId(targetOrder.id);
+        setActiveOrder(targetOrder);
+        setSettledOrder(targetOrder);
+        setInvoiceVisible(true);
+      } else {
+        setOrders(activePending);
+
+        const autoSelect = isClearedRef.current ? false : shouldAutoSelect;
+        isClearedRef.current = false;
+
+        if (autoSelect && activePending.length > 0) {
           setSelectedOrderId((currentId) => {
             const currentOrderExists = activePending.some(
-              (order) => order.id === currentId,
+              (order) => order.id === currentId
             );
-
-            if (currentOrderExists) {
-              return currentId;
-            }
-
-            return activePending[0].id;
+            return currentOrderExists ? currentId : activePending[0].id;
           });
 
           setActiveOrder((currentOrder) => {
             const currentOrderExists = activePending.some(
-              (order) => order.id === currentOrder?.id,
+              (order) => order.id === currentOrder?.id
             );
-
-            if (currentOrderExists) {
-              return currentOrder;
-            }
-
-            return activePending[0];
+            return currentOrderExists ? currentOrder : activePending[0];
           });
         } else {
           setSelectedOrderId(null);
           setActiveOrder(null);
         }
-      } else {
-        setSelectedOrderId(null);
-        setActiveOrder(null);
       }
     } catch (error) {
       console.error("Error fetching billing data:", error);
