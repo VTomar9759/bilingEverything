@@ -22,6 +22,8 @@ import OrderDetailDrawer from "./components/OrderDetailDrawer";
 import { getStatusBadge, getPaymentStatusBadge, getPaymentModeBadge } from "../../utils/common_function";
 import { ORDER_STATUS } from "../../utils/constant";
 import * as service from "../../../services";
+import { EmptyPlaceholder, PageSpinner } from "../../../loader/PageSpinner";
+
 
 const { TabPane } = Tabs;
 
@@ -360,11 +362,13 @@ const OrdersListing = () => {
           </Space>
         </div>
 
+        {loading ? (
+          <PageSpinner minHeight="320px" />
+        ) : (
         <StyledTable
           dataSource={filteredOrders}
           columns={columns}
           rowKey="id"
-          loading={loading}
           size="small"
           scroll={{ x: true }}
           pagination={{
@@ -379,9 +383,16 @@ const OrdersListing = () => {
             },
           }}
           locale={{
-            emptyText: <Empty description="No orders match filters" />,
+            emptyText: (
+              <EmptyPlaceholder
+                icon="🛒"
+                title="No orders found"
+                desc="No orders match your current filters. Try adjusting the date range or status."
+              />
+            ),
           }}
         />
+        )}
       </PanelCard>
 
       {/* Order Detail Drawer */}

@@ -1,48 +1,65 @@
 import styled, { keyframes } from "styled-components";
 
 const spin = keyframes`
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  to { transform: rotate(360deg); }
 `;
 
-const LoaderContainer = styled.div`
-  height: 100vh;
+const pulseProgress = keyframes`
+  0%   { width: 0%;   left: 0;   opacity: 1; }
+  60%  { width: 70%;  left: 10%; opacity: 1; }
+  100% { width: 100%; left: 0;   opacity: 0.6; }
+`;
+
+/* Top progress line that shows during Suspense fallback */
+const TopLine = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: transparent;
+  z-index: 99999;
+  overflow: hidden;
+
+  &::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    height: 100%;
+    background: linear-gradient(90deg, #01514b 0%, #00a389 60%, #4ade80 100%);
+    box-shadow: 0 0 10px #00a389;
+    animation: ${pulseProgress} 1.1s ease-in-out infinite;
+  }
+`;
+
+const Overlay = styled.div`
+  position: fixed;
+  inset: 0;
   display: flex;
-  justify-content: center;
+  height:80vh;
   align-items: center;
-  background-color: #ffffff;
+  justify-content: center;
+  background: var(--color-bg, #ffffff);
+  z-index: 9998;
 `;
 
-const Spinner = styled.div`
-  border: 4px solid #e0e0e0;
-  border-top: 4px solid ${({ theme }) => theme.color.primary}; 
-  border-radius: 50%;
+const Ring = styled.div`
   width: 36px;
   height: 36px;
-  animation: ${spin} 1s linear infinite;
-`;
-
-const LoadingText = styled.p`
-  margin-top: 12px;
-  font-size: 16px;
-  font-weight: 500;
-  color: #444;
-  font-family: 'Inter', sans-serif;
-`;
-
-const Column = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  border-radius: 50%;
+  border: 3px solid rgba(1, 81, 75, 0.15);
+  border-top-color: #01514b;
+  animation: ${spin} 0.75s linear infinite;
 `;
 
 const Loading = () => (
-  <LoaderContainer>
-    <Column>
-      <Spinner />
-      <LoadingText>Loading...</LoadingText>
-    </Column>
-  </LoaderContainer>
+  <>
+    <TopLine />
+    <Overlay>
+        <Ring />
+      
+    </Overlay>
+  </>
 );
 
 export default Loading;

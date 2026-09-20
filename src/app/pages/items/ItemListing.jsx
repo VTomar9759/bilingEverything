@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled, { keyframes } from "styled-components";
-import { Button, Row, Col, Skeleton } from "antd";
-import { PlusOutlined, AppstoreOutlined } from "@ant-design/icons";
+import { Button, Row, Col } from "antd";
+import { PlusOutlined } from "@ant-design/icons";
 import { PATH_ADD_ITEM } from "../../routes/pathname";
 import TabHeader from "../../../components/TabHeader";
 import { PageWrapper } from "../../styles/commonstyle";
@@ -10,7 +10,7 @@ import ItemCard from "./components/ItemCard";
 import useItemStore from "../../hooks/useItemStore";
 import InputSearch from "../../../components/SearchInput";
 import CategorySelecter from "../../../components/CategorySelecter";
-
+import { PageSpinner, EmptyPlaceholder } from "../../../loader/PageSpinner";
 import useOrgData from "../../hooks/useOrgData";
 
 const ItemListing = () => {
@@ -95,42 +95,25 @@ const ItemListing = () => {
       {/* Content */}
       <ContentArea>
         {loading ? (
-          <SkeletonGrid>
-            {Array.from({ length: 8 }).map((_, i) => (
-              <SkeletonCard key={i}>
-                <Skeleton.Image
-                  active
-                  style={{ width: "100%", height: 144, borderRadius: 11 }}
-                />
-                <Skeleton
-                  active
-                  paragraph={{ rows: 2 }}
-                  style={{ marginTop: 12 }}
-                />
-              </SkeletonCard>
-            ))}
-          </SkeletonGrid>
+          <PageSpinner />
         ) : data?.length === 0 ? (
-          <EmptyState>
-            <EmptyIcon>
-              <AppstoreOutlined />
-            </EmptyIcon>
-            <EmptyTitle>No items yet</EmptyTitle>
-            <EmptyDesc>
-              Your catalog is empty. Start adding products to manage your
-              inventory.
-            </EmptyDesc>
-            {canCreate && (
-              <AddButton
-                type="primary"
-                icon={<PlusOutlined />}
-                onClick={() => navigate(PATH_ADD_ITEM)}
-                size="large"
-              >
-                Add Your First Item
-              </AddButton>
-            )}
-          </EmptyState>
+          <EmptyPlaceholder
+            icon="📦"
+            title="No items yet"
+            desc="Your catalog is empty. Start adding products to manage your inventory."
+            action={
+              canCreate && (
+                <AddButton
+                  type="primary"
+                  icon={<PlusOutlined />}
+                  onClick={() => navigate(PATH_ADD_ITEM)}
+                  size="large"
+                >
+                  Add Your First Item
+                </AddButton>
+              )
+            }
+          />
         ) : (
           <Row gutter={[16, 16]}>
             {data.map((item) => (
@@ -218,76 +201,4 @@ const AddButton = styled(Button)`
   }
 `;
 
-/* ─── Skeleton grid ─── */
-const SkeletonGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-  gap: 12px;
-`;
 
-const SkeletonCard = styled.div`
-  background: var(--color-surface);
-  border-radius: var(--radius-xl);
-  border: 1px solid var(--color-border-light);
-  padding: 0 0 16px;
-  overflow: hidden;
-
-  .ant-skeleton-image {
-    width: 100% !important;
-    height: 144px !important;
-    border-radius: 0 !important;
-  }
-
-  .ant-skeleton {
-    padding: 0 16px;
-  }
-`;
-
-/* ─── Empty state ─── */
-const EmptyState = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 16px;
-  background: var(--color-surface);
-  border-radius: var(--radius-2xl);
-  border: 2px dashed var(--color-border);
-  text-align: center;
-  gap: 10px;
-  animation: ${fadeIn} 0.4s ease;
-  transition: border-color var(--transition-base);
-
-  &:hover {
-    border-color: var(--color-primary-100);
-  }
-`;
-
-const EmptyIcon = styled.div`
-  width: 58px;
-  height: 58px;
-  border-radius: 50%;
-  background: var(--color-primary-50);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 24px;
-  color: var(--color-primary);
-  margin-bottom: 4px;
-`;
-
-const EmptyTitle = styled.h3`
-  font-family: var(--font-display);
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--color-text-primary);
-  margin: 0;
-`;
-
-const EmptyDesc = styled.p`
-  font-size: 12px;
-  color: var(--color-text-muted);
-  margin: 0;
-  max-width: 320px;
-  line-height: 1.6;
-`;

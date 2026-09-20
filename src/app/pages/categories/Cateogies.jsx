@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import styled, { keyframes } from "styled-components";
-import { Button, Space, message, Skeleton, Result } from "antd";
-import { PlusOutlined, ReloadOutlined, LockOutlined } from "@ant-design/icons";
+import { Button, Space, message } from "antd";
+import { PlusOutlined, ReloadOutlined } from "@ant-design/icons";
+import { PageSpinner, EmptyPlaceholder } from "../../../loader/PageSpinner";
 
 import TabHeader from "../../../components/TabHeader";
 import { PageWrapper } from "../../styles/commonstyle";
@@ -124,13 +125,7 @@ const CategoriesListing = () => {
       {/* Grid Content */}
       <ContentArea>
         {loading ? (
-          <SkeletonGrid>
-            {Array.from({ length: 12 }).map((_, i) => (
-              <SkeletonCard key={i}>
-                <Skeleton active avatar={{ size: "small", shape: "square" }} title={{ width: "60%" }} paragraph={false} />
-              </SkeletonCard>
-            ))}
-          </SkeletonGrid>
+          <PageSpinner />
         ) : (
           <CardGrid>
             {categories.map((category) => (
@@ -252,22 +247,6 @@ const AddText = styled.p`
 `;
 
 const CardGrid = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-
-  @media (max-width: 720px) {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  @media (max-width: 520px) {
-    grid-template-columns: 1fr;
-    gap: 10px;
-  }
-`;
-
-const SkeletonGrid = styled.div`
   display: flex;
   flex-wrap: wrap;
   gap: 12px;

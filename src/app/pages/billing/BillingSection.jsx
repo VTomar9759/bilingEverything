@@ -2,9 +2,10 @@ import { useState, useEffect, useRef } from "react";
 import styled from "styled-components";
 import useOrgData from "../../hooks/useOrgData";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Button, Select, InputNumber, Form, Skeleton, Empty, message } from "antd";
+import { Button, Select, InputNumber, Form, message } from "antd";
 import dayjs from "dayjs";
 import { useDispatch } from "react-redux";
+import { PageSpinner, EmptyPlaceholder } from "../../../loader/PageSpinner";
 
 import TabHeader from "../../../components/TabHeader";
 import { PageWrapper } from "../../styles/commonstyle";
@@ -346,12 +347,14 @@ const BillingSection = () => {
 
       {/* Loading */}
       {loading ? (
-        <Skeleton active paragraph={{ rows: 8 }} />
+        <PageSpinner minHeight="400px" />
       ) : orders.length === 0 ? (
         /* Empty */
-        <EmptyCard>
-          <Empty description="No active dining orders found. Start composing new orders in Orders module." />
-        </EmptyCard>
+        <EmptyPlaceholder
+          icon="🧾"
+          title="No active orders to bill"
+          desc="No active dining orders found. Start composing new orders in the Orders module."
+        />
       ) : (
         <RegisterLayout>
           {/* LEFT SIDE */}

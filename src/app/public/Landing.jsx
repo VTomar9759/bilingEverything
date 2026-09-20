@@ -26,6 +26,26 @@ const fadeIn = keyframes`
   to { opacity: 1; transform: translateY(0); }
 `;
 
+const orb1Anim = keyframes`
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%       { transform: translate(40px, -30px) scale(1.08); }
+`;
+
+const orb2Anim = keyframes`
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%       { transform: translate(-30px, 40px) scale(1.05); }
+`;
+
+const shimmer = keyframes`
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+`;
+
+const scaleIn = keyframes`
+  from { opacity: 0; transform: scale(0.96) translateY(10px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+`;
+
 /* --------------------------------------------------
     STYLED COMPONENTS (DEFINED FIRST)
 -------------------------------------------------- */
@@ -120,14 +140,29 @@ const NavLinks = styled.div`
 const NavLinkBtn = styled.button`
   background: none;
   border: none;
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 600;
   color: #475569;
   cursor: pointer;
   transition: color 0.2s ease;
+  position: relative;
+  padding-bottom: 2px;
+
+  &::after {
+    content: "";
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #01514b, #00a389);
+    border-radius: 999px;
+    transition: width 0.25s ease;
+  }
 
   &:hover {
     color: #01514b;
+    &::after { width: 100%; }
   }
 `;
 
@@ -159,7 +194,7 @@ const SignInBtn = styled.button`
 `;
 
 const GetStartedBtn = styled.button`
-  background: #01514b;
+  background: linear-gradient(135deg, #01514b 0%, #00a389 100%);
   color: #ffffff;
   font-size: 13px;
   font-weight: 700;
@@ -167,11 +202,17 @@ const GetStartedBtn = styled.button`
   border-radius: 999px;
   border: none;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 14px rgba(1, 81, 75, 0.3);
 
   &:hover {
-    background: #003833;
-    box-shadow: 0 4px 12px rgba(1, 81, 75, 0.2);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px rgba(1, 81, 75, 0.38);
+    filter: brightness(1.06);
+  }
+
+  &:active {
+    transform: translateY(0);
   }
 `;
 
@@ -225,12 +266,41 @@ const MobileActionWrap = styled.div`
 /* ─── Hero Section ─── */
 const HeroSection = styled.section`
   padding-top: 130px;
-  padding-bottom: 70px;
-  background: linear-gradient(180deg, #f0faf9 0%, #ffffff 100%);
+  padding-bottom: 80px;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(160deg, #f0faf9 0%, #ffffff 60%, #f8fff8 100%);
+
+  /* Decorative orbs */
+  &::before {
+    content: "";
+    position: absolute;
+    top: -80px;
+    right: -100px;
+    width: 500px;
+    height: 500px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(0, 163, 137, 0.12) 0%, transparent 70%);
+    animation: ${orb1Anim} 8s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  &::after {
+    content: "";
+    position: absolute;
+    bottom: -60px;
+    left: -80px;
+    width: 380px;
+    height: 380px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(1, 81, 75, 0.08) 0%, transparent 70%);
+    animation: ${orb2Anim} 10s ease-in-out infinite;
+    pointer-events: none;
+  }
 
   @media (max-width: 768px) {
     padding-top: 100px;
-    padding-bottom: 40px;
+    padding-bottom: 50px;
   }
 `;
 
@@ -256,32 +326,39 @@ const HeroLeft = styled.div`
 `;
 
 const EyebrowBadge = styled.div`
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   padding: 6px 14px;
   border-radius: 999px;
-  background: #e6f7f5;
+  background: linear-gradient(135deg, #e6f7f5 0%, #f0fdf9 100%);
+  border: 1px solid rgba(0, 163, 137, 0.25);
   color: #01514b;
   font-size: 11px;
   font-weight: 800;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
   margin-bottom: 20px;
   width: fit-content;
+  box-shadow: 0 0 0 4px rgba(0, 163, 137, 0.06);
 `;
 
 const HeroMainTitle = styled.h1`
-  font-size: 48px;
-  font-weight: 800;
+  font-size: 54px;
+  font-weight: 900;
   color: #0f172a;
-  letter-spacing: -0.03em;
-  line-height: 1.15;
-  margin-bottom: 16px;
+  letter-spacing: -0.04em;
+  line-height: 1.1;
+  margin-bottom: 20px;
 
   .highlight {
-    color: #00a389;
+    background: linear-gradient(135deg, #01514b 0%, #00a389 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
 
   @media (max-width: 768px) {
-    font-size: 34px;
+    font-size: 36px;
   }
 `;
 
@@ -309,7 +386,7 @@ const HeroBtnRow = styled.div`
 `;
 
 const CtaGreenBtn = styled.button`
-  background: #01514b;
+  background: linear-gradient(135deg, #01514b 0%, #00a389 100%);
   color: #ffffff;
   font-size: 14px;
   font-weight: 700;
@@ -317,15 +394,21 @@ const CtaGreenBtn = styled.button`
   border-radius: 999px;
   border: none;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.25s ease;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
+  box-shadow: 0 4px 20px rgba(1, 81, 75, 0.3);
 
   &:hover {
-    background: #003833;
-    box-shadow: 0 6px 16px rgba(1, 81, 75, 0.25);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 28px rgba(1, 81, 75, 0.38);
+    filter: brightness(1.05);
+  }
+
+  &:active {
+    transform: translateY(0);
   }
 `;
 
@@ -360,12 +443,16 @@ const PlayIconWrap = styled.div`
 `;
 
 const TrustTagLine = styled.div`
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 8px;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 600;
   color: #64748b;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  padding: 6px 14px;
+  border-radius: 999px;
 `;
 
 /* ─── Hero Right & Dashboard Screenshot ─── */
@@ -379,11 +466,13 @@ const FloatingMetricsBar = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(1, 81, 75, 0.1);
   border-radius: 16px;
-  padding: 12px 20px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  padding: 14px 20px;
+  box-shadow: 0 8px 32px rgba(1, 81, 75, 0.08), 0 2px 8px rgba(0,0,0,0.04);
 
   @media (max-width: 640px) {
     flex-direction: column;
@@ -395,6 +484,13 @@ const TopMetricItem = styled.div`
   display: flex;
   align-items: center;
   gap: 10px;
+  padding: 4px 8px;
+  border-radius: 10px;
+  transition: background 0.2s ease;
+
+  &:hover {
+    background: #f0fdf9;
+  }
 `;
 
 const MetricIcon = styled.div`
@@ -409,32 +505,37 @@ const MetricIcon = styled.div`
 `;
 
 const MetricVal = styled.div`
-  font-size: 14px;
-  font-weight: 800;
+  font-size: 15px;
+  font-weight: 900;
   color: #0f172a;
   line-height: 1.1;
+  letter-spacing: -0.02em;
 `;
 
 const MetricLabel = styled.div`
   font-size: 10px;
-  font-weight: 700;
+  font-weight: 600;
   color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 `;
 
 const DashboardFrame = styled.div`
-  border-radius: 16px;
+  border-radius: 20px;
   background: #01514b;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 20px 40px rgba(1, 81, 75, 0.15);
+  border: 1px solid rgba(1, 81, 75, 0.2);
+  box-shadow: 0 28px 60px rgba(1, 81, 75, 0.2), 0 8px 20px rgba(0, 0, 0, 0.08);
   overflow: hidden;
+  animation: ${floatAnim} 5s ease-in-out infinite;
 `;
 
 const BrowserFrame = styled.div`
-  border-radius: 16px;
+  border-radius: 20px;
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 28px 60px rgba(0, 0, 0, 0.1), 0 4px 16px rgba(0, 0, 0, 0.05);
   overflow: hidden;
+  animation: ${floatAnim} 5s ease-in-out infinite;
 `;
 
 const DashboardContainer = styled.div`
@@ -730,23 +831,27 @@ const EyebrowTag = styled.div`
   letter-spacing: 0.08em;
   padding: 4px 12px;
   border-radius: 999px;
-  background: #e6f7f5;
+  background: linear-gradient(135deg, #e6f7f5 0%, #f0fdf9 100%);
+  border: 1px solid rgba(0, 163, 137, 0.2);
   color: #01514b;
 `;
 
 const SectionTitle = styled.h2`
-  font-size: 34px;
-  font-weight: 800;
+  font-size: 38px;
+  font-weight: 900;
   color: #0f172a;
-  letter-spacing: -0.02em;
-  margin-top: 8px;
+  letter-spacing: -0.03em;
+  margin-top: 10px;
 
   .highlight {
-    color: #00a389;
+    background: linear-gradient(135deg, #01514b 0%, #00a389 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
 
   @media (max-width: 768px) {
-    font-size: 26px;
+    font-size: 28px;
   }
 `;
 
@@ -762,7 +867,7 @@ const CardGrid = styled.div`
   grid-template-columns: repeat(${({ $cols }) => $cols || 3}, 1fr);
   gap: 24px;
 
-  @media (max-width: 900px) {
+  @media (max-width: 1024px) {
     grid-template-columns: repeat(2, 1fr);
   }
 
@@ -774,28 +879,64 @@ const CardGrid = styled.div`
 const FeatureCard = styled.div`
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 16px;
-  padding: 28px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-  transition: all 0.3s ease;
+  border-radius: 20px;
+  padding: 32px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+  transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #01514b, #00a389);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s ease;
+  }
 
   &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 24px rgba(1, 81, 75, 0.08);
+    transform: translateY(-6px);
+    box-shadow: 0 20px 40px rgba(1, 81, 75, 0.1);
     border-color: #a1e1da;
+
+    &::before {
+      transform: scaleX(1);
+    }
   }
 `;
 
+const FeatureCardTop = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+`;
+
+const FeatureNumBadge = styled.span`
+  font-size: 13px;
+  font-weight: 800;
+  color: #00a389;
+  background: rgba(0, 163, 137, 0.08);
+  padding: 4px 10px;
+  border-radius: 20px;
+  letter-spacing: 0.5px;
+`;
+
 const FeatureIconWrap = styled.div`
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  background: #e6f7f5;
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #e6f7f5 0%, #f0fdf9 100%);
   color: #01514b;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 16px;
+  box-shadow: 0 4px 12px rgba(1, 81, 75, 0.1);
 `;
 
 const FeatureTitle = styled.h3`
@@ -809,6 +950,50 @@ const FeatureDesc = styled.p`
   font-size: 13px;
   color: #64748b;
   line-height: 1.5;
+`;
+
+const StatsStrip = styled.div`
+  background: linear-gradient(135deg, #013e39 0%, #01514b 100%);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 36px 0;
+`;
+
+const StatsStripInner = styled.div`
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+  text-align: center;
+
+  @media (max-width: 768px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+`;
+
+const StatStripItem = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+`;
+
+const StatStripNum = styled.div`
+  font-size: 32px;
+  font-weight: 900;
+  color: #ffffff;
+  letter-spacing: -0.5px;
+
+  @media (max-width: 640px) {
+    font-size: 24px;
+  }
+`;
+
+const StatStripLabel = styled.div`
+  font-size: 13px;
+  font-weight: 600;
+  color: #a1e1da;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 `;
 
 const TwoColGrid = styled.div`
@@ -1818,10 +2003,29 @@ const Landing = () => {
         </Container>
       </HeroSection>
 
+      {/* ─── Stats Strip ─── */}
+      <StatsStrip>
+        <Container>
+          <StatsStripInner>
+            {[
+              { num: "1,500+", label: "Restaurants Trust Us" },
+              { num: "10M+", label: "Bills Generated" },
+              { num: "99.9%",  label: "Uptime SLA" },
+              { num: "24 / 7", label: "Cloud Backup" },
+            ].map((s, i) => (
+              <StatStripItem key={i}>
+                <StatStripNum>{s.num}</StatStripNum>
+                <StatStripLabel>{s.label}</StatStripLabel>
+              </StatStripItem>
+            ))}
+          </StatsStripInner>
+        </Container>
+      </StatsStrip>
+
       {/* --------------------------------------------------
           2. PRODUCT VALUE SECTION ("POWERFUL FEATURES")
       -------------------------------------------------- */}
-      <Section id="features" $bg="#ffffff">
+      <Section id="features" $bg="#f8fafc" $border>
         <Container>
           <SectionHeader>
             <EyebrowTag>POWERFUL FEATURES</EyebrowTag>
@@ -1834,71 +2038,53 @@ const Landing = () => {
           </SectionHeader>
 
           <CardGrid $cols={3}>
-            {/* 1. Smart POS */}
-            <FeatureCard>
-              <FeatureIconWrap>
-                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" />
-                </svg>
-              </FeatureIconWrap>
-              <FeatureTitle>Smart POS</FeatureTitle>
-              <FeatureDesc>Create and manage restaurant orders quickly.</FeatureDesc>
-            </FeatureCard>
-
-            {/* 2. Table Management */}
-            <FeatureCard>
-              <FeatureIconWrap>
-                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-                </svg>
-              </FeatureIconWrap>
-              <FeatureTitle>Table Management</FeatureTitle>
-              <FeatureDesc>Track tables, seating and occupancy in real time.</FeatureDesc>
-            </FeatureCard>
-
-            {/* 3. Fast Billing */}
-            <FeatureCard>
-              <FeatureIconWrap>
-                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </FeatureIconWrap>
-              <FeatureTitle>Fast Billing</FeatureTitle>
-              <FeatureDesc>Generate accurate bills with GST and payment tracking.</FeatureDesc>
-            </FeatureCard>
-
-            {/* 4. Menu Management */}
-            <FeatureCard>
-              <FeatureIconWrap>
-                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                </svg>
-              </FeatureIconWrap>
-              <FeatureTitle>Menu Management</FeatureTitle>
-              <FeatureDesc>Manage categories, products, pricing and availability.</FeatureDesc>
-            </FeatureCard>
-
-            {/* 5. Kitchen & Order Queue */}
-            <FeatureCard>
-              <FeatureIconWrap>
-                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </FeatureIconWrap>
-              <FeatureTitle>Kitchen & Order Queue</FeatureTitle>
-              <FeatureDesc>Keep kitchen orders organized and easy to track.</FeatureDesc>
-            </FeatureCard>
-
-            {/* 6. Business Dashboard */}
-            <FeatureCard>
-              <FeatureIconWrap>
-                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-              </FeatureIconWrap>
-              <FeatureTitle>Business Dashboard</FeatureTitle>
-              <FeatureDesc>Monitor sales, orders and restaurant performance.</FeatureDesc>
-            </FeatureCard>
+            {[
+              {
+                num: "01",
+                icon: <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" /></svg>,
+                title: "Smart POS",
+                desc: "Create and manage restaurant orders quickly with category-based menu browsing and one-tap item selection.",
+              },
+              {
+                num: "02",
+                icon: <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" /></svg>,
+                title: "Table Management",
+                desc: "Track tables, seating and occupancy in real time. Assign orders to tables with a single click.",
+              },
+              {
+                num: "03",
+                icon: <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>,
+                title: "Fast Billing",
+                desc: "Generate GST-compliant invoices in seconds with auto-calculation, discounts, and payment tracking.",
+              },
+              {
+                num: "04",
+                icon: <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>,
+                title: "Menu Management",
+                desc: "Manage categories, products, pricing and availability. Update your menu instantly across all devices.",
+              },
+              {
+                num: "05",
+                icon: <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
+                title: "Kitchen & Order Queue",
+                desc: "Keep kitchen orders organized with live KOT display. Track every order from prep to delivery.",
+              },
+              {
+                num: "06",
+                icon: <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>,
+                title: "Business Dashboard",
+                desc: "Monitor sales, orders, top-selling items and restaurant performance with real-time analytics.",
+              },
+            ].map((f) => (
+              <FeatureCard key={f.num}>
+                <FeatureCardTop>
+                  <FeatureIconWrap>{f.icon}</FeatureIconWrap>
+                  <FeatureNumBadge>{f.num}</FeatureNumBadge>
+                </FeatureCardTop>
+                <FeatureTitle>{f.title}</FeatureTitle>
+                <FeatureDesc>{f.desc}</FeatureDesc>
+              </FeatureCard>
+            ))}
           </CardGrid>
         </Container>
       </Section>
@@ -2169,6 +2355,7 @@ const Landing = () => {
           SUBSCRIPTION PRICING CARDS
       -------------------------------------------------- */}
       {/* <SubscriptionSection id="pricing" /> */}
+      <SubscriptionSection/>
 
       {/* --------------------------------------------------
           5. FREQUENTLY ASKED QUESTIONS (FAQ) SECTION

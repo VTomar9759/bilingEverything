@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import styled, { keyframes } from "styled-components";
-import { Button, Space, message, Skeleton, Input, Empty } from "antd";
+import { Button, Space, message, Input } from "antd";
 import { PlusOutlined, ReloadOutlined, SearchOutlined, UserAddOutlined } from "@ant-design/icons";
+import { PageSpinner, EmptyPlaceholder } from "../../../loader/PageSpinner";
 
 import TabHeader from "../../../components/TabHeader";
 import { PageWrapper } from "../../styles/commonstyle";
@@ -168,23 +169,14 @@ const AdminListing = () => {
       {/* Content Area */}
       <ContentArea>
         {loading ? (
-          <SkeletonGrid>
-            {Array.from({ length: 6 }).map((_, i) => (
-              <SkeletonCard key={i}>
-                <Skeleton active avatar title={{ width: "50%" }} paragraph={{ rows: 2 }} />
-              </SkeletonCard>
-            ))}
-          </SkeletonGrid>
+          <PageSpinner />
         ) : filteredAdmins.length === 0 ? (
-          <EmptyBox>
-            <Empty
-              description={
-                searchQuery
-                  ? "No admins found matching your search"
-                  : "No admins created yet"
-              }
-            >
-              {canCreate && !searchQuery && (
+          <EmptyPlaceholder
+            icon="👤"
+            title={searchQuery ? "No admins match your search" : "No admins created yet"}
+            desc={searchQuery ? "Try a different name or email address." : "Get started by creating your first admin user."}
+            action={
+              canCreate && !searchQuery && (
                 <Button
                   type="primary"
                   icon={<UserAddOutlined />}
@@ -194,9 +186,9 @@ const AdminListing = () => {
                 >
                   Create Admin Now
                 </Button>
-              )}
-            </Empty>
-          </EmptyBox>
+              )
+            }
+          />
         ) : (
           <CardGrid>
             {filteredAdmins.map((admin) => (

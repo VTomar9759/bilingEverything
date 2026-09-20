@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
-import { Button, Skeleton } from "antd";
+import { Button } from "antd";
 import { useSelector } from "react-redux";
 import { PlusOutlined, FileSyncOutlined } from "@ant-design/icons";
 import useOrgData from "../../hooks/useOrgData";
+import { PageSpinner } from "../../../loader/PageSpinner";
 
 import TabHeader from "../../../components/TabHeader";
 import { PageWrapper } from "../../styles/commonstyle";
@@ -109,7 +110,7 @@ const DashboardOverview = () => {
       </HeaderSection>
 
       {loading ? (
-        <Skeleton active paragraph={{ rows: 12 }} />
+        <PageSpinner minHeight="360px" />
       ) : (
         <>
           {/* Statistical Cards Grid */}

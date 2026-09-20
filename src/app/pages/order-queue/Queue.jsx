@@ -1,8 +1,9 @@
 import { useMemo } from "react";
 import styled from "styled-components";
-import { Button, Empty, Space, Spin } from "antd";
+import { Button, Space } from "antd";
 import { ReloadOutlined, DesktopOutlined, LogoutOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
+import { PageSpinner, EmptyPlaceholder } from "../../../loader/PageSpinner";
 
 import TabHeader from "../../../components/TabHeader";
 import { PageWrapper } from "../../styles/commonstyle";
@@ -24,7 +25,7 @@ const Queue = ({ hideCustomerNav = false, showExitNav = false }) => {
       return new Date(a.created_at) - new Date(b.created_at);
     });
   }, [queueListing]);
-  
+
 
   const isInitialLoading = loading && queueListing.length === 0;
 
@@ -65,11 +66,13 @@ const Queue = ({ hideCustomerNav = false, showExitNav = false }) => {
 
       {/* Queue Grid */}
       {isInitialLoading ? (
-        <LoadingBox>
-          <Spin size="large" tip="Loading order queue..." />
-        </LoadingBox>
+        <PageSpinner minHeight="300px" />
       ) : sortedQueue.length === 0 ? (
-        <Empty description="No orders in queue" style={{ marginTop: 40 }} />
+        <EmptyPlaceholder
+          icon="📎"
+          title="No orders in queue"
+          desc="The order queue is currently empty. New orders will appear here automatically."
+        />
       ) : (
         <QueueGrid>
           {sortedQueue.map((order) => (
@@ -90,6 +93,14 @@ const HeaderBox = styled.div`
   align-items: center;
   flex-wrap: wrap;
   gap: 10px;
+`;
+
+const CardSkeletonContainer = styled.div`
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-left: 4px solid var(--color-primary);
+  border-radius: var(--radius-xl);
+  padding: 16px;
 `;
 
 const QueueGrid = styled.div`
