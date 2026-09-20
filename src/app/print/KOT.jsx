@@ -45,7 +45,7 @@ const PrintGlobalStyles = createGlobalStyle`
       top: 0 !important;
       width: ${({ $paperWidth }) => $paperWidth || "80mm"} !important;
       max-width: ${({ $paperWidth }) => $paperWidth || "80mm"} !important;
-      padding: 4mm 3mm !important;
+      padding: 4mm 7mm 25mm 7mm !important;
       box-sizing: border-box !important;
       background: #ffffff !important;
       color: #000000 !important;
@@ -126,7 +126,7 @@ const KOT = ({ visible, onClose, order, settings, isCombined = true }) => {
     settings?.invoice_footer ||
     "Thank You For Dining With Us!";
 
-  const printType = userData?.print_type || settings?.print_type || PRINT_TYPE.MODERN;
+  const printType = ps?.print_size || userData?.print_type || settings?.print_type || PRINT_TYPE.MODERN;
   const printConfig = PRINT_SIZE[printType] || PRINT_SIZE[PRINT_TYPE.MODERN];
   const paperWidth = settings?.paper_width || userData?.paper_width || printConfig.width;
   const modalWidth = printConfig.widthPx + 78;
@@ -446,11 +446,14 @@ const KOT = ({ visible, onClose, order, settings, isCombined = true }) => {
                 <DottedDivider className="dotted-divider" />
 
                 {ps?.footer_visible !== false && (
-                  <ReceiptFooter className="receipt-footer" style={{ textAlign: "center", width: "100%" }}>
-                    <p style={{ fontWeight: 600, fontStyle: "italic", color: "#d97706", textAlign: "center", width: "100%", margin: "2px 0" }}>
-                      {invoiceFooter}
-                    </p>
-                  </ReceiptFooter>
+                  <>
+                    <ReceiptFooter className="receipt-footer" style={{ textAlign: "center", width: "100%" }}>
+                      <p style={{ fontWeight: 600, fontStyle: "italic", color: "#d97706", textAlign: "center", width: "100%", margin: "2px 0" }}>
+                        {invoiceFooter}
+                      </p>
+                    </ReceiptFooter>
+                    <DottedDivider className="dotted-divider" style={{ margin: "8px 0 12px 0" }} />
+                  </>
                 )}
 
                 {/* ─── SEPARATOR BEFORE KOT ─── */}
@@ -461,14 +464,13 @@ const KOT = ({ visible, onClose, order, settings, isCombined = true }) => {
             )}
 
             {/* ─── BOTTOM SECTION: KOT ─── */}
-            <ReceiptHeader className="receipt-header" style={{ textAlign: "center", width: "100%" }}>
-              <p style={{ fontWeight: 700, fontSize: "14px", textTransform: "uppercase", textAlign: "center", width: "100%", margin: "0 0 2px 0" }}>
-                KITCHEN ORDER TICKET (KOT)
-              </p>
-              {businessName && (
-                <p style={{ fontWeight: 600, textAlign: "center", width: "100%", fontSize: "11px" }}>{businessName}</p>
-              )}
-            </ReceiptHeader>
+            {businessName && (
+              <ReceiptHeader className="receipt-header" style={{ textAlign: "center", width: "100%" }}>
+                <p style={{ fontWeight: 700, textAlign: "center", width: "100%", fontSize: "13px", margin: "0 0 4px 0", textTransform: "uppercase" }}>
+                  {businessName}
+                </p>
+              </ReceiptHeader>
+            )}
 
             <DottedDivider className="dotted-divider" />
 
@@ -512,7 +514,13 @@ const KOT = ({ visible, onClose, order, settings, isCombined = true }) => {
               </tbody>
             </KotItemsTable>
 
-            <DottedDivider className="dotted-divider" />
+            <DottedDivider className="dotted-divider" style={{ margin: "8px 0 4px 0" }} />
+            <p style={{ textAlign: "center", fontWeight: 700, fontSize: "12px", margin: "4px 0 6px 0", color: "#000", textTransform: "uppercase" }}>
+              -- Order Completed --
+            </p>
+            <DottedDivider className="dotted-divider" style={{ margin: "4px 0 12px 0" }} />
+            {/* Feed spacing for thermal auto-cutter */}
+            <div style={{ height: "35px", width: "100%" }} className="cut-spacer" />
           </ReceiptPaper>
         </ReceiptOuter>
         <Space
@@ -531,7 +539,7 @@ const KOT = ({ visible, onClose, order, settings, isCombined = true }) => {
             onClick={handlePrint}
             style={{ background: "#d97706", borderColor: "#d97706" }}
           >
-            {isCombined ? "Print KOT & Invoice" : "Print KOT"}
+            {isCombined ? "Print KOT & Receipt" : "Print KOT"}
           </Button>
         </Space>
       </Modal>
@@ -561,7 +569,7 @@ const ReceiptPaper = styled.div`
   background: white;
   width: ${({ $paperWidth }) => ($paperWidth === "58mm" ? "220px" : "300px")};
   max-width: 100%;
-  padding: 12px 10px;
+  padding: 12px 14px 20px 14px;
   font-family: 'Segoe UI', 'Inter', 'Helvetica Neue', Arial, sans-serif;
   color: #1e293b;
   border-radius: 4px;

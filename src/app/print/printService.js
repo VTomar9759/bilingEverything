@@ -73,9 +73,9 @@ export const generateReceiptHTML = (order, settings = {}) => {
   if (!order) return "";
 
   const ps = settings?.printSettings || {};
-  const printType = settings?.print_type || order?.print_type || PRINT_TYPE.MODERN;
+  const printType = ps?.print_size || settings?.print_type || order?.print_type || PRINT_TYPE.MODERN;
   const printConfig = PRINT_SIZE[printType] || PRINT_SIZE[PRINT_TYPE.MODERN];
-  const paperWidth = settings?.paper_width || printConfig.width;
+  const paperWidth = settings?.paper_width || ps?.paper_width || printConfig.width;
   const currency = settings?.currency || "₹";
   const logoImage = settings?.logo_image || settings?.logo || settings?.logo_url || "";
   const logoSize = ps?.logo_size || 80;
@@ -206,7 +206,7 @@ export const generateReceiptHTML = (order, settings = {}) => {
             width: ${paperWidth};
             max-width: 100%;
             margin: 0 auto;
-            padding: 4mm 3mm 15mm 3mm;
+            padding: 4mm 7mm 25mm 7mm;
             box-sizing: border-box;
             background: #ffffff;
           }
@@ -411,7 +411,9 @@ export const generateReceiptHTML = (order, settings = {}) => {
             ${ps?.footer_visible !== false ? `
             <div class="receipt-footer" style="text-align: center; width: 100%;">
               <p style="text-align: center; width: 100%; margin: 2px 0; font-weight: 600; font-style: italic; color: #d97706;">${footerNote}</p>
-            </div>` : ""}
+            </div>
+            <div class="dotted-divider" style="margin: 8px 0 12px 0;"></div>` : ""}
+            <div style="height: 35px; width: 100%;" class="cut-spacer"></div>
           </div>
         </div>
       </body>
@@ -537,7 +539,10 @@ export const printInvoiceSilent = async ({ order, settings = {}, copies = 2, rec
 export const generateKOTHTML = (order, settings = {}) => {
   if (!order) return "";
 
-  const paperWidth = settings?.paper_width || "80mm";
+  const ps = settings?.printSettings || {};
+  const printType = ps?.print_size || settings?.print_type || order?.print_type || PRINT_TYPE.MODERN;
+  const printConfig = PRINT_SIZE[printType] || PRINT_SIZE[PRINT_TYPE.MODERN];
+  const paperWidth = settings?.paper_width || ps?.paper_width || printConfig.width;
 
   const getCleanName = (name) => {
     if (!name || typeof name !== "string") return "";
@@ -598,7 +603,7 @@ export const generateKOTHTML = (order, settings = {}) => {
           }
           .kot {
             width: ${paperWidth};
-            padding: 4mm 3mm 15mm 3mm;
+            padding: 4mm 7mm 25mm 7mm;
             box-sizing: border-box;
             background: #ffffff;
           }
@@ -674,7 +679,12 @@ export const generateKOTHTML = (order, settings = {}) => {
             </tbody>
           </table>
 
-          <div class="divider"></div>
+          <div class="divider" style="margin: 8px 0 4px 0;"></div>
+          <p style="text-align: center; font-weight: 700; font-size: 12px; margin: 4px 0 6px 0; color: #000; text-transform: uppercase;">
+            -- Order Completed --
+          </p>
+          <div class="divider" style="margin: 4px 0 12px 0;"></div>
+          <div style="height: 35px; width: 100%;" class="cut-spacer"></div>
         </div>
       </body>
     </html>
