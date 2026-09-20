@@ -3,6 +3,7 @@ export const PATH_LANDING = "/";
 export const PATH_LOGIN = "/login";
 export const PATH_SIGNUP = "/signup";
 export const PATH_FORGOT_PASSWORD = "/forgot-password";
+export const PATH_RESET_PASSWORD = "/reset-password";
 
 // Private paths
 export const PATH_ITEMS = "/items";

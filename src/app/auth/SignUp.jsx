@@ -10,7 +10,7 @@ import {
 } from "antd";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../lib/supabaseClients";
-import { PATH_LOGIN } from "../routes/pathname";
+import { PATH_LOGIN, PATH_LANDING } from "../routes/pathname";
 
  const PERMISSION = {
   orders: {
@@ -133,7 +133,25 @@ function SignUp() {
     <Wrapper>
       <Card>
         <CardHeader>
-          <Title>Create Account</Title>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%", marginBottom: "8px" }}>
+            <Title style={{ margin: 0 }}>Create Account</Title>
+            <button
+              onClick={() => navigate(PATH_LANDING)}
+              style={{
+                background: "none",
+                border: "none",
+                color: "#00a389",
+                fontSize: "13px",
+                fontWeight: "600",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: "4px"
+              }}
+            >
+              ← Back to Home
+            </button>
+          </div>
           <SmallText>Fill in your details to get started</SmallText>
         </CardHeader>
 

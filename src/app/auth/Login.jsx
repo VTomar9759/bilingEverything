@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import styled, { keyframes } from "styled-components";
 import { Input, Button, Form, message } from "antd";
 import { useNavigate } from "react-router-dom";
-import { PATH_SIGNUP } from "../routes/pathname";
+import { PATH_SIGNUP, PATH_LANDING } from "../routes/pathname";
 import { supabase } from "../../lib/supabaseClients";
 import { useDispatch } from "react-redux";
 import { logingAuth } from "../store/slices/authSlices";
@@ -15,118 +15,112 @@ const Login = () => {
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(false);
 
+  const handleSubmit = async (values) => {
+    if (loading) return;
+    const { email, password } = values;
 
-const handleSubmit = async (values) => {
-  if (loading) return;
-  const { email, password } = values;
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-  setLoading(true);
-  try {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+      if (error) throw error;
 
-    if (error) throw error;
-
-    // Check whether the logged-in user exists in admin table
-    const { data: adminRecord, error: adminError } = await supabase
-      .from("admin")
-      .select("*")
-      .or(`id.eq.${data.user.id},email.eq.${email}`)
-      .maybeSingle();
-
-    if (adminError) throw adminError;
-
-    if (adminRecord) {
-      // Get organization ID
-      const targetOrgId =
-        adminRecord.org_id || adminRecord.created_by;
-
-      if (!targetOrgId) {
-        throw new Error("Organization ID not found for admin.");
-      }
-  
-     
-      // Get organization data
-      const { data: orgData, error: orgError } = await supabase
-        .from("organization")
+      // Check whether the logged-in user exists in admin table
+      const { data: adminRecord, error: adminError } = await supabase
+        .from("admin")
         .select("*")
-        .eq("id",targetOrgId)
+        .or(`id.eq.${data.user.id},email.eq.${email}`)
         .maybeSingle();
 
-      if (orgError) throw orgError;
+      if (adminError) throw adminError;
 
-      if (!orgData) {
-        throw new Error("Organization data not found.");
+      if (adminRecord) {
+        // Get organization ID
+        const targetOrgId =
+          adminRecord.org_id || adminRecord.created_by;
+
+        if (!targetOrgId) {
+          throw new Error("Organization ID not found for admin.");
+        }
+
+        // Get organization data
+        const { data: orgData, error: orgError } = await supabase
+          .from("organization")
+          .select("*")
+          .eq("id", targetOrgId)
+          .maybeSingle();
+
+        if (orgError) throw orgError;
+
+        if (!orgData) {
+          throw new Error("Organization data not found.");
+        }
+
+        dispatch(
+          logingAuth({
+            userData: {
+              ...data.user,
+              ...orgData,
+              ...adminRecord,
+              admin: adminRecord,
+              role: "admin",
+              permission: adminRecord?.permissions || adminRecord?.permission,
+              permissions: adminRecord?.permissions || adminRecord?.permission,
+              full_name: adminRecord?.name,
+            },
+            token: data.session.access_token,
+            refreshToken: data.session.refresh_token,
+            org_id: targetOrgId,
+          })
+        );
+      } else {
+        // Normal organization user
+        const { data: user, error: userError } = await supabase
+          .from("organization")
+          .select("*")
+          .eq("id", data.user.id)
+          .maybeSingle();
+
+        if (userError) throw userError;
+
+        if (!user) {
+          throw new Error("Organization data not found.");
+        }
+
+        dispatch(
+          logingAuth({
+            userData: {
+              ...data.user,
+              ...user,
+            },
+            token: data.session.access_token,
+            refreshToken: data.session.refresh_token,
+            org_id: data.user.id,
+          })
+        );
       }
-      console.log("data.user.permissions", data.user?.permissions);
-      console.log("orgData",orgData)
-      console.log("adminRecord",adminRecord)
-      // Admin login
-      dispatch(
-        logingAuth({
-          userData: {
-            ...data.user,
-            ...orgData,
-            ...adminRecord,
-            admin: adminRecord,
-            role: "admin",
-            permission: adminRecord?.permissions || adminRecord?.permission,
-            permissions: adminRecord?.permissions || adminRecord?.permission,
-            full_name: adminRecord?.name,
-          },
-          token: data.session.access_token,
-          refreshToken: data.session.refresh_token,
-          org_id: targetOrgId,
-        })
-      );
-    } else {
-      // Normal organization user
-      const { data: user, error: userError } = await supabase
-        .from("organization")
-        .select("*")
-        .eq("id", data.user.id)
-        .maybeSingle();
 
-      if (userError) throw userError;
-
-      if (!user) {
-        throw new Error("Organization data not found.");
-      }
-
-      dispatch(
-        logingAuth({
-          userData: {
-            ...data.user,
-            ...user,
-          },
-          token: data.session.access_token,
-          refreshToken: data.session.refresh_token,
-          org_id: data.user.id,
-        })
-      );
+      message.success("Login successful");
+    } catch (err) {
+      console.error("Login error:", err);
+      message.error(err?.message || "Login failed");
+    } finally {
+      setLoading(false);
     }
-
-    message.success("Login successful");
-  } catch (err) {
-    console.error("Login error:", err);
-    message.error(err?.message || "Login failed");
-  } finally {
-    setLoading(false);
-  }
-};
-
+  };
 
   return (
     <Wrapper>
       <Card>
         {/* Header */}
         <CardHeader>
-          <LogoBadge>
+          <LogoBadge onClick={() => navigate(PATH_LANDING)} style={{ cursor: "pointer" }} title="Go to Landing Page">
             <img src={logo} alt="logo" className="image-box" />
           </LogoBadge>
-          <BrandTitle>
+          <BrandTitle onClick={() => navigate(PATH_LANDING)} style={{ cursor: "pointer" }} title="Go to Landing Page">
             Billing <span className="highlight">Every Thing</span>
           </BrandTitle>
           <SmallText>Welcome back</SmallText>

@@ -4,6 +4,7 @@ import {
   PATH_LANDING,
   PATH_LOGIN,
   PATH_FORGOT_PASSWORD,
+  PATH_RESET_PASSWORD,
   PATH_SIGNUP,
   PATH_ITEMS,
   PATH_ADD_ITEM,
@@ -27,6 +28,7 @@ import {
 
 import Login from "../auth/Login";
 import PorgotPassword from "../auth/PorgotPassword";
+import ResetPassword from "../auth/ResetPassword";
 import SignUp from "../auth/SignUp";
 import ItemListing from "../pages/items/ItemListing";
 import AddItem from "../pages/items/AddItem";
@@ -63,6 +65,10 @@ export const publicChildren = [
   {
     path: PATH_FORGOT_PASSWORD,
     element: <PorgotPassword />,
+  },
+  {
+    path: PATH_RESET_PASSWORD,
+    element: <ResetPassword />,
   },
   {
     path: PATH_SIGNUP,

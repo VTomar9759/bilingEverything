@@ -1,19 +1,35 @@
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import publicBackground from "../../assets/pubicbackground.jpg";
-import { useLocation } from "react-router-dom";
+import logo from "../../assets/logo.png";
 import { PATH_LANDING } from "../routes/pathname";
+
 const PublicLayout = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+
   if (PATH_LANDING === location.pathname) {
     return <Outlet />;
   }
 
   return (
     <PublicLayoutStyle>
+      {/* Top Floating Nav to return to Landing Page */}
+      <TopAuthNav>
+        <NavBrand onClick={() => navigate(PATH_LANDING)}>
+          <img src={logo} alt="Billing EveryThing Logo" />
+          <span>Billing<span className="highlight">EveryThing</span></span>
+        </NavBrand>
+        <BackToLandingBtn onClick={() => navigate(PATH_LANDING)}>
+          ← Back to Home
+        </BackToLandingBtn>
+      </TopAuthNav>
+
       <PublicCard>
         <LeftSection>
-          <BrandBadge>CRM</BrandBadge>
+          <BrandBadge onClick={() => navigate(PATH_LANDING)} style={{ cursor: "pointer" }}>
+            CRM
+          </BrandBadge>
 
           <HeroTitle>
             Everything<br />
@@ -48,12 +64,79 @@ const PublicLayout = () => {
 export default PublicLayout;
 
 /* ── Public layout styled components ── */
+const TopAuthNav = styled.header`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 36px;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+
+  @media (max-width: 640px) {
+    padding: 12px 16px;
+  }
+`;
+
+const NavBrand = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+
+  img {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+  }
+
+  span {
+    font-size: 17px;
+    font-weight: 800;
+    color: #ffffff;
+    letter-spacing: -0.3px;
+
+    .highlight {
+      color: #00a389;
+    }
+  }
+`;
+
+const BackToLandingBtn = styled.button`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+  padding: 8px 18px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+
+  &:hover {
+    background: #01514b;
+    border-color: #00a389;
+    color: #ffffff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 163, 137, 0.3);
+  }
+`;
+
 const PublicLayoutStyle = styled.div`
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px 16px;
+  padding: 90px 16px 32px;
   position: relative;
   overflow: hidden;
 

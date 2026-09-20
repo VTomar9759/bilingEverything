@@ -1,56 +1,110 @@
+import React, { useState } from "react";
 import styled from "styled-components";
-import { Button, Form } from "antd";
-import { useNavigate } from "react-router";
+import { Input, Button, Form, message } from "antd";
+import { useNavigate } from "react-router-dom";
+import { PATH_LANDING, PATH_LOGIN } from "../routes/pathname";
+import { supabase } from "../../lib/supabaseClients";
 
 const PorgotPassword = () => {
   const [form] = Form.useForm();
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (values) => {
-    console.log("Form Data:", values);
+  const handleSubmit = async (values) => {
+    if (loading) return;
+    const { email } = values;
+    setLoading(true);
+
+    try {
+      const redirectTo = `${window.location.origin}/reset-password`;
+
+      // Try invoking Supabase Edge Function with custom branded HTML email template
+      const { data, error: fnError } = await supabase.functions.invoke(
+        "send-reset-password-email",
+        {
+          body: { email, redirectTo },
+        }
+      );
+
+      if (fnError || data?.error) {
+        console.warn(
+          "Edge function reset email failed/not deployed, falling back to default Supabase Auth reset:",
+          fnError || data?.error
+        );
+
+        // Fallback to default Supabase resetPasswordForEmail
+        const { error: authError } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo,
+        });
+
+        if (authError) throw authError;
+      }
+
+      message.success("✅ Password reset link has been sent to your email!");
+      form.resetFields();
+    } catch (err) {
+      console.error("Forgot password error:", err);
+      message.error(err?.message || "Failed to send reset email");
+    } finally {
+      setLoading(false);
+    }
   };
+
   const handleBack = () => navigate(-1);
 
   return (
     <Wrapper>
       <Card>
-        <BackButton onClick={handleBack}>
-          <svg
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <BackButton onClick={handleBack} title="Go back">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M13.98 5.31999L10.77 8.52999L8.79999 10.49C7.96999 11.32 7.96999 12.67 8.79999 13.5L13.98 18.68C14.66 19.36 15.82 18.87 15.82 17.92V12.31V6.07999C15.82 5.11999 14.66 4.63999 13.98 5.31999Z"
+                fill="#7A7B7A"
+              />
+            </svg>
+          </BackButton>
+
+          <button
+            onClick={() => navigate(PATH_LANDING)}
+            style={{
+              background: "none",
+              border: "none",
+              color: "#00a389",
+              fontSize: "13px",
+              fontWeight: "600",
+              cursor: "pointer",
+            }}
           >
-            <path
-              d="M13.98 5.31999L10.77 8.52999L8.79999 10.49C7.96999 11.32 7.96999 12.67 8.79999 13.5L13.98 18.68C14.66 19.36 15.82 18.87 15.82 17.92V12.31V6.07999C15.82 5.11999 14.66 4.63999 13.98 5.31999Z"
-              fill="#7A7B7A"
-            />
-          </svg>
-        </BackButton>
+            ← Back to Home
+          </button>
+        </div>
         <Title>Forgot Password</Title>
         <SmallText>
-          Please enter your email address to reset your password.
+          Please enter your email address to receive a password reset link.
         </SmallText>
 
         <Form form={form} layout="vertical" onFinish={handleSubmit}>
-          <InputWrapper>
-            {/* Email */}
-            <Form.Item
-              name="email"
-              rules={[
-                { required: true, message: "Please enter email" },
-                { type: "email", message: "Invalid email" },
-              ]}
-            >
-              <CustomInputField>
-                <InputLabel>Email Address</InputLabel>
-                <CustomInput placeholder="example@gmail.com" />
-              </CustomInputField>
-            </Form.Item>
-          </InputWrapper>
+          <Form.Item
+            name="email"
+            label="Email Address"
+            rules={[
+              { required: true, message: "Please enter your email" },
+              { type: "email", message: "Invalid email address" },
+            ]}
+          >
+            <StyledInput placeholder="example@gmail.com" size="large" />
+          </Form.Item>
 
-          <StyledButton htmlType="submit">Submit</StyledButton>
+          <StyledButton htmlType="submit" loading={loading} disabled={loading}>
+            Send Reset Link →
+          </StyledButton>
         </Form>
       </Card>
     </Wrapper>
@@ -58,6 +112,7 @@ const PorgotPassword = () => {
 };
 
 export default PorgotPassword;
+
 const Wrapper = styled.div`
   width: 100%;
   max-width: 513px;
@@ -69,6 +124,7 @@ const Wrapper = styled.div`
     padding: 20px;
   }
 `;
+
 const BackButton = styled.button`
   display: flex;
   align-items: center;
@@ -83,6 +139,7 @@ const BackButton = styled.button`
     border-color: #7c7c7c;
   }
 `;
+
 const Card = styled.div`
   width: 100%;
   display: flex;
@@ -106,50 +163,21 @@ const Title = styled.h2`
   color: ${({ theme }) => theme.colors.black};
 `;
 
-const InputWrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-`;
-const CustomInput = styled.input.attrs((props) => ({
-  value: props.value || "",
-}))`
-  width: 100%;
-  background: transparent;
-  border: none;
-  font-size: 16px;
-  color: ${({ theme }) => theme.colors.black};
-  outline: none;
-
-  &::placeholder {
-    color: ${({ theme }) => theme.colors.black};
-  }
-`;
-const CustomInputField = styled.div`
-  width: 100%;
-  height: 56px;
-  border-radius: 10px;
-  padding: 10px;
-  border-radius: 10px;
-  position: relative;
-  transition: all 0.3s ease;
-  border: 1px solid #c8c8c8;
+const StyledInput = styled(Input)`
+  height: 48px !important;
+  border-radius: 10px !important;
+  border: 1px solid #c8c8c8 !important;
+  font-size: 15px !important;
 
   &:hover {
-    border-color: ${({ theme }) => theme.colors.primary};
+    border-color: ${({ theme }) => theme?.colors?.primary || "#00a389"} !important;
   }
 
-  &:focus-within {
-    border-color: #c8c8c8;
-    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+  &:focus,
+  &.ant-input-focused {
+    border-color: ${({ theme }) => theme?.colors?.primary || "#00a389"} !important;
+    box-shadow: 0 0 0 3px rgba(0, 163, 137, 0.1) !important;
   }
-`;
-const InputLabel = styled.label`
-  font-family: Outfit;
-  font-weight: 400;
-  font-size: 12px;
-  line-height: 100%;
-  color: #666666;
-  display: block;
 `;
 
 const StyledButton = styled(Button)`
@@ -159,6 +187,7 @@ const StyledButton = styled(Button)`
   background: ${({ theme }) => theme.colors.primary};
   color: ${({ theme }) => theme.colors.white};
   border: none;
+  margin-top: 10px;
 
   &:hover {
     opacity: 0.9;
@@ -166,3 +195,4 @@ const StyledButton = styled(Button)`
     color: ${({ theme }) => theme.colors.white} !important;
   }
 `;
+
