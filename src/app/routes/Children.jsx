@@ -1,5 +1,7 @@
+// Public and Private Children Routes
 import { Navigate } from "react-router-dom";
 import {
+  PATH_LANDING,
   PATH_LOGIN,
   PATH_FORGOT_PASSWORD,
   PATH_SIGNUP,
@@ -47,8 +49,13 @@ import ProfileUpdate from "../pages/settings/componests/profileUpdate";
 import ChangePassword from "../pages/settings/componests/changePassword";
 import BusinessDetails from "../pages/settings/componests/BusinessDetails";
 import PrintSetting from "../pages/settings/componests/PrintSetting";
+import Landing from "../public/Landing";
 
 export const publicChildren = [
+  {
+    path: PATH_LANDING,
+    element: <Landing />,
+  },
   {
     path: PATH_LOGIN,
     element: <Login />,

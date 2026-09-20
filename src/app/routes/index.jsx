@@ -2,11 +2,12 @@ import {
   createBrowserRouter,
   RouterProvider,
   Navigate,
+  Outlet,
 } from "react-router-dom";
 import { Suspense } from "react";
 import useOrgData from "../hooks/useOrgData";
 import Loading from "../../loader/Loading";
-import Layout, { layoutType } from "../layout";
+import { PublicLayout, PrivateLayout } from "../layout";
 import PageNotFound from "../utils/pagenotFound";
 import { privateChildren, publicChildren, withoutSidenave } from "./Children";
 import {
@@ -38,9 +39,9 @@ const ROUTE_PERMISSION_MAP = {
   [PATH_BILLING]: "billing",
 };
 
-const PublicRoute = ({ children, isAuthenticated,permissionDashboard }) => {
+const PublicRoute = ({ children, isAuthenticated, permissionDashboard }) => {
   if (isAuthenticated) {
-    if(!permissionDashboard){
+    if (!permissionDashboard) {
       return <Navigate to={PATH_SETTINGS} replace />;
     }
     return <Navigate to={PATH_DASHBOARD} replace />;
@@ -76,8 +77,8 @@ const AppRouter = () => {
     // Public Layout
     {
       element: (
-        <PublicRoute isAuthenticated={isAuthenticated} >
-          <Layout type={layoutType.public} />
+        <PublicRoute isAuthenticated={isAuthenticated}>
+          <PublicLayout />
         </PublicRoute>
       ),
       children: publicChildren,
@@ -87,8 +88,11 @@ const AppRouter = () => {
     // Private Layout
     {
       element: (
-        <PrivateRoute isAuthenticated={isAuthenticated} permissionDashboard={permission?.dashboard?.view}>
-          <Layout type={layoutType.private} />
+        <PrivateRoute
+          isAuthenticated={isAuthenticated}
+          permissionDashboard={permission?.dashboard?.view}
+        >
+          <PrivateLayout />
         </PrivateRoute>
       ),
       children: filteredPrivateChildren,
@@ -99,8 +103,7 @@ const AppRouter = () => {
     {
       element: (
         <PrivateRoute isAuthenticated={isAuthenticated}>
-          <Layout type={layoutType.withoutSidebar} />
-
+          <Outlet />
         </PrivateRoute>
       ),
       children: withoutSidenave,

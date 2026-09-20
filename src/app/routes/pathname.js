@@ -1,5 +1,6 @@
 // Public paths
-export const PATH_LOGIN = "/";
+export const PATH_LANDING = "/";
+export const PATH_LOGIN = "/login";
 export const PATH_SIGNUP = "/signup";
 export const PATH_FORGOT_PASSWORD = "/forgot-password";
 
