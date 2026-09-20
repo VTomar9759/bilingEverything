@@ -39,7 +39,11 @@ const ItemListing = () => {
     );
     setData(filtered);
   };
-
+    const handleOutOfStock=()=>{
+      const filtered = items?.filter((item) => !item?.status);
+      setData(filtered);
+    
+  } 
   const handleCategoryFilter = (catId) => {
     setSelectedCatId(catId);
     if (catId === "all") {
@@ -79,6 +83,7 @@ const ItemListing = () => {
             onSearch={handleSearch}
             placeholder="Search by name or code..."
           />
+             <p onClick={handleOutOfStock}>Out of stock</p>
           {canCreate && (
             <AddButton
               type="primary"

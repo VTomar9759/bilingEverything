@@ -17,6 +17,7 @@ import {
   PATH_ORDER_EDIT,
   PATH_TABLES,
   PATH_BILLING,
+  PATH_REPORTS,
   PATH_ORDER_QUEUE,
   PATH_ONLY_QUEUE,
   PATH_SETTINGS,
@@ -38,6 +39,7 @@ import AdminListing from "../pages/admin/AdminListing";
 
 import DashboardOverview from "../pages/dashboard/DashboardOverview";
 import BillingSection from "../pages/billing/BillingSection";
+import ReportsDashboard from "../pages/reports/ReportsDashboard";
 
 import OrdersListing from "../pages/orders/OrdersListing";
 import PosOrderComposer from "../pages/orders/PosOrderComposer";
@@ -123,6 +125,10 @@ export const privateChildren = [
   {
     path: PATH_BILLING,
     element: <BillingSection />,
+  },
+  {
+    path: PATH_REPORTS,
+    element: <ReportsDashboard />,
   },
   {
     path: PATH_ORDER_QUEUE,

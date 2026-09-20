@@ -19,6 +19,7 @@ export const PATH_ORDER_COMPOSER = "/composer";
 export const PATH_ORDER_EDIT = "/order-edit";
 export const PATH_TABLES = "/tables";
 export const PATH_BILLING = "/billing";
+export const PATH_REPORTS = "/reports";
 export const PATH_ORDER_QUEUE = "/order-queue";
 export const PATH_ONLY_QUEUE = "/only-queue";
 
@@ -69,6 +70,12 @@ export const navItems = [
     icon: "Billing",
     activePath: [PATH_BILLING],
     path: PATH_BILLING,
+  },
+  {
+    label: "Reports & Analytics",
+    icon: "Reports",
+    activePath: [PATH_REPORTS],
+    path: PATH_REPORTS,
   },
   {
     label: "Order Queue",
