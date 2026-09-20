@@ -233,6 +233,30 @@ const ReportsDashboard = () => {
     triggerPrintReport(`${activeTab} Report (${dateRange})`, "reports-content-area");
   };
 
+  const reportsPerm = permission?.reports;
+  const isAuthorized =
+    !user_role || user_role === "owner" || user_role === "super_admin" || reportsPerm?.view !== false;
+
+  if (!isAuthorized) {
+    return (
+      <PageWrapper>
+        <HeaderRow>
+          <TabHeader
+            title="Reports & Analytics"
+            subtitle="Track sales, expenses, profit, payments, GST and restaurant performance."
+          />
+        </HeaderRow>
+        <div style={{ textAlign: "center", padding: "60px 20px", color: "var(--color-text-muted, #64748b)" }}>
+          <span style={{ fontSize: "48px", display: "block", marginBottom: "16px" }}>🔒</span>
+          <h3 style={{ fontSize: "18px", color: "var(--color-text-primary, #1e293b)", marginBottom: "8px" }}>
+            Access Denied
+          </h3>
+          <p>You do not have permission to view Reports & Analytics.</p>
+        </div>
+      </PageWrapper>
+    );
+  }
+
   return (
     <PageWrapper>
       {/* Top Header */}

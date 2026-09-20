@@ -64,6 +64,12 @@ const useOrgData = () => {
       update: true,
       delete: true,
     },
+    reports: {
+      view: true,
+      create: true,
+      update: true,
+      delete: true,
+    },
     settings: {
       view: true,
       create: true,

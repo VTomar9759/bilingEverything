@@ -23,6 +23,7 @@ import {
   PATH_ORDER_EDIT,
   PATH_BILLING,
   PATH_SETTINGS,
+  PATH_REPORTS,
 } from "./pathname";
 import ErrorElement from "../utils/ErrorElement";
 
@@ -37,6 +38,7 @@ const ROUTE_PERMISSION_MAP = {
   [PATH_ORDER_COMPOSER]: "orders",
   [PATH_ORDER_EDIT]: "orders",
   [PATH_BILLING]: "billing",
+  [PATH_REPORTS]: "reports",
 };
 
 const PublicRoute = ({ children, isAuthenticated, permissionDashboard }) => {

@@ -10,6 +10,7 @@ import {
   CreditCardOutlined,
   SettingOutlined,
   SafetyOutlined,
+  BarChartOutlined,
 } from "@ant-design/icons";
 
 export const MODULE_CONFIG = {
@@ -19,6 +20,7 @@ export const MODULE_CONFIG = {
   items_catalog: { label: "Items Catalog", icon: <ShoppingOutlined /> },
   billing: { label: "Billing", icon: <CreditCardOutlined /> },
   dashboard: { label: "Dashboard", icon: <DashboardOutlined /> },
+  reports: { label: "Reports & Analytics", icon: <BarChartOutlined /> },
   settings: { label: "Settings", icon: <SettingOutlined /> },
 };
 

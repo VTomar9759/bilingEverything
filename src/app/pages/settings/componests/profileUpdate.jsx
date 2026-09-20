@@ -2,8 +2,13 @@ import React from "react";
 import styled from "styled-components";
 import LogoUpdate from "./logoUpdate";
 import BulkAdd from "./BulkAdd";
+import useOrgData from "../../../hooks/useOrgData";
 
 const ProfileUpdate = () => {
+    const { org_id, userData, permission,user_role } = useOrgData();
+  const settingsPerm = permission?.settings;
+  const canUpdate = settingsPerm?.update ?? false;
+  const canDelete = settingsPerm?.delete ?? false;
   return (
     <SectionContainer>
       <SectionHeader>
@@ -16,7 +21,7 @@ const ProfileUpdate = () => {
       </SectionHeader>
 
       <LogoUpdate />
-      <BulkAdd/>
+      {user_role === "admingn" &&<BulkAdd/>}
     </SectionContainer>
   );
 };

@@ -31,6 +31,12 @@ import { PATH_LOGIN, PATH_LANDING } from "../routes/pathname";
     update: true,
     delete: true
   },
+  reports: {
+    view: true,
+    create: true,
+    update: true,
+    delete: true
+  },
   settings: {
     view: true,
     create: true,

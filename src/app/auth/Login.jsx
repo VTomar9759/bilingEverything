@@ -53,11 +53,14 @@ const Login = () => {
           .eq("id", targetOrgId)
           .maybeSingle();
 
+
         if (orgError) throw orgError;
 
         if (!orgData) {
           throw new Error("Organization data not found.");
         }
+
+      
 
         dispatch(
           logingAuth({
@@ -76,6 +79,8 @@ const Login = () => {
             org_id: targetOrgId,
           })
         );
+
+        
       } else {
         // Normal organization user
         const { data: user, error: userError } = await supabase
@@ -130,7 +135,7 @@ const Login = () => {
           form={form}
           layout="vertical"
           onFinish={handleSubmit}
-   
+
         >
           <Form.Item
             name="email"
