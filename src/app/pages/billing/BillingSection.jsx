@@ -20,7 +20,6 @@ import {
   GlobalOutlined,
 } from "@ant-design/icons";
 import { PAYMENT_MODE } from "../../utils/constant";
-import { fetchPrintSettings } from "../../store/slices/printSettingSlice";
 
 const { Option } = Select;
 
@@ -60,9 +59,8 @@ const BillingSection = () => {
       service.getSettings(org_id).then((res) => {
         if (res) setSettings(res);
       });
-      dispatch(fetchPrintSettings(org_id));
     }
-  }, [org_id, dispatch]);
+  }, [org_id]);
 
   useEffect(() => {
     if (activeOrder) {

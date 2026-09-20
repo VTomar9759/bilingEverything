@@ -28,7 +28,6 @@ import CategorySelecter from "../../../components/CategorySelecter";
 import * as service from "../../../services";
 import OrderInvoiceModal from "../../print/OrderInvoiceModal";
 import KOT from "../../print/KOT";
-import { fetchPrintSettings } from "../../store/slices/printSettingSlice";
 import { setShowCustomerDetails } from "../../store/slices/authSlices";
 
 const { Option } = Select;
@@ -65,9 +64,8 @@ const OrderEditPage = () => {
       service.getSettings(org_id).then((res) => {
         if (res) setSettings(res);
       });
-      dispatch(fetchPrintSettings(org_id));
     }
-  }, [org_id, dispatch]);
+  }, [org_id]);
 
   // Fetch the order to edit
   useEffect(() => {

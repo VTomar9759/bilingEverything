@@ -37,6 +37,7 @@ import {
   selectPrintSettings,
   selectPrintSettingsLoading,
   selectPrintSettingsSaving,
+  selectPrintSettingsFetched,
 } from "../../../store/slices/printSettingSlice";
 import { DEFAULT_PRINT_SETTINGS } from "../../../../services/printSettingsService";
 import { PRINT_SIZE_OPTIONS } from "../../../utils/constant";
@@ -52,16 +53,17 @@ const PrintSetting = () => {
   const canUpdate = settingsPerm?.update ?? true;
 
   const printSettings = useSelector(selectPrintSettings);
+  const printSettingsFetched = useSelector(selectPrintSettingsFetched);
   const loading = useSelector(selectPrintSettingsLoading);
   const saving = useSelector(selectPrintSettingsSaving);
 
   const [formValues, setFormValues] = useState(DEFAULT_PRINT_SETTINGS);
 
   useEffect(() => {
-    if (org_id) {
+    if (org_id && !printSettingsFetched) {
       dispatch(fetchPrintSettings(org_id));
     }
-  }, [org_id, dispatch]);
+  }, [org_id, printSettingsFetched, dispatch]);
 
   // Sync Redux settings to form when loaded
   useEffect(() => {

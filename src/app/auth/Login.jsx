@@ -6,6 +6,7 @@ import { PATH_SIGNUP, PATH_LANDING } from "../routes/pathname";
 import { supabase } from "../../lib/supabaseClients";
 import { useDispatch } from "react-redux";
 import { logingAuth } from "../store/slices/authSlices";
+import { fetchPrintSettings } from "../store/slices/printSettingSlice";
 import logo from "../../assets/logo.png";
 import { BrandTitle } from "../utils/commons_style";
 
@@ -53,14 +54,11 @@ const Login = () => {
           .eq("id", targetOrgId)
           .maybeSingle();
 
-
         if (orgError) throw orgError;
 
         if (!orgData) {
           throw new Error("Organization data not found.");
         }
-
-      
 
         dispatch(
           logingAuth({
@@ -80,7 +78,8 @@ const Login = () => {
           })
         );
 
-        
+        // Fetch organization print settings into printSettingSlice
+        dispatch(fetchPrintSettings(targetOrgId));
       } else {
         // Normal organization user
         const { data: user, error: userError } = await supabase
@@ -106,6 +105,9 @@ const Login = () => {
             org_id: data.user.id,
           })
         );
+
+        // Fetch organization print settings into printSettingSlice
+        dispatch(fetchPrintSettings(data.user.id));
       }
 
       message.success("Login successful");
