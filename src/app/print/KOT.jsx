@@ -465,7 +465,7 @@ const KOT = ({ visible, onClose, order, settings, isCombined = true }) => {
                         {invoiceFooter}
                       </p>
                     </ReceiptFooter>
-                    <DottedDivider className="dotted-divider" style={{ margin: "8px 0 12px 0" }} />
+                    <DottedDivider className="dotted-divider" style={{ margin: "6px 0 4px 0" }} />
                   </>
                 )}
 
@@ -531,9 +531,7 @@ const KOT = ({ visible, onClose, order, settings, isCombined = true }) => {
             <p style={{ textAlign: "center", fontWeight: 700, fontSize: "12px", margin: "4px 0 6px 0", color: "#000", textTransform: "uppercase" }}>
               -- Order Completed --
             </p>
-            <DottedDivider className="dotted-divider" style={{ margin: "4px 0 12px 0" }} />
-            {/* Feed spacing for thermal auto-cutter */}
-            <div style={{ height: "35px", width: "100%" }} className="cut-spacer" />
+            <DottedDivider className="dotted-divider" style={{ margin: "4px 0 4px 0" }} />
           </ReceiptPaper>
         </ReceiptOuter>
         <Space
@@ -582,7 +580,7 @@ const ReceiptPaper = styled.div`
   background: white;
   width: ${({ $paperWidth }) => ($paperWidth === "58mm" ? "210px" : "280px")};
   max-width: 100%;
-  padding: 10px 16px 20px 10px;
+  padding: 10px 16px 8px 10px;
   font-family: 'Segoe UI', 'Inter', 'Helvetica Neue', Arial, sans-serif;
   color: #1e293b;
   border-radius: 4px;

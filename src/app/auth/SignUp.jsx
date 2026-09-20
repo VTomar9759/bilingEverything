@@ -133,25 +133,7 @@ function SignUp() {
     <Wrapper>
       <Card>
         <CardHeader>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%", marginBottom: "8px" }}>
-            <Title style={{ margin: 0 }}>Create Account</Title>
-            <button
-              onClick={() => navigate(PATH_LANDING)}
-              style={{
-                background: "none",
-                border: "none",
-                color: "#00a389",
-                fontSize: "13px",
-                fontWeight: "600",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                gap: "4px"
-              }}
-            >
-              ← Back to Home
-            </button>
-          </div>
+          <Title>Create Account</Title>
           <SmallText>Fill in your details to get started</SmallText>
         </CardHeader>
 

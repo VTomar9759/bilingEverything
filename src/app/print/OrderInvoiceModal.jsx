@@ -554,11 +554,9 @@ const OrderInvoiceModal = ({ visible, onClose, order, settings }) => {
                     {invoiceFooter}
                   </p>
                 </ReceiptFooter>
-                <DottedDivider className="dotted-divider" style={{ margin: "8px 0 12px 0" }} />
+                <DottedDivider className="dotted-divider" style={{ margin: "6px 0 4px 0" }} />
               </>
             )}
-            {/* Feed spacing so thermal printer blade cuts below the horizontal line */}
-            <div style={{ height: "35px", width: "100%" }} className="cut-spacer" />
           </ReceiptPaper>
         </ReceiptOuter>
         <div
@@ -616,7 +614,7 @@ const ReceiptPaper = styled.div`
   background: white;
   width: ${({ $paperWidth }) => ($paperWidth === "58mm" ? "210px" : "280px")};
   max-width: 100%;
-  padding: 10px 16px 20px 10px;
+  padding: 10px 16px 8px 10px;
   font-family: 'Segoe UI', 'Inter', 'Helvetica Neue', Arial, sans-serif;
   color: #1e293b;
   border-radius: 4px;
