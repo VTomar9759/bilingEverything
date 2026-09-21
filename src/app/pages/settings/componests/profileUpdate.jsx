@@ -21,7 +21,7 @@ const ProfileUpdate = () => {
       </SectionHeader>
 
       <LogoUpdate />
-      {user_role === "admingn" &&<BulkAdd/>}
+      {user_role !== "admin" && <BulkAdd/>}
     </SectionContainer>
   );
 };
