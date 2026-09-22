@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled, { keyframes } from "styled-components";
-import { Button, Row, Col } from "antd";
+import { Button, Row, Col, Switch } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import { PATH_ADD_ITEM } from "../../routes/pathname";
 import TabHeader from "../../../components/TabHeader";
@@ -25,47 +25,43 @@ const ItemListing = () => {
   const [items, loading] = useItemStore({ search: "", filter: "" });
   const [data, setData] = useState([]);
   const [selectedCatId, setSelectedCatId] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [outOfStockOnly, setOutOfStockOnly] = useState(false);
 
   const handleSearch = (searchValue) => {
-    setSelectedCatId("all");
-    if (!searchValue) {
-      setData(items);
-      return;
-    }
-    const filtered = items?.filter(
-      (item) =>
-        item.name?.toLowerCase().includes(searchValue.toLowerCase()) ||
-        item.code?.toLowerCase().includes(searchValue.toLowerCase()),
-    );
-    setData(filtered);
+    setSearchQuery(searchValue || "");
   };
-    const handleOutOfStock=()=>{
-      const filtered = items?.filter((item) => !item?.status);
-      setData(filtered);
-    
-  } 
+
   const handleCategoryFilter = (catId) => {
     setSelectedCatId(catId);
-    if (catId === "all") {
-      setData(items);
-    } else {
-      const filtered = items?.filter((item) => item?.category_id === catId);
-      setData(filtered);
-    }
   };
 
   useEffect(() => {
     if (items) {
-      if (selectedCatId === "all") {
-        setData(items);
-      } else {
-        const filtered = items?.filter(
-          (item) => item?.category_id === selectedCatId,
+      let filtered = items;
+
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        filtered = filtered?.filter(
+          (item) =>
+            item.name?.toLowerCase().includes(query) ||
+            item.code?.toLowerCase().includes(query)
         );
-        setData(filtered);
       }
+
+      if (selectedCatId !== "all") {
+        filtered = filtered?.filter(
+          (item) => item?.category_id === selectedCatId
+        );
+      }
+
+      if (outOfStockOnly) {
+        filtered = filtered?.filter((item) => !item?.status);
+      }
+
+      setData(filtered);
     }
-  }, [items, selectedCatId]);
+  }, [items, selectedCatId, outOfStockOnly, searchQuery]);
 
   return (
     <PageWrapper>
@@ -83,7 +79,20 @@ const ItemListing = () => {
             onSearch={handleSearch}
             placeholder="Search by name or code..."
           />
-             <p onClick={handleOutOfStock}>Out of stock</p>
+          <ToggleWrapper onClick={() => setOutOfStockOnly((prev) => !prev)}>
+            <Switch
+              id="out-of-stock-toggle"
+              checked={outOfStockOnly}
+              onChange={(checked, e) => {
+                e?.stopPropagation?.();
+                setOutOfStockOnly(checked);
+              }}
+              size="small"
+            />
+            <ToggleLabel htmlFor="out-of-stock-toggle">
+              Out of stock
+            </ToggleLabel>
+          </ToggleWrapper>
           {canCreate && (
             <AddButton
               type="primary"
@@ -205,5 +214,32 @@ const AddButton = styled(Button)`
     transform: translateY(0) !important;
   }
 `;
+
+const ToggleWrapper = styled.div`
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px;
+  height: 32px;
+  background: var(--color-bg-container, #ffffff);
+  border: 1px solid var(--color-border, #d9d9d9);
+  border-radius: var(--radius-md, 6px);
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: var(--color-primary, #01514b);
+  }
+`;
+
+const ToggleLabel = styled.label`
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary, #595959);
+  cursor: pointer;
+  white-space: nowrap;
+`;
+
 
 
