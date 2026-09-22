@@ -305,11 +305,11 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           })}
         </NavSection>
         {/* Brand Watermark */}
-        <WatermarkContainer $isOpen={isOpen} title="BillingEveryThing">
-          <WatermarkLogo src={logo} alt="BillingEveryThing"/>
+        <WatermarkContainer $isOpen={isOpen} title="BillEveryThing">
+          <WatermarkLogo src={logo} alt="BillEveryThing"/>
           {isOpen && (
             <BrandTitle fontSize="12px" color="#fff">
-              Billing <span className="highlight">Every Thing</span>
+              Bill <span className="highlight">Every Thing</span>
             </BrandTitle>
           )}
         </WatermarkContainer>

@@ -135,7 +135,7 @@ export const triggerPrintReport = (reportTitle = "Report", elementId = "report-p
       </head>
       <body>
         <div style="margin-bottom: 20px; border-bottom: 2px solid #01514b; padding-bottom: 10px;">
-          <h2>BillingEveryThing - ${reportTitle}</h2>
+          <h2>BillEveryThing - ${reportTitle}</h2>
           <p style="font-size: 11px; color: #64748b;">Generated on: ${new Date().toLocaleString()}</p>
         </div>
         ${elem.innerHTML}

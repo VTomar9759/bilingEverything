@@ -128,7 +128,7 @@ const Login = () => {
             <img src={logo} alt="logo" className="image-box" />
           </LogoBadge>
           <BrandTitle onClick={() => navigate(PATH_LANDING)} style={{ cursor: "pointer" }} title="Go to Landing Page">
-            Billing <span className="highlight">Every Thing</span>
+            Bill <span className="highlight">Every Thing</span>
           </BrandTitle>
           <SmallText>Welcome back</SmallText>
         </CardHeader>

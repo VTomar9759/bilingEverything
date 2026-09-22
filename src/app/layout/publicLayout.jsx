@@ -17,8 +17,8 @@ const PublicLayout = () => {
       {/* Top Floating Nav to return to Landing Page */}
       <TopAuthNav>
         <NavBrand onClick={() => navigate(PATH_LANDING)}>
-          <img src={logo} alt="Billing EveryThing Logo" />
-          <span>Billing<span className="highlight">EveryThing</span></span>
+          <img src={logo} alt="Bill EveryThing Logo" />
+          <span>Bill<span className="highlight">EveryThing</span></span>
         </NavBrand>
         <BackToLandingBtn onClick={() => navigate(PATH_LANDING)}>
           ← Back to Home

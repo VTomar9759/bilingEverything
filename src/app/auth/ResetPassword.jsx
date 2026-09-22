@@ -64,7 +64,7 @@ const ResetPassword = () => {
             </button>
           </div>
           <BrandTitle onClick={() => navigate(PATH_LANDING)} style={{ cursor: "pointer" }}>
-            Billing <span className="highlight">Every Thing</span>
+            Bill <span className="highlight">Every Thing</span>
           </BrandTitle>
           <Title>Set New Password</Title>
           <SmallText>Please enter your new password below</SmallText>

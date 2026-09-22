@@ -18,7 +18,7 @@ const getHtmlTemplate = (actionLink: string, userEmail: string) => {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Reset Your Password - Billing Every Thing</title>
+  <title>Reset Your Password - Bill Every Thing</title>
   <style>
     body {
       margin: 0;
@@ -118,7 +118,7 @@ const getHtmlTemplate = (actionLink: string, userEmail: string) => {
 <body>
   <div class="container">
     <div class="header">
-      <h1>Billing Every Thing</h1>
+      <h1>Bill Every Thing</h1>
       <p>Restaurant & Business Management SaaS</p>
     </div>
     <div class="content">
@@ -141,7 +141,7 @@ const getHtmlTemplate = (actionLink: string, userEmail: string) => {
       </div>
     </div>
     <div class="footer">
-      &copy; ${new Date().getFullYear()} Billing Every Thing. All rights reserved.
+      &copy; ${new Date().getFullYear()} Bill Every Thing. All rights reserved.
     </div>
   </div>
 </body>
@@ -202,9 +202,9 @@ serve(async (req) => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          from: "Billing Every Thing <noreply@resend.dev>",
+          from: "Bill Every Thing <noreply@resend.dev>",
           to: [email],
-          subject: "Reset your Password - Billing Every Thing",
+          subject: "Reset your Password - Bill Every Thing",
           html: htmlContent,
         }),
       });

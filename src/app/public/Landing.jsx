@@ -1644,9 +1644,9 @@ const FaqAnswer = styled.div`
 
 const faqList = [
   {
-    question: "What is Billing Every Thing and how does it work?",
+    question: "What is Bill Every Thing and how does it work?",
     answer:
-      "Billing Every Thing is a complete cloud-based restaurant POS and billing management solution. It allows you to manage POS orders, table occupancy, kitchen order tickets (KOT), GST-compliant invoicing, menu items, and real-time sales reports all in one dashboard.",
+      "Bill Every Thing is a complete cloud-based restaurant POS and billing management solution. It allows you to manage POS orders, table occupancy, kitchen order tickets (KOT), GST-compliant invoicing, menu items, and real-time sales reports all in one dashboard.",
   },
   {
     question: "Can I generate GST-compliant invoices and print thermal receipts?",
@@ -1661,7 +1661,7 @@ const faqList = [
   {
     question: "Can my staff use the system on multiple devices simultaneously?",
     answer:
-      "Absolutely. Billing Every Thing supports role-based access for admins, cashiers, and kitchen managers. Your team can access the system simultaneously from desktops, tablets, or laptops.",
+      "Absolutely. Bill Every Thing supports role-based access for admins, cashiers, and kitchen managers. Your team can access the system simultaneously from desktops, tablets, or laptops.",
   },
   {
     question: "Is my data secure and backed up automatically?",
@@ -1715,9 +1715,9 @@ const Landing = () => {
         <NavContainer>
           {/* Logo */}
           <BrandLink onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
-            <LogoImg src={logo} alt="BillingEveryThing Logo" />
+            <LogoImg src={logo} alt="BillEveryThing Logo" />
             <BrandTitle>
-              Billing<span className="teal">EveryThing</span>
+              Bill<span className="teal">EveryThing</span>
             </BrandTitle>
           </BrandLink>
 
@@ -1875,7 +1875,7 @@ const Landing = () => {
 
                     <DashWatermark>
                       <img src={logo} alt="Logo" style={{ width: "16px", height: "16px" }} />
-                      <span>Billing Every Thing</span>
+                      <span>Bill Every Thing</span>
                     </DashWatermark>
                   </DashSidebar>
 
@@ -2033,7 +2033,7 @@ const Landing = () => {
               Run Your Restaurant From <span className="highlight">One Place</span>
             </SectionTitle>
             <SectionSub>
-              From the first order to the final bill, Billing Every Thing keeps your restaurant operations connected.
+              From the first order to the final bill, Bill Every Thing keeps your restaurant operations connected.
             </SectionSub>
           </SectionHeader>
 
@@ -2101,7 +2101,7 @@ const Landing = () => {
                 <Dot $bg="#ff5f56" />
                 <Dot $bg="#ffbd2e" />
                 <Dot $bg="#27c93f" />
-                <AddressBar>app.billingeverything.com/composer</AddressBar>
+                <AddressBar>app.billeverything.com/composer</AddressBar>
               </BrowserHeader>
 
               <PosMockupBody>
@@ -2368,7 +2368,7 @@ const Landing = () => {
               Frequently Asked <span className="highlight">Questions</span>
             </SectionTitle>
             <SectionSub>
-              Everything you need to know about Billing Every Thing and how it helps your restaurant.
+              Everything you need to know about Bill Every Thing and how it helps your restaurant.
             </SectionSub>
           </SectionHeader>
 
@@ -2402,7 +2402,7 @@ const Landing = () => {
             <div>
               <BrandLogoTitleRow>
                 <img src={logo} alt="BE" style={{ width: "36px", height: "36px" }} />
-                <span className="brand-name">Billing<span className="highlight">EveryThing</span></span>
+                <span className="brand-name">Bill<span className="highlight">EveryThing</span></span>
               </BrandLogoTitleRow>
 
               <DarkEyebrowBadge>GET STARTED TODAY</DarkEyebrowBadge>
@@ -2472,7 +2472,7 @@ const Landing = () => {
             <div>
               <FooterBrandRow onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
                 <img src={logo} alt="BE" style={{ width: "24px", height: "24px" }} />
-                <span className="title">Billing<span className="highlight">EveryThing</span></span>
+                <span className="title">Bill<span className="highlight">EveryThing</span></span>
               </FooterBrandRow>
               <FooterTagline>Restaurant management made simple.</FooterTagline>
             </div>
@@ -2522,7 +2522,7 @@ const Landing = () => {
           </FooterMainGrid>
 
           <FooterBottomRow>
-            <div>© 2026 Billing Every Thing. All rights reserved.</div>
+            <div>© 2026 Bill Every Thing. All rights reserved.</div>
             <SocialLinksRow>
               <span>f</span>
               <span>X</span>

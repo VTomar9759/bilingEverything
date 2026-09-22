@@ -36,7 +36,7 @@ const PrivateLayout = () => {
                     </MobileHamburgerBtn>
                     <MobileBrand>
                         <MobileBrandLogo src={logo} alt="Logo" />
-                        <MobileBrandTitle>{userData?.business_name || "BillingEveryThing"}</MobileBrandTitle>
+                        <MobileBrandTitle>{userData?.business_name || "BillEveryThing"}</MobileBrandTitle>
                     </MobileBrand>
                 </MobileHeader>
 
