@@ -10,9 +10,9 @@ export default defineConfig({
       registerType: "autoUpdate",
       includeAssets: ["favicon.ico", "apple-touch-icon.png", "mask-icon.svg"],
       manifest: {
-        name: "CMS",
-        short_name: "CMS",
-        description: "Modern Food Management System CMS",
+        name: "Bill Everything",
+        short_name: "Bill Everything",
+        description: "Modern Food Management System - Bill Everything",
         theme_color: "#ffffff",
         icons: [
           {

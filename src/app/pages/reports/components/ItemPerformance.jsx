@@ -6,29 +6,42 @@ import { formatCurrency } from "../utils/reportUtils";
 
 const ItemPerformance = ({ orders = [], itemsCatalog = [], categories = [], currency = "₹" }) => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [selectedCategory, setSelectedCategory] = useState(undefined);
 
   const itemStats = useMemo(() => {
     const map = {};
 
-    // Map item catalog costs
+    // Map item catalog costs and categories
     const itemCostMap = {};
+    const itemCategoryMap = {};
     (itemsCatalog || []).forEach((item) => {
       const cost = Number(item.cost_price || item.cost || item.purchase_price || 0);
-      if (item.id) itemCostMap[item.id] = cost;
-      if (item.name) itemCostMap[item.name.toLowerCase()] = cost;
+      const cat = item.category || item.category_name;
+      if (item.id) {
+        itemCostMap[item.id] = cost;
+        if (cat) itemCategoryMap[item.id] = cat;
+      }
+      if (item.name) {
+        itemCostMap[item.name.toLowerCase()] = cost;
+        if (cat) itemCategoryMap[item.name.toLowerCase()] = cat;
+      }
     });
 
     orders.forEach((o) => {
       if (o.status === "Cancelled") return;
       (o.items || []).forEach((item) => {
         const name = item.name || item.item_name || "Unknown Item";
-        const cat = item.category || item.category_name || "General";
+        const itemId = item.id || item.item_id;
+        const itemNameLower = name.toLowerCase();
+        const cat =
+          item.category ||
+          item.category_name ||
+          itemCategoryMap[itemId] ||
+          itemCategoryMap[itemNameLower] ||
+          "General";
         const qty = Number(item.quantity || item.qty || 1);
         const price = Number(item.price || 0);
         const rev = qty * price;
-        const itemId = item.id || item.item_id;
-        const itemNameLower = name.toLowerCase();
         const costPrice =
           Number(item.cost_price || item.cost) ||
           itemCostMap[itemId] ||
@@ -66,11 +79,28 @@ const ItemPerformance = ({ orders = [], itemsCatalog = [], categories = [], curr
     return list;
   }, [orders, itemsCatalog]);
 
+  const categoryOptions = useMemo(() => {
+    const set = new Set();
+    (categories || []).forEach((c) => {
+      const name = typeof c === "object" ? c.name || c.title || c.category_name : c;
+      if (name && typeof name === "string") set.add(name);
+    });
+    itemStats.forEach((item) => {
+      if (item.category) set.add(item.category);
+    });
+    return Array.from(set).map((cat) => ({
+      label: cat,
+      value: cat,
+    }));
+  }, [categories, itemStats]);
+
   const filteredItems = useMemo(() => {
     return itemStats.filter((item) => {
       const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesCategory =
-        selectedCategory === "All" || item.category === selectedCategory;
+        !selectedCategory ||
+        selectedCategory === "All" ||
+        item.category?.toLowerCase() === selectedCategory?.toLowerCase();
       return matchesSearch && matchesCategory;
     });
   }, [itemStats, searchTerm, selectedCategory]);
@@ -162,13 +192,17 @@ const ItemPerformance = ({ orders = [], itemsCatalog = [], categories = [], curr
             style={{ width: 180 }}
           />
           <Select
+            showSearch
+            allowClear
             value={selectedCategory}
-            onChange={setSelectedCategory}
-            style={{ width: 150 }}
-            options={[
-              { label: "All Categories", value: "All" },
-              ...(categories || []).map((c) => ({ label: c.name || c, value: c.name || c })),
-            ]}
+            onChange={(val) => setSelectedCategory(val)}
+            style={{ width: 170 }}
+            placeholder="All Categories"
+            optionFilterProp="label"
+            filterOption={(input, option) =>
+              (option?.label ?? "").toLowerCase().includes(input.toLowerCase())
+            }
+            options={categoryOptions}
           />
         </FiltersRow>
       </CardHeader>
@@ -218,6 +252,7 @@ const ItemPerformance = ({ orders = [], itemsCatalog = [], categories = [], curr
         rowKey="name"
         pagination={{ pageSize: 8 }}
         size="small"
+        scroll={{ x: "max-content" }}
       />
     </CardContainer>
   );
@@ -231,6 +266,10 @@ const CardContainer = styled.div`
   border-radius: 12px;
   padding: 20px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+
+  @media (max-width: 720px) {
+    padding: 12px 10px;
+  }
 `;
 
 const CardHeader = styled.div`

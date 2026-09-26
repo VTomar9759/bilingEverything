@@ -9,7 +9,12 @@ export const SIDEBAR_OPEN_WIDTH = 230;
 export const SIDEBAR_CLOSED_WIDTH = 70;
 
 const PrivateLayout = () => {
-    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(() => {
+        if (typeof window !== "undefined") {
+            return window.innerWidth > 720;
+        }
+        return true;
+    });
     const { userData } = useOrgData();
 
     const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);

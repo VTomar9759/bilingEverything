@@ -185,6 +185,7 @@ const GstTaxReport = ({ orders = [], currency = "₹", gstin = "" }) => {
           columns={columns}
           pagination={{ pageSize: 8 }}
           size="small"
+          scroll={{ x: "max-content" }}
         />
       </div>
     </CardContainer>
@@ -199,6 +200,10 @@ const CardContainer = styled.div`
   border-radius: 12px;
   padding: 20px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+
+  @media (max-width: 720px) {
+    padding: 12px 10px;
+  }
 `;
 
 const CardHeader = styled.div`

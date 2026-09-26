@@ -9,9 +9,17 @@ const CATEGORY_ICONS = {
   "Electricity": "⚡",
   "Gas": "🔥",
   "Packaging": "📦",
+  "Kitchen Supplies": "🍳",
+  "Cleaning & Hygiene": "🧹",
+  "Water & Utilities": "💧",
   "Maintenance": "🛠️",
   "Marketing": "📢",
   "Transportation": "🚚",
+  "POS & Software": "💻",
+  "Licenses & Legal": "📜",
+  "Spoilage & Wastage": "🗑️",
+  "Crockery & Cutlery": "🍽️",
+  "Uniforms": "👔",
   "Other": "📝",
 };
 
@@ -22,9 +30,17 @@ const CATEGORY_COLORS = {
   "Electricity": "#f59e0b",
   "Gas": "#ef4444",
   "Packaging": "#ec4899",
-  "Maintenance": "#14b8a6",
+  "Kitchen Supplies": "#14b8a6",
+  "Cleaning & Hygiene": "#0ea5e9",
+  "Water & Utilities": "#0284c7",
+  "Maintenance": "#d97706",
   "Marketing": "#06b6d4",
   "Transportation": "#6366f1",
+  "POS & Software": "#4f46e5",
+  "Licenses & Legal": "#a855f7",
+  "Spoilage & Wastage": "#e11d48",
+  "Crockery & Cutlery": "#ca8a04",
+  "Uniforms": "#475569",
   "Other": "#64748b",
 };
 
@@ -40,18 +56,21 @@ const ExpenseBreakdownCard = ({ expenses = [], currency = "₹" }) => {
       total += amt;
     });
 
-    const categoriesList = Object.keys(CATEGORY_COLORS);
-    const items = categoriesList.map((cat) => {
-      const amt = map[cat] || 0;
-      const pct = total > 0 ? Math.round((amt / total) * 100) : 0;
-      return {
-        name: cat,
-        amount: amt,
-        pct,
-        icon: CATEGORY_ICONS[cat] || "📝",
-        color: CATEGORY_COLORS[cat] || "#64748b",
-      };
-    }).sort((a, b) => b.amount - a.amount);
+    const allCatKeys = Array.from(new Set([...Object.keys(CATEGORY_COLORS), ...Object.keys(map)]));
+    const items = allCatKeys
+      .map((cat) => {
+        const amt = map[cat] || 0;
+        const pct = total > 0 ? Math.round((amt / total) * 100) : 0;
+        return {
+          name: cat,
+          amount: amt,
+          pct,
+          icon: CATEGORY_ICONS[cat] || "📝",
+          color: CATEGORY_COLORS[cat] || "#64748b",
+        };
+      })
+      .filter((item) => item.amount > 0)
+      .sort((a, b) => b.amount - a.amount);
 
     return { total, items };
   }, [expenses]);
@@ -64,23 +83,27 @@ const ExpenseBreakdownCard = ({ expenses = [], currency = "₹" }) => {
       </CardHeader>
 
       <List>
-        {breakdown.items.map((item, idx) => (
-          <Row key={idx}>
-            <RowTop>
-              <NameGroup>
-                <IconWrap>{item.icon}</IconWrap>
-                <ItemName>{item.name}</ItemName>
-              </NameGroup>
-              <ValueGroup>
-                <ItemAmount>{formatCurrency(item.amount, currency)}</ItemAmount>
-                <ItemPct>{item.pct}%</ItemPct>
-              </ValueGroup>
-            </RowTop>
-            <ProgressBarBg>
-              <ProgressBarFill $color={item.color} $width={`${item.pct}%`} />
-            </ProgressBarBg>
-          </Row>
-        ))}
+        {breakdown.items.length === 0 ? (
+          <EmptySubText>No expenses recorded for this period</EmptySubText>
+        ) : (
+          breakdown.items.map((item, idx) => (
+            <Row key={idx}>
+              <RowTop>
+                <NameGroup>
+                  <IconWrap>{item.icon}</IconWrap>
+                  <ItemName>{item.name}</ItemName>
+                </NameGroup>
+                <ValueGroup>
+                  <ItemAmount>{formatCurrency(item.amount, currency)}</ItemAmount>
+                  <ItemPct>{item.pct}%</ItemPct>
+                </ValueGroup>
+              </RowTop>
+              <ProgressBarBg>
+                <ProgressBarFill $color={item.color} $width={`${item.pct}%`} />
+              </ProgressBarBg>
+            </Row>
+          ))
+        )}
       </List>
     </CardContainer>
   );
@@ -120,17 +143,6 @@ const List = styled.div`
   display: flex;
   flex-direction: column;
   gap: 10px;
-  max-height: 280px;
-  overflow-y: auto;
-  padding-right: 4px;
-
-  &::-webkit-scrollbar {
-    width: 4px;
-  }
-  &::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 4px;
-  }
 `;
 
 const Row = styled.div`
@@ -195,4 +207,11 @@ const ProgressBarFill = styled.div`
   width: ${({ $width }) => $width};
   border-radius: 3px;
   transition: width 0.4s ease;
+`;
+
+const EmptySubText = styled.p`
+  font-size: 12px;
+  color: #94a3b8;
+  margin: 8px 0;
+  text-align: center;
 `;

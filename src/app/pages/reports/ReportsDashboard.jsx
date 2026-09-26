@@ -37,7 +37,6 @@ import {
 const { RangePicker } = DatePicker;
 
 const TABS = [
-  { key: "Overview", label: "Overview" },
   { key: "Sales", label: "Sales" },
   { key: "Profit & Loss", label: "Profit & Loss" },
   { key: "Expenses", label: "Expenses" },
@@ -51,7 +50,7 @@ const TABS = [
 
 const ReportsDashboard = () => {
   const { org_id, created_by, userData, permission, user_role, gstin } = useOrgData();
-  const [activeTab, setActiveTab] = useState("Overview");
+  const [activeTab, setActiveTab] = useState("Sales");
 
   // Filter states
   const [dateRange, setDateRange] = useState(DATE_RANGES.THIS_MONTH);
@@ -324,19 +323,7 @@ const ReportsDashboard = () => {
           </EmptyContainer>
         ) : (
           <TabContentWrapper>
-            {/* 1. OVERVIEW TAB */}
-            {activeTab === "Overview" && (
-              <ContentColumn>
-                <SummaryCards summaryData={summaryData} currency={currency} loading={loading} />
-                <SalesProfitChart orders={filteredOrders} expenses={filteredExpenses} currency={currency} />
-                <TwoColGrid>
-                  <RevenueBreakdownCard orders={filteredOrders} categories={categories} currency={currency} />
-                  <ExpenseBreakdownCard expenses={filteredExpenses} currency={currency} />
-                </TwoColGrid>
-              </ContentColumn>
-            )}
-
-            {/* 2. SALES TAB */}
+            {/* 1. SALES TAB */}
             {activeTab === "Sales" && (
               <ContentColumn>
                 <SummaryCards summaryData={summaryData} currency={currency} loading={loading} />
@@ -497,15 +484,6 @@ const ContentColumn = styled.div`
   gap: 16px;
 `;
 
-const TwoColGrid = styled.div`
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-
-  @media (max-width: 900px) {
-    grid-template-columns: 1fr;
-  }
-`;
 
 const SpinnerContainer = styled.div`
   display: flex;

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import styled from "styled-components";
-import { Modal, Button, Form, Input, Select, DatePicker, message, Table, Popconfirm } from "antd";
-import { PlusOutlined, EditOutlined, DeleteOutlined, PaperClipOutlined } from "@ant-design/icons";
+import { Modal, Button, Form, Input, Select, DatePicker, message, Table } from "antd";
+import { PlusOutlined, EditOutlined, DeleteOutlined, PaperClipOutlined, ExclamationCircleOutlined } from "@ant-design/icons";
 import { addExpense, updateExpense, deleteExpense } from "../../../../services/expenseService";
 import { formatCurrency } from "../utils/reportUtils";
 import dayjs from "dayjs";
@@ -13,9 +13,17 @@ const EXPENSE_CATEGORIES = [
   "Electricity",
   "Gas",
   "Packaging",
+  "Kitchen Supplies",
+  "Cleaning & Hygiene",
+  "Water & Utilities",
   "Maintenance",
   "Marketing",
   "Transportation",
+  "POS & Software",
+  "Licenses & Legal",
+  "Spoilage & Wastage",
+  "Crockery & Cutlery",
+  "Uniforms",
   "Other",
 ];
 
@@ -26,7 +34,7 @@ const ExpenseManagement = ({ expenses = [], onRefresh, org_id, created_by, curre
   const [editingExpense, setEditingExpense] = useState(null);
   const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
-  const [categoryFilter, setCategoryFilter] = useState("All");
+  const [categoryFilter, setCategoryFilter] = useState(undefined);
 
   const canEdit = permission.update !== false && permission.create !== false;
 
@@ -94,7 +102,29 @@ const ExpenseManagement = ({ expenses = [], onRefresh, org_id, created_by, curre
     }
   };
 
-  const filteredExpenses = categoryFilter === "All"
+  const showDeleteConfirm = (record) => {
+    Modal.confirm({
+      title: "Delete Expense",
+      icon: <ExclamationCircleOutlined style={{ color: "#ef4444" }} />,
+      content: (
+        <div>
+          <p style={{ margin: "4px 0" }}>Are you sure you want to delete this expense record?</p>
+          <div style={{ marginTop: 8, padding: "8px 12px", background: "#f8fafc", borderRadius: 6, fontSize: 12 }}>
+            <strong>{record.category || "Expense"}</strong>: {formatCurrency(record.amount, currency)}
+            {record.description && <div style={{ color: "#64748b", marginTop: 2 }}>{record.description}</div>}
+          </div>
+        </div>
+      ),
+      okText: "Yes, Delete",
+      okButtonProps: { danger: true },
+      cancelText: "Cancel",
+      onOk() {
+        return handleDelete(record.id);
+      },
+    });
+  };
+
+  const filteredExpenses = !categoryFilter || categoryFilter === "All"
     ? expenses
     : expenses.filter((e) => e.category === categoryFilter);
 
@@ -152,17 +182,13 @@ const ExpenseManagement = ({ expenses = [], onRefresh, org_id, created_by, curre
             </IconButton>
           )}
           {canEdit && (
-            <Popconfirm
-              title="Delete expense?"
-              description="Are you sure you want to delete this expense?"
-              onConfirm={() => handleDelete(record.id)}
-              okText="Yes"
-              cancelText="No"
+            <IconButton
+              title="Delete"
+              $danger
+              onClick={() => showDeleteConfirm(record)}
             >
-              <IconButton title="Delete" $danger>
-                <DeleteOutlined />
-              </IconButton>
-            </Popconfirm>
+              <DeleteOutlined />
+            </IconButton>
           )}
         </ActionGroup>
       ),
@@ -178,13 +204,17 @@ const ExpenseManagement = ({ expenses = [], onRefresh, org_id, created_by, curre
         </div>
         <ControlsGroup>
           <Select
+            showSearch
+            allowClear
             value={categoryFilter}
-            onChange={setCategoryFilter}
-            style={{ width: 150 }}
-            options={[
-              { label: "All Categories", value: "All" },
-              ...EXPENSE_CATEGORIES.map((cat) => ({ label: cat, value: cat })),
-            ]}
+            onChange={(val) => setCategoryFilter(val)}
+            style={{ width: 170 }}
+            placeholder="All Categories"
+            optionFilterProp="label"
+            filterOption={(input, option) =>
+              (option?.label ?? "").toLowerCase().includes(input.toLowerCase())
+            }
+            options={EXPENSE_CATEGORIES.map((cat) => ({ label: cat, value: cat }))}
           />
           {canEdit && (
             <Button
@@ -205,6 +235,7 @@ const ExpenseManagement = ({ expenses = [], onRefresh, org_id, created_by, curre
         rowKey="id"
         pagination={{ pageSize: 8 }}
         size="small"
+        scroll={{ x: "max-content" }}
       />
 
       {/* Add / Edit Expense Modal */}
@@ -229,7 +260,14 @@ const ExpenseManagement = ({ expenses = [], onRefresh, org_id, created_by, curre
             label="Category"
             rules={[{ required: true, message: "Please select category" }]}
           >
-            <Select>
+            <Select
+              showSearch
+              placeholder="Search or select category"
+              optionFilterProp="children"
+              filterOption={(input, option) =>
+                (option?.children ?? "").toLowerCase().includes(input.toLowerCase())
+              }
+            >
               {EXPENSE_CATEGORIES.map((cat) => (
                 <Select.Option key={cat} value={cat}>
                   {cat}
@@ -292,6 +330,10 @@ const CardContainer = styled.div`
   border-radius: 12px;
   padding: 20px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+
+  @media (max-width: 720px) {
+    padding: 12px 10px;
+  }
 `;
 
 const CardHeader = styled.div`

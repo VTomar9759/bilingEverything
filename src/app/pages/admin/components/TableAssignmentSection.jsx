@@ -86,7 +86,9 @@ const TableAssignmentSection = ({
         ) : (
           <TableGrid>
             {tables.map((table) => {
-              const tableName = table.table_number || table.name || `Table ${table.id}`;
+              const num = (table.table_number || table.code || "").trim();
+              const nameStr = (table.table_name || table.name || "").trim();
+              const tableName = num && nameStr ? (nameStr.toLowerCase().startsWith(num.toLowerCase()) ? nameStr : `${num} ${nameStr}`) : (num || nameStr || "Table");
               const isAssignedToCurrent = table.branch_permission === currentAdminId;
               const otherAssignedAdmin = !isAssignedToCurrent && table.branch_permission
                 ? admins.find((a) => a.id === table.branch_permission)
