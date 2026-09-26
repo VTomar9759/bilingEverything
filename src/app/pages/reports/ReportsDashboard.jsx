@@ -405,6 +405,7 @@ const ReportsDashboard = () => {
                 <StaffPerformance
                   orders={filteredOrders}
                   admins={adminsList}
+                  userData={userData}
                   currency={currency}
                   permission={permission}
                   user_role={user_role}

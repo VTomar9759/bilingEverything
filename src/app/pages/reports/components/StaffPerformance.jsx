@@ -1,423 +1,490 @@
-import React, { useState, useMemo } from "react";
+import React, { useMemo } from "react";
 import styled from "styled-components";
-import { Input, Table, Tag } from "antd";
-import { SearchOutlined, UserOutlined, TrophyOutlined, ShoppingOutlined, DollarOutlined } from "@ant-design/icons";
 import { formatCurrency } from "../utils/reportUtils";
 
-const StaffPerformance = ({ orders = [], admins = [], currency = "₹" }) => {
-  const [searchTerm, setSearchTerm] = useState("");
+const isUuid = (str) =>
+  typeof str === "string" &&
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str.trim());
+
+const getInitials = (name = "") => {
+  if (!name) return "ST";
+  const parts = name.trim().split(" ");
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+  return name.slice(0, 2).toUpperCase();
+};
+
+const StaffPerformance = ({
+  orders = [],
+  admins = [],
+  userData = null,
+  currency = "₹",
+  permission = {},
+  user_role = "",
+}) => {
+  const isAuthorized =
+    user_role === "owner" || user_role === "super_admin" || permission.reports?.view !== false;
 
   const staffStats = useMemo(() => {
     const map = {};
 
-    // First, map known admins / staff members
-    (admins || []).forEach((admin) => {
-      const id = admin.id || admin._id || admin.user_id || admin.email;
-      const key = String(id || admin.name || "unknown").toLowerCase();
+    // 1. Populate map with known admins
+    (admins || []).forEach((a) => {
+      const name = a.name || a.email || "Admin";
+      const key = a.id || a.user_id || a.auth_id || a.email || name;
       map[key] = {
-        id: admin.id || key,
-        name: admin.name || admin.email || admin.username || "Staff Member",
-        email: admin.email || "-",
-        role: admin.role || admin.user_role || "Staff",
-        ordersCount: 0,
-        revenue: 0,
+        id: a.id || key,
+        name,
+        email: a.email || "",
+        orders: 0,
+        sales: 0,
+        discounts: 0,
+        cancelled: 0,
+        refunds: 0,
       };
     });
 
-    // Process orders
+    // 2. Add logged-in owner/user details if available
+    if (userData) {
+      const primaryName =
+        userData.name || userData.full_name || userData.business_name || userData.email || "Primary Admin";
+      const primaryKey = userData.id || userData.created_by || "primary_admin";
+      let existingKey = Object.keys(map).find(
+        (k) =>
+          k === primaryKey ||
+          map[k]?.email?.toLowerCase() === userData.email?.toLowerCase() ||
+          map[k]?.name?.toLowerCase() === primaryName.toLowerCase()
+      );
+
+      if (!existingKey) {
+        map[primaryKey] = {
+          id: primaryKey,
+          name: primaryName,
+          email: userData.email || "",
+          orders: 0,
+          sales: 0,
+          discounts: 0,
+          cancelled: 0,
+          refunds: 0,
+        };
+      }
+    }
+
+    // 3. Process orders
     orders.forEach((o) => {
-      if (o.status === "Cancelled") return;
+      const rawId = o.created_by || o.user_id;
+      const rawName = o.biller_name || o.created_by_name || o.user_name || o.staff_name;
+      const rawEmail = o.created_by_email || o.user_email || "";
 
-      const creatorId = String(
-        o.created_by ||
-        o.user_id ||
-        o.admin_id ||
-        o.staff_id ||
-        o.waiter_id ||
-        ""
-      ).toLowerCase();
+      let targetKey = null;
 
-      const creatorName =
-        o.created_by_name ||
-        o.staff_name ||
-        o.waiter_name ||
-        o.server_name ||
-        o.user_name ||
-        o.creator_name ||
-        "";
-
-      let matchedKey = null;
-
-      // Try matching by ID or email/name
-      if (creatorId && map[creatorId]) {
-        matchedKey = creatorId;
-      } else if (creatorName) {
-        const lowerName = creatorName.toLowerCase();
-        matchedKey = Object.keys(map).find(
-          (k) => k === lowerName || map[k].name.toLowerCase() === lowerName
+      // Check if rawId or rawName matches an existing map key
+      if (rawId && map[rawId]) {
+        targetKey = rawId;
+      } else if (rawName && map[rawName]) {
+        targetKey = rawName;
+      } else {
+        // Check if rawId or rawName matches an admin
+        const foundAdmin = (admins || []).find(
+          (a) =>
+            (rawId && (a.id === rawId || a.user_id === rawId || a.auth_id === rawId || a.created_by === rawId)) ||
+            (rawName && (a.name === rawName || a.email === rawName)) ||
+            (rawEmail && a.email?.toLowerCase() === rawEmail.toLowerCase())
         );
+
+        if (foundAdmin) {
+          targetKey = foundAdmin.id || foundAdmin.user_id || foundAdmin.auth_id || foundAdmin.email || foundAdmin.name;
+        } else if (
+          userData &&
+          ((rawId && (userData.id === rawId || userData.org_id === rawId || userData.created_by === rawId)) ||
+            (rawName && (userData.name === rawName || userData.email === rawName)) ||
+            (rawEmail && userData.email?.toLowerCase() === rawEmail.toLowerCase()))
+        ) {
+          targetKey = userData.id || userData.created_by || "primary_admin";
+        }
       }
 
-      const total = Number(o.total || 0);
+      if (!targetKey) {
+        // Determine a clean display name when not matched to admin/userData
+        let displayName = rawName;
+        let displayEmail = rawEmail;
 
-      if (matchedKey) {
-        map[matchedKey].ordersCount += 1;
-        map[matchedKey].revenue += total;
-      } else {
-        // Fallback key if staff is not in admins list or unnamed creator
-        const fallbackName = creatorName || (creatorId ? `User (${creatorId.slice(0, 8)})` : "General / Direct");
-        const fallbackKey = `unmapped_${fallbackName.toLowerCase()}`;
+        if (!displayName || isUuid(displayName)) {
+          if (rawName && !isUuid(rawName)) {
+            displayName = rawName;
+          } else if (rawId && !isUuid(rawId)) {
+            displayName = rawId;
+          } else {
+            // It is a raw UUID and no admin/user match was found
+            displayName = rawEmail ? rawEmail.split("@")[0] : "Staff Member";
+          }
+        }
 
-        if (!map[fallbackKey]) {
-          map[fallbackKey] = {
-            id: fallbackKey,
-            name: fallbackName,
-            email: "-",
-            role: creatorName ? "Staff" : "System / Direct",
-            ordersCount: 0,
-            revenue: 0,
+        targetKey = rawId || rawName || displayName;
+
+        if (!map[targetKey]) {
+          map[targetKey] = {
+            id: targetKey,
+            name: displayName,
+            email: displayEmail,
+            orders: 0,
+            sales: 0,
+            discounts: 0,
+            cancelled: 0,
+            refunds: 0,
           };
         }
-        map[fallbackKey].ordersCount += 1;
-        map[fallbackKey].revenue += total;
       }
-    });
 
-    const list = Object.values(map);
-
-    const totalRevenue = list.reduce((sum, item) => sum + item.revenue, 0);
-    const totalOrders = list.reduce((sum, item) => sum + item.ordersCount, 0);
-
-    const activeStaffCount = list.filter((item) => item.ordersCount > 0).length;
-
-    // Find top performer by revenue
-    let topPerformer = null;
-    let maxRev = -1;
-    list.forEach((item) => {
-      if (item.revenue > maxRev && item.ordersCount > 0) {
-        maxRev = item.revenue;
-        topPerformer = item;
+      const target = map[targetKey];
+      const st = (o.status || "").toLowerCase();
+      if (st === "cancelled") {
+        target.cancelled++;
+        return;
       }
+      if (st === "refunded") {
+        target.refunds += Number(o.total || 0);
+        return;
+      }
+
+      target.orders++;
+      target.sales += Number(o.total || 0);
+      target.discounts += Number(o.discount || 0);
     });
 
-    // Add calculations (AOV, contribution %)
-    const enrichedList = list.map((item) => {
-      const aov = item.ordersCount > 0 ? item.revenue / item.ordersCount : 0;
-      const contribution = totalRevenue > 0 ? (item.revenue / totalRevenue) * 100 : 0;
-      return {
-        ...item,
-        aov,
-        contribution,
-      };
-    });
+    // Return entries that have activity or belong to registered admins
+    return Object.values(map)
+      .filter((s) => s.orders > 0 || s.cancelled > 0 || s.sales > 0 || (admins || []).some((a) => a.name === s.name))
+      .sort((a, b) => b.sales - a.sales);
+  }, [orders, admins, userData]);
 
-    enrichedList.sort((a, b) => b.revenue - a.revenue || b.ordersCount - a.ordersCount);
+  const topPerformer = staffStats[0] || null;
+  const totalOrdersHandled = staffStats.reduce((acc, s) => acc + s.orders, 0);
+  const totalStaffSales = staffStats.reduce((acc, s) => acc + s.sales, 0);
 
-    return {
-      list: enrichedList,
-      totalRevenue,
-      totalOrders,
-      activeStaffCount,
-      totalStaffCount: list.length,
-      topPerformer,
-    };
-  }, [orders, admins]);
-
-  const filteredList = useMemo(() => {
-    if (!searchTerm.trim()) return staffStats.list;
-    const q = searchTerm.toLowerCase();
-    return staffStats.list.filter(
-      (item) =>
-        item.name.toLowerCase().includes(q) ||
-        item.email.toLowerCase().includes(q) ||
-        item.role.toLowerCase().includes(q)
+  if (!isAuthorized) {
+    return (
+      <CardContainer>
+        <LockNotice>
+          🔒 You do not have permission to view staff performance metrics.
+        </LockNotice>
+      </CardContainer>
     );
-  }, [staffStats.list, searchTerm]);
-
-  const columns = [
-    {
-      title: "Staff Member",
-      dataIndex: "name",
-      key: "name",
-      render: (text, record) => (
-        <StaffCell>
-          <AvatarBadge>
-            <UserOutlined />
-          </AvatarBadge>
-          <div>
-            <StaffName>{text}</StaffName>
-            {record.email !== "-" && <StaffEmail>{record.email}</StaffEmail>}
-          </div>
-        </StaffCell>
-      ),
-    },
-    {
-      title: "Role",
-      dataIndex: "role",
-      key: "role",
-      render: (role) => {
-        let color = "blue";
-        const r = (role || "").toLowerCase();
-        if (r.includes("admin") || r.includes("owner")) color = "purple";
-        else if (r.includes("manager")) color = "cyan";
-        else if (r.includes("waiter") || r.includes("server")) color = "green";
-        else if (r.includes("cashier")) color = "orange";
-        return <Tag color={color}>{role.toUpperCase()}</Tag>;
-      },
-    },
-    {
-      title: "Orders Handled",
-      dataIndex: "ordersCount",
-      key: "ordersCount",
-      align: "center",
-      sorter: (a, b) => a.ordersCount - b.ordersCount,
-      render: (val) => <NumberBadge>{val}</NumberBadge>,
-    },
-    {
-      title: "Total Sales",
-      dataIndex: "revenue",
-      key: "revenue",
-      align: "right",
-      sorter: (a, b) => a.revenue - b.revenue,
-      render: (val) => <SalesText>{formatCurrency(val, currency)}</SalesText>,
-    },
-    {
-      title: "Avg Order Value (AOV)",
-      dataIndex: "aov",
-      key: "aov",
-      align: "right",
-      sorter: (a, b) => a.aov - b.aov,
-      render: (val) => formatCurrency(val, currency),
-    },
-    {
-      title: "Sales Share",
-      dataIndex: "contribution",
-      key: "contribution",
-      align: "right",
-      sorter: (a, b) => a.contribution - b.contribution,
-      render: (val) => (
-        <ProgressCell>
-          <ProgressBarWrapper>
-            <ProgressBarFill $pct={Math.min(100, val)} />
-          </ProgressBarWrapper>
-          <PctText>{val.toFixed(1)}%</PctText>
-        </ProgressCell>
-      ),
-    },
-  ];
+  }
 
   return (
-    <Container>
-      <MetricsGrid>
-        <MetricCard>
-          <MetricIcon $bg="#e0f2fe" $color="#0284c7">
-            <UserOutlined />
-          </MetricIcon>
-          <MetricContent>
-            <MetricLabel>Active Staff</MetricLabel>
-            <MetricValue>{staffStats.activeStaffCount} / {staffStats.totalStaffCount}</MetricValue>
-          </MetricContent>
-        </MetricCard>
+    <CardContainer>
+      <CardHeader>
+        <div>
+          <Title>Staff Performance</Title>
+          <SubTitle>Performance metrics on sales, discounts, and order cancellations per staff member</SubTitle>
+        </div>
+        <CountBadge>{staffStats.length} Active Staff</CountBadge>
+      </CardHeader>
 
-        <MetricCard>
-          <MetricIcon $bg="#ecfdf5" $color="#059669">
-            <DollarOutlined />
-          </MetricIcon>
-          <MetricContent>
-            <MetricLabel>Total Staff Revenue</MetricLabel>
-            <MetricValue>{formatCurrency(staffStats.totalRevenue, currency)}</MetricValue>
-          </MetricContent>
-        </MetricCard>
+      {/* Highlights Bar */}
+      <HighlightRow>
+        <HighlightCard $color="#01514b">
+          <CardLabel>🏆 Top Performer</CardLabel>
+          <CardVal>{topPerformer ? topPerformer.name : "-"}</CardVal>
+          <SubText>{topPerformer ? formatCurrency(topPerformer.sales, currency) : formatCurrency(0, currency)}</SubText>
+        </HighlightCard>
+        <HighlightCard $color="#3b82f6">
+          <CardLabel>📦 Total Orders Handled</CardLabel>
+          <CardVal>{totalOrdersHandled}</CardVal>
+          <SubText>Across all staff</SubText>
+        </HighlightCard>
+        <HighlightCard $color="#10b981">
+          <CardLabel>💰 Total Staff Sales</CardLabel>
+          <CardVal>{formatCurrency(totalStaffSales, currency)}</CardVal>
+          <SubText>Cumulative revenue</SubText>
+        </HighlightCard>
+      </HighlightRow>
 
-        <MetricCard>
-          <MetricIcon $bg="#fef3c7" $color="#d97706">
-            <ShoppingOutlined />
-          </MetricIcon>
-          <MetricContent>
-            <MetricLabel>Total Orders Handled</MetricLabel>
-            <MetricValue>{staffStats.totalOrders}</MetricValue>
-          </MetricContent>
-        </MetricCard>
+      {/* Staff Cards Grid */}
+      {staffStats.length === 0 ? (
+        <EmptyNotice>No staff performance data available for this period.</EmptyNotice>
+      ) : (
+        <StaffCardGrid>
+          {staffStats.map((staff, idx) => (
+            <StaffCard key={staff.id || staff.name || idx}>
+              <CardTop>
+                <AvatarBadge $rank={idx}>
+                  {getInitials(staff.name)}
+                </AvatarBadge>
+                <StaffInfo>
+                  <StaffName>{staff.name}</StaffName>
+                  {staff.email && <StaffEmail>{staff.email}</StaffEmail>}
+                </StaffInfo>
+                {idx === 0 && staff.sales > 0 && <RankBadge>🏆 #1 Top</RankBadge>}
+              </CardTop>
 
-        <MetricCard>
-          <MetricIcon $bg="#f3e8ff" $color="#9333ea">
-            <TrophyOutlined />
-          </MetricIcon>
-          <MetricContent>
-            <MetricLabel>Top Performer</MetricLabel>
-            <MetricValueStyle>
-              {staffStats.topPerformer ? staffStats.topPerformer.name : "N/A"}
-            </MetricValueStyle>
-          </MetricContent>
-        </MetricCard>
-      </MetricsGrid>
+              <SalesBox>
+                <SalesLabel>Total Sales</SalesLabel>
+                <SalesValue>{formatCurrency(staff.sales, currency)}</SalesValue>
+              </SalesBox>
 
-      <FilterBar>
-        <Input
-          placeholder="Search by staff name or role..."
-          prefix={<SearchOutlined style={{ color: "#94a3b8" }} />}
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          allowClear
-          style={{ maxWidth: 320, borderRadius: 8 }}
-        />
-      </FilterBar>
-
-      <TableCard>
-        <Table
-          columns={columns}
-          dataSource={filteredList}
-          rowKey="id"
-          pagination={{ pageSize: 10, showSizeChanger: true }}
-          locale={{ emptyText: "No staff performance data available." }}
-        />
-      </TableCard>
-    </Container>
+              <MetricsGrid>
+                <MetricCell>
+                  <MetricLabel>Orders</MetricLabel>
+                  <MetricValue>{staff.orders}</MetricValue>
+                </MetricCell>
+                <MetricCell>
+                  <MetricLabel>Discounts</MetricLabel>
+                  <MetricValue>{formatCurrency(staff.discounts, currency)}</MetricValue>
+                </MetricCell>
+                <MetricCell>
+                  <MetricLabel>Cancelled</MetricLabel>
+                  <MetricValue $danger={staff.cancelled > 0}>{staff.cancelled}</MetricValue>
+                </MetricCell>
+                <MetricCell>
+                  <MetricLabel>Refunds</MetricLabel>
+                  <MetricValue>{formatCurrency(staff.refunds, currency)}</MetricValue>
+                </MetricCell>
+              </MetricsGrid>
+            </StaffCard>
+          ))}
+        </StaffCardGrid>
+      )}
+    </CardContainer>
   );
 };
 
 export default StaffPerformance;
 
-const Container = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-`;
-
-const MetricsGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 14px;
-`;
-
-const MetricCard = styled.div`
-  background: #ffffff;
+/* ─── Styled Components ─── */
+const CardContainer = styled.div`
+  background: var(--color-surface, #ffffff);
+  border: 1px solid var(--color-border, #e2e8f0);
   border-radius: 12px;
-  padding: 16px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+
+  @media (max-width: 640px) {
+    padding: 14px 10px;
+  }
+`;
+
+const CardHeader = styled.div`
   display: flex;
-  align-items: center;
-  gap: 14px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  border: 1px solid #f1f5f9;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
 `;
 
-const MetricIcon = styled.div`
-  width: 44px;
-  height: 44px;
-  border-radius: 10px;
-  background: ${({ $bg }) => $bg || "#f1f5f9"};
-  color: ${({ $color }) => $color || "#334155"};
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 20px;
-`;
-
-const MetricContent = styled.div`
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-`;
-
-const MetricLabel = styled.span`
-  font-size: 12px;
-  color: #64748b;
-  font-weight: 500;
-`;
-
-const MetricValue = styled.span`
-  font-size: 18px;
+const Title = styled.h3`
+  font-size: 15px;
   font-weight: 700;
   color: #0f172a;
+  margin: 0;
 `;
 
-const MetricValueStyle = styled(MetricValue)`
-  font-size: 15px;
+const SubTitle = styled.p`
+  font-size: 11.5px;
+  color: #64748b;
+  margin: 2px 0 0 0;
+`;
+
+const CountBadge = styled.span`
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 20px;
+`;
+
+const HighlightRow = styled.div`
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+const HighlightCard = styled.div`
+  background: #f8fafc;
+  border-top: 3px solid ${({ $color }) => $color};
+  border-radius: 8px;
+  padding: 12px 14px;
+  border-right: 1px solid #e2e8f0;
+  border-left: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
+`;
+
+const CardLabel = styled.span`
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+`;
+
+const CardVal = styled.div`
+  font-size: 16px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 2px 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 `;
 
-const FilterBar = styled.div`
+const SubText = styled.span`
+  font-size: 11px;
+  color: #01514b;
+  font-weight: 600;
+`;
+
+const StaffCardGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+`;
+
+const StaffCard = styled.div`
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+
+  &:hover {
+    transform: translateY(-2px);
+    border-color: #01514b;
+    box-shadow: 0 4px 12px rgba(1, 81, 75, 0.08);
+  }
+`;
+
+const CardTop = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+`;
+
+const AvatarBadge = styled.div`
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: ${({ $rank }) =>
+    $rank === 0
+      ? "linear-gradient(135deg, #01514b, #0d7065)"
+      : "linear-gradient(135deg, #334155, #64748b)"};
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+`;
+
+const StaffInfo = styled.div`
+  flex: 1;
+  min-width: 0;
+`;
+
+const StaffName = styled.h4`
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+const StaffEmail = styled.p`
+  font-size: 11px;
+  color: #64748b;
+  margin: 1px 0 0 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+const RankBadge = styled.span`
+  background: #fef3c7;
+  color: #d97706;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 12px;
+  white-space: nowrap;
+`;
+
+const SalesBox = styled.div`
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
   display: flex;
   justify-content: space-between;
   align-items: center;
 `;
 
-const TableCard = styled.div`
-  background: #ffffff;
-  border-radius: 12px;
-  padding: 16px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  border: 1px solid #f1f5f9;
-  overflow-x: auto;
-`;
-
-const StaffCell = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 10px;
-`;
-
-const AvatarBadge = styled.div`
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  background: #f1f5f9;
-  color: #01514b;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
-`;
-
-const StaffName = styled.div`
+const SalesLabel = styled.span`
+  font-size: 11px;
   font-weight: 600;
-  color: #0f172a;
+  color: #166534;
+`;
+
+const SalesValue = styled.span`
+  font-size: 16px;
+  font-weight: 800;
+  color: #01514b;
+`;
+
+const MetricsGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-top: auto;
+`;
+
+const MetricCell = styled.div`
+  background: #f8fafc;
+  border: 1px solid #f1f5f9;
+  border-radius: 6px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+`;
+
+const MetricLabel = styled.span`
+  font-size: 10px;
+  color: #64748b;
+  font-weight: 500;
+`;
+
+const MetricValue = styled.span`
+  font-size: 12px;
+  font-weight: 700;
+  color: ${({ $danger }) => ($danger ? "#ef4444" : "#0f172a")};
+  margin-top: 2px;
+`;
+
+const EmptyNotice = styled.div`
+  padding: 30px;
+  text-align: center;
+  color: #94a3b8;
   font-size: 13px;
 `;
 
-const StaffEmail = styled.div`
-  font-size: 11px;
-  color: #64748b;
-`;
-
-const NumberBadge = styled.span`
+const LockNotice = styled.div`
+  padding: 20px;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 13px;
   font-weight: 600;
-  color: #334155;
 `;
 
-const SalesText = styled.span`
-  font-weight: 700;
-  color: #01514b;
-`;
-
-const ProgressCell = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 8px;
-`;
-
-const ProgressBarWrapper = styled.div`
-  width: 60px;
-  height: 6px;
-  background: #e2e8f0;
-  border-radius: 3px;
-  overflow: hidden;
-`;
-
-const ProgressBarFill = styled.div`
-  height: 100%;
-  width: ${({ $pct }) => $pct}%;
-  background: #01514b;
-  border-radius: 3px;
-`;
-
-const PctText = styled.span`
-  font-size: 12px;
-  font-weight: 600;
-  color: #475569;
-  width: 40px;
-  text-align: right;
-`;
