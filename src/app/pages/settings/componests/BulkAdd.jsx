@@ -119,26 +119,30 @@ const BulkAdd = () => {
                 <CardTitle>CSV REQUIREMENTS</CardTitle>
                 <RequirementsList>
                     <li>
-                        <strong>name</strong> — Required product name
+                        <strong>name</strong> — Product name (required)
                     </li>
                     <li>
-                        <strong>code</strong> — Product code (optional)
+                        <strong>code</strong> — Product code (required)
                     </li>
                     <li>
-                        <strong>category</strong> — Category name (auto-created if new)
+                        <strong>category</strong> — Category name (optional, auto-created if new)
                     </li>
                     <li>
-                        <strong>price</strong> — Required, must be 0 or greater
+                        <strong>price</strong> — Product price (required, must be 0 or greater)
                     </li>
                     <li>
-                        <strong>title</strong> — Short title (optional)
+                        <strong>title</strong> — Short title (optional, can be empty)
                     </li>
                     <li>
-                        <strong>description</strong> — Product description (optional)
+                        <strong>description</strong> — Product description (optional, can be empty)
                     </li>
                     <li>
-                        <strong>status</strong> — active or deactivated (or boolean true / false)
+                        <strong>status</strong> — true or false (optional, can be empty, defaults to true)
                     </li>
+                    <li>
+                        <strong>gst_status</strong> — true or false (optional, can be empty, defaults to true)
+                    </li>
+                    <li>Template contains 1 example item row with empty description, status, and gst_status</li>
                     <li>Do not change the column names</li>
                 </RequirementsList>
             </RequirementsCard>

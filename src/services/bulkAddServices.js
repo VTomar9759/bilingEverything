@@ -22,31 +22,19 @@ export const CSV_COLUMNS = [
  */
 export const downloadCSVTemplate = () => {
   const headers = CSV_COLUMNS.join(",");
-  const sampleRow1 = [
-    '"Wireless Headphones"',
+  const sampleRow = [
+    '"Sample Item"',
     '"PRD-001"',
     '"Electronics"',
-    '"1499.00"',
-    '"Premium Audio"',
-    '"High quality noise canceling headphones"',
+    '"100.00"',
     '""',
-    '"active"',
-    '"true"',
+    '""',
+    '""',
+    '""',
+    '""',
   ].join(",");
 
-  const sampleRow2 = [
-    '"Cotton T-Shirt"',
-    '"PRD-002"',
-    '"Apparel"',
-    '"499.00"',
-    '"Casual Wear"',
-    '"100% pure cotton breathable t-shirt"',
-    '""',
-    '"active"',
-    '"true"',
-  ].join(",");
-
-  const csvContent = `${headers}\n${sampleRow1}\n${sampleRow2}`;
+  const csvContent = `${headers}\n${sampleRow}`;
   triggerDownload(csvContent, "item_upload_template.csv");
 };
 
