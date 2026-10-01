@@ -56,6 +56,7 @@ const { Option } = Select;
 const AddItem = () => {
   const [file, setFile] = React.useState(null);
   const [previewUrl, setPreviewUrl] = React.useState(null);
+  const [submitting, setSubmitting] = React.useState(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [form] = Form.useForm();
@@ -90,32 +91,28 @@ const AddItem = () => {
       message.error("You do not have permission to add items.");
       return;
     }
+    setSubmitting(true);
     let imageUrl = values.image;
 
-    if (file) {
-      try {
+    try {
+      if (file) {
         const uploadedUrl = await handleUpload({ file });
         if (uploadedUrl) imageUrl = uploadedUrl;
-      } catch {
-        message.error("Image upload failed");
-        return;
       }
-    }
 
-    const payload = {
-      name: values.name,
-      code: values.code,
-      image: imageUrl,
-      category_id: values.category_id || values.category || null,
-      price: values.price !== undefined && values.price !== null ? String(values.price) : null,
-      title: values.title,
-      description: values.description,
-      gst_status: hasGst ? Boolean(values.gst_status ?? true) : false,
-      status: values.status ?? true,
-      org_id: org_id,
-    };
+      const payload = {
+        name: values.name,
+        code: values.code,
+        image: imageUrl,
+        category_id: values.category_id || values.category || null,
+        price: values.price !== undefined && values.price !== null ? String(values.price) : null,
+        title: values.title,
+        description: values.description,
+        gst_status: hasGst ? Boolean(values.gst_status ?? true) : false,
+        status: values.status ?? true,
+        org_id: org_id,
+      };
 
-    try {
       await addItem(org_id, payload);
       dispatch(clearItems());
       message.success("Product added successfully");
@@ -123,6 +120,8 @@ const AddItem = () => {
       form.resetFields();
     } catch (err) {
       message.error(err.message || "Failed to create product");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -323,11 +322,11 @@ const AddItem = () => {
         </BoxSection>
 
         <FormFooter>
-          <CancelButton icon={<ArrowLeftOutlined />} onClick={() => navigate(PATH_ITEMS)}>
+          <CancelButton icon={<ArrowLeftOutlined />} onClick={() => navigate(PATH_ITEMS)} disabled={submitting}>
             Back
           </CancelButton>
-          <SubmitButton type="primary" htmlType="submit" icon={<SaveOutlined />} loading={uploading}>
-            Create Product
+          <SubmitButton type="primary" htmlType="submit" icon={<SaveOutlined />} loading={submitting} disabled={submitting}>
+            {submitting ? "Creating..." : "Create Product"}
           </SubmitButton>
         </FormFooter>
       </StyledForm>

@@ -76,6 +76,7 @@ const EditItem = () => {
   const [oldImageUrl, setOldImageUrl] = useState(null);
   const [currentImageUrl, setCurrentImageUrl] = useState(null);
   const [pageLoading, setPageLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [form] = Form.useForm();
@@ -143,47 +144,44 @@ const EditItem = () => {
       message.error("You do not have permission to edit items.");
       return;
     }
+    setSubmitting(true);
     let imageUrl = values.image;
 
-    if (file) {
-      try {
+    try {
+      if (file) {
         const uploadedUrl = await handleUpload({ file });
         if (uploadedUrl) imageUrl = uploadedUrl;
-      } catch {
-        message.error("Image upload failed");
-        return;
       }
-    }
 
-    // Delete old image from storage if changed
-    if (oldImageUrl && oldImageUrl !== imageUrl) {
-      const parts = oldImageUrl.split("items-images/");
-      if (parts.length === 2) {
-        const filePath = parts[1].split("?")[0];
-        await supabase.storage.from("items-images").remove([filePath]);
+      // Delete old image from storage if changed
+      if (oldImageUrl && oldImageUrl !== imageUrl) {
+        const parts = oldImageUrl.split("items-images/");
+        if (parts.length === 2) {
+          const filePath = parts[1].split("?")[0];
+          await supabase.storage.from("items-images").remove([filePath]);
+        }
       }
-    }
 
-    const payload = {
-      name: values.name,
-      code: values.code,
-      image: imageUrl !== undefined ? imageUrl : null,
-      category_id: values.category_id || null,
-      price: values.price !== undefined && values.price !== null ? String(values.price) : null,
-      gst_status: hasGst ? Boolean(values.gst_status ?? true) : false,
-      title: values.title,
-      description: values.description,
-      org_id: org_id,
+      const payload = {
+        name: values.name,
+        code: values.code,
+        image: imageUrl !== undefined ? imageUrl : null,
+        category_id: values.category_id || null,
+        price: values.price !== undefined && values.price !== null ? String(values.price) : null,
+        gst_status: hasGst ? Boolean(values.gst_status ?? true) : false,
+        title: values.title,
+        description: values.description,
+        org_id: org_id,
+      };
 
-    };
-
-    try {
       await updateItem(org_id, id, payload);
       dispatch(clearItems());
       message.success("Product updated successfully");
       navigate(PATH_ITEMS);
     } catch (err) {
       message.error(err.message || "Failed to update product");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -395,16 +393,17 @@ const EditItem = () => {
         </BoxSection>
 
         <FormFooter>
-          <CancelButton icon={<ArrowLeftOutlined />} onClick={() => navigate(PATH_ITEMS)}>
+          <CancelButton icon={<ArrowLeftOutlined />} onClick={() => navigate(PATH_ITEMS)} disabled={submitting}>
             Back
           </CancelButton>
           <SubmitButton
             type="primary"
             htmlType="submit"
             icon={<SaveOutlined />}
-            loading={uploading || pageLoading}
+            loading={submitting}
+            disabled={submitting}
           >
-            Update Product
+            {submitting ? "Saving..." : "Update Product"}
           </SubmitButton>
         </FormFooter>
       </StyledForm>
