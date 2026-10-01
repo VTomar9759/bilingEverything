@@ -1,5 +1,5 @@
 export const colors = [
-  "#0F766E", // Default - Professional Teal
+  "#01514b", // Default - Professional Teal
   "#0891B2", // Calm Cyan
   "#0284C7", // Sky Blue
   "#6366C1", // Soft Indigo
