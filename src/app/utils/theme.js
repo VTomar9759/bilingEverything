@@ -29,7 +29,7 @@ export const colors = [
 ];
 
 export const colors2 = [
-  "#0B4F4A", // Deep Sea Green
+  "#063935ff", // Deep Sea Green
   "#155E75", // Deep Cyan
   "#1D4ED8", // Royal Blue
   "#4338CA", // Deep Indigo
