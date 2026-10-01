@@ -86,7 +86,7 @@ const PaymentSummary = ({ orders = [], currency = "₹" }) => {
       </CardHeader>
 
       <OverviewRow>
-        <MiniCard $color="#01514b">
+        <MiniCard $color="var(--color-primary)">
           <MiniLabel>Total Collected</MiniLabel>
           <MiniVal>{formatCurrency(stats.totalCollected, currency)}</MiniVal>
         </MiniCard>

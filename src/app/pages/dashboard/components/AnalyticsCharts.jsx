@@ -48,30 +48,6 @@ const aggregateBusyHours = (orders = []) => {
   }));
 };
 
-const STATUS_COLORS = {
-  Pending: "#f59e0b",
-  Preparing: "#3b82f6",
-  Ready: "#8b5cf6",
-  Served: "#10b981",
-  Cancelled: "#ef4444",
-  Completed: "#06b6d4",
-};
-
-const aggregateStatusBreakdown = (orders = []) => {
-  const map = {};
-  orders.forEach((o) => {
-    const s = o.status || "Other";
-    map[s] = (map[s] || 0) + 1;
-  });
-  return Object.entries(map)
-    .map(([name, value]) => ({
-      name,
-      value,
-      color: STATUS_COLORS[name] || "#94a3b8",
-    }))
-    .sort((a, b) => b.value - a.value);
-};
-
 const aggregateTopItems = (orders = []) => {
   const map = {};
   orders.forEach((o) => {
@@ -284,112 +260,6 @@ export const BusyHoursChart = ({ orders = [] }) => {
 };
 
 // ═══════════════════════════════════════════════════════════════════════
-// Order Status Breakdown Donut
-// ═══════════════════════════════════════════════════════════════════════
-export const OrderStatusDonut = ({ orders = [] }) => {
-  const categories = useMemo(
-    () => aggregateStatusBreakdown(orders),
-    [orders],
-  );
-  const total = categories.reduce((s, c) => s + c.value, 0) || 1;
-
-  const size = 150;
-  const strokeWidth = 14;
-  const radius = (size - strokeWidth) / 2;
-  const circumference = 2 * Math.PI * radius;
-
-  let accumulatedPercent = 0;
-
-  if (categories.length === 0) {
-    return (
-      <DonutCard>
-        <ChartTitle style={{ marginBottom: 16 }}>Order Status</ChartTitle>
-        <EmptyState>No orders to display</EmptyState>
-      </DonutCard>
-    );
-  }
-
-  return (
-    <DonutCard>
-      <ChartTitle style={{ marginBottom: 16 }}>Order Status</ChartTitle>
-
-      <DonutContent>
-        <DonutSvgWrapper>
-          <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-            {categories.map((c, idx) => {
-              const pct = (c.value / total) * 100;
-              const dashArray = `${(pct / 100) * circumference} ${circumference}`;
-              const dashOffset = -((accumulatedPercent / 100) * circumference);
-              accumulatedPercent += pct;
-
-              return (
-                <circle
-                  key={idx}
-                  cx={size / 2}
-                  cy={size / 2}
-                  r={radius}
-                  fill="none"
-                  stroke={c.color}
-                  strokeWidth={strokeWidth}
-                  strokeDasharray={dashArray}
-                  strokeDashoffset={dashOffset}
-                  transform={`rotate(-90 ${size / 2} ${size / 2})`}
-                  style={{ transition: "stroke-dashoffset 0.5s ease" }}
-                />
-              );
-            })}
-
-            <circle
-              cx={size / 2}
-              cy={size / 2}
-              r={radius - strokeWidth / 2}
-              fill="var(--color-surface)"
-            />
-
-            <text
-              x="50%"
-              y="47%"
-              dominantBaseline="middle"
-              textAnchor="middle"
-              fill="var(--color-text-secondary)"
-              fontSize="10"
-              fontWeight="600"
-            >
-              TOTAL
-            </text>
-            <text
-              x="50%"
-              y="60%"
-              dominantBaseline="middle"
-              textAnchor="middle"
-              fill="var(--color-text-primary)"
-              fontSize="16"
-              fontWeight="800"
-            >
-              {total}
-            </text>
-          </svg>
-        </DonutSvgWrapper>
-
-        <Legend>
-          {categories.map((c, idx) => (
-            <LegendItem key={idx}>
-              <ColorBadge $color={c.color} />
-              <LegendText>
-                <CatName>{c.name}</CatName>
-                <CatValue>
-                  {c.value} ({Math.round((c.value / total) * 100)}%)
-                </CatValue>
-              </LegendText>
-            </LegendItem>
-          ))}
-        </Legend>
-      </DonutContent>
-    </DonutCard>
-  );
-};
-
-// ═══════════════════════════════════════════════════════════════════════
 // Top Selling Items
 // ═══════════════════════════════════════════════════════════════════════
 export const TopSellingItems = ({ orders = [] }) => {
@@ -451,14 +321,6 @@ const ChartContainer = styled(SurfaceCard)`
   }
 `;
 
-const DonutCard = styled(SurfaceCard)`
-  min-width: 240px;
-  transition: all var(--transition-base);
-  &:hover {
-    box-shadow: var(--shadow-md);
-  }
-`;
-
 const ChartHeader = styled.div`
   display: flex;
   justify-content: space-between;
@@ -496,62 +358,6 @@ const EmptyState = styled.div`
   color: var(--color-text-muted);
   font-size: 12px;
   font-weight: 500;
-`;
-
-const DonutContent = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  flex-wrap: wrap;
-
-  @media (max-width: 480px) {
-    justify-content: center;
-    flex-direction: column;
-    gap: 12px;
-  }
-`;
-
-const DonutSvgWrapper = styled.div`
-  flex-shrink: 0;
-`;
-
-const Legend = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  flex: 1;
-  min-width: 140px;
-`;
-
-const LegendItem = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 6px;
-`;
-
-const ColorBadge = styled.div`
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: ${({ $color }) => $color};
-  flex-shrink: 0;
-`;
-
-const LegendText = styled.div`
-  display: flex;
-  justify-content: space-between;
-  flex: 1;
-  font-size: 11.5px;
-`;
-
-const CatName = styled.span`
-  color: var(--color-text-secondary);
-  font-weight: 500;
-`;
-
-const CatValue = styled.span`
-  color: var(--color-text-primary);
-  font-weight: 700;
 `;
 
 // Bar chart styles

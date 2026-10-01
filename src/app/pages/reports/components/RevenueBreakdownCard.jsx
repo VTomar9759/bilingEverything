@@ -45,7 +45,7 @@ const RevenueBreakdownCard = ({ orders = [], categories = [], currency = "₹" }
     if (grandTotal === 0) grandTotal = 1;
 
     const items = [
-      { name: "Food Sales", amount: catMap.Food, color: "#01514b" },
+      { name: "Food Sales", amount: catMap.Food, color: "var(--color-primary)" },
       { name: "Beverages", amount: catMap.Beverages, color: "#3b82f6" },
       { name: "Desserts", amount: catMap.Desserts, color: "#f59e0b" },
       { name: "Other Sales", amount: catMap.Other, color: "#8b5cf6" },
@@ -117,7 +117,7 @@ const Title = styled.h3`
 const TotalText = styled.span`
   font-size: 12px;
   font-weight: 700;
-  color: #01514b;
+  color: var(--color-primary);
 `;
 
 const List = styled.div`

@@ -91,7 +91,7 @@ const OrderPerformance = ({ orders = [] }) => {
   }, [orders]);
 
   const statusCards = [
-    { label: "Total Orders", value: stats.total, color: "#01514b" },
+    { label: "Total Orders", value: stats.total, color: "var(--color-primary)" },
     { label: "Completed", value: stats.completed, color: "#10b981" },
     { label: "Served", value: stats.served, color: "#06b6d4" },
     { label: "Preparing", value: stats.preparing, color: "#3b82f6" },
@@ -147,7 +147,7 @@ const OrderPerformance = ({ orders = [] }) => {
           <BarChartContainer>
             {stats.dailyData.map((d, i) => (
               <BarCol key={i}>
-                <BarHeight $height={`${d.pct}%`} $color="#01514b" />
+                <BarHeight $height={`${d.pct}%`} $color="var(--color-primary)" />
                 <BarLabel>{d.day}</BarLabel>
               </BarCol>
             ))}

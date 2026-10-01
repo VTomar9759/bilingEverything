@@ -122,7 +122,7 @@ export const triggerPrintReport = (reportTitle = "Report", elementId = "report-p
         <title>${reportTitle}</title>
         <style>
           body { font-family: 'Segoe UI', Arial, sans-serif; padding: 20px; color: #1e293b; background: #ffffff; }
-          h1, h2, h3 { margin-top: 0; color: #01514b; }
+          h1, h2, h3 { margin-top: 0; color: var(--color-primary, #01514b); }
           table { width: 100%; border-collapse: collapse; margin-top: 15px; margin-bottom: 20px; font-size: 12px; }
           th, td { border: 1px solid #cbd5e1; padding: 8px 10px; text-align: left; }
           th { background-color: #f1f5f9; font-weight: 700; color: #0f172a; }
@@ -134,7 +134,7 @@ export const triggerPrintReport = (reportTitle = "Report", elementId = "report-p
         </style>
       </head>
       <body>
-        <div style="margin-bottom: 20px; border-bottom: 2px solid #01514b; padding-bottom: 10px;">
+        <div style="margin-bottom: 20px; border-bottom: 2px solid var(--color-primary, #01514b); padding-bottom: 10px;">
           <h2>BillEveryThing - ${reportTitle}</h2>
           <p style="font-size: 11px; color: #64748b;">Generated on: ${new Date().toLocaleString()}</p>
         </div>

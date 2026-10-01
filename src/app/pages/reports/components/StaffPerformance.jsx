@@ -185,7 +185,7 @@ const StaffPerformance = ({
 
       {/* Highlights Bar */}
       <HighlightRow>
-        <HighlightCard $color="#01514b">
+        <HighlightCard $color="var(--color-primary)">
           <CardLabel>🏆 Top Performer</CardLabel>
           <CardVal>{topPerformer ? topPerformer.name : "-"}</CardVal>
           <SubText>{topPerformer ? formatCurrency(topPerformer.sales, currency) : formatCurrency(0, currency)}</SubText>
@@ -336,7 +336,7 @@ const CardVal = styled.div`
 
 const SubText = styled.span`
   font-size: 11px;
-  color: #01514b;
+  color: var(--color-primary);
   font-weight: 600;
 `;
 
@@ -358,8 +358,8 @@ const StaffCard = styled.div`
 
   &:hover {
     transform: translateY(-2px);
-    border-color: #01514b;
-    box-shadow: 0 4px 12px rgba(1, 81, 75, 0.08);
+    border-color: var(--color-primary);
+    box-shadow: 0 4px 12px var(--color-primary-50);
   }
 `;
 
@@ -376,7 +376,7 @@ const AvatarBadge = styled.div`
   border-radius: 50%;
   background: ${({ $rank }) =>
     $rank === 0
-      ? "linear-gradient(135deg, #01514b, #0d7065)"
+      ? "linear-gradient(135deg, var(--color-primary), var(--color-primary-light))"
       : "linear-gradient(135deg, #334155, #64748b)"};
   color: #ffffff;
   font-weight: 700;
@@ -441,7 +441,7 @@ const SalesLabel = styled.span`
 const SalesValue = styled.span`
   font-size: 16px;
   font-weight: 800;
-  color: #01514b;
+  color: var(--color-primary);
 `;
 
 const MetricsGrid = styled.div`

@@ -191,7 +191,7 @@ const TablePerformance = ({ orders = [], tables = [], currency = "₹" }) => {
       </CardHeader>
 
       <HighlightRow>
-        <HighlightCard $color="#01514b">
+        <HighlightCard $color="var(--color-primary)">
           <CardLabel>🏆 Highest Revenue Table</CardLabel>
           <CardVal>{tableStats.highestRevenueTable.name}</CardVal>
           <SubText>{formatCurrency(tableStats.highestRevenueTable.revenue, currency)}</SubText>
@@ -328,7 +328,7 @@ const CardVal = styled.div`
 
 const SubText = styled.span`
   font-size: 11px;
-  color: #01514b;
+  color: var(--color-primary);
   font-weight: 600;
 `;
 
@@ -388,8 +388,8 @@ const TableNameText = styled.span`
 `;
 
 const RevenueBadge = styled.div`
-  background: #e6f4f2;
-  color: #01514b;
+  background: var(--color-primary-50);
+  color: var(--color-primary);
   font-weight: 800;
   font-size: 13px;
   padding: 4px 10px;

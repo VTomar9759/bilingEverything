@@ -190,9 +190,9 @@ const SalesProfitChart = ({ orders = [], expenses = [], currency = "₹" }) => {
           <TitleRow>
             <ChartIcon>
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                <rect x="2" y="10" width="4" height="8" rx="1.5" fill="#01514b" opacity="0.3" />
-                <rect x="8" y="6" width="4" height="12" rx="1.5" fill="#01514b" opacity="0.6" />
-                <rect x="14" y="2" width="4" height="16" rx="1.5" fill="#01514b" />
+                <rect x="2" y="10" width="4" height="8" rx="1.5" fill="var(--color-primary)" opacity="0.3" />
+                <rect x="8" y="6" width="4" height="12" rx="1.5" fill="var(--color-primary)" opacity="0.6" />
+                <rect x="14" y="2" width="4" height="16" rx="1.5" fill="var(--color-primary)" />
               </svg>
             </ChartIcon>
             <div>
@@ -215,8 +215,8 @@ const SalesProfitChart = ({ orders = [], expenses = [], currency = "₹" }) => {
       </CardHeader>
 
       <MetricsRow>
-        <MetricCard $color="#01514b" $bg="rgba(1, 81, 75, 0.06)">
-          <MetricDot $color="#01514b" />
+        <MetricCard $color="var(--color-primary)" $bg="var(--color-primary-50)">
+          <MetricDot $color="var(--color-primary)" />
           <div>
             <MetricLabel>Revenue</MetricLabel>
             <MetricValue>{formatCurrency(totalRev, currency)}</MetricValue>
@@ -249,8 +249,8 @@ const SalesProfitChart = ({ orders = [], expenses = [], currency = "₹" }) => {
         >
           <defs>
             <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#017a6e" />
-              <stop offset="100%" stopColor="#01514b" />
+              <stop offset="0%" stopColor="var(--color-primary-light)" />
+              <stop offset="100%" stopColor="var(--color-primary)" />
             </linearGradient>
             <linearGradient id="expGrad" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#f87171" />
@@ -261,8 +261,8 @@ const SalesProfitChart = ({ orders = [], expenses = [], currency = "₹" }) => {
               <stop offset="100%" stopColor="#10b981" />
             </linearGradient>
             <linearGradient id="hoverBg" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#01514b" stopOpacity="0.04" />
-              <stop offset="100%" stopColor="#01514b" stopOpacity="0.01" />
+              <stop offset="0%" stopColor="var(--color-primary)" stopOpacity="0.04" />
+              <stop offset="100%" stopColor="var(--color-primary)" stopOpacity="0.01" />
             </linearGradient>
             <filter id="barShadow" x="-20%" y="-10%" width="140%" height="130%">
               <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#000" floodOpacity="0.08" />
@@ -373,13 +373,12 @@ const SalesProfitChart = ({ orders = [], expenses = [], currency = "₹" }) => {
                   opacity={isHovered ? 1 : 0.88}
                 />
 
-                {/* Value labels on hover */}
-                {isHovered && d.rev > 0 && (
+                {/* Value labels on hover                 {isHovered && d.rev > 0 && (
                   <text
-                    x={centerX - barW * 1.5 - barGap + barW / 2}
+                    x={centerX - barW * 0.5 - barGap - barW / 2}
                     y={revY - 6}
                     textAnchor="middle"
-                    fill="#01514b"
+                    fill="var(--color-primary)"
                     fontSize="10"
                     fontWeight="700"
                     fontFamily="Inter, system-ui, sans-serif"
@@ -428,7 +427,7 @@ const SalesProfitChart = ({ orders = [], expenses = [], currency = "₹" }) => {
                 </text>
 
                 {isHovered && (
-                  <circle cx={centerX} cy={baseY + 32} r="2.5" fill="#01514b" />
+                  <circle cx={centerX} cy={baseY + 32} r="2.5" fill="var(--color-primary)" />
                 )}
               </g>
             );
@@ -443,7 +442,7 @@ const SalesProfitChart = ({ orders = [], expenses = [], currency = "₹" }) => {
           >
             <TooltipHeader>{chartData[hoveredIdx].label}</TooltipHeader>
             <TooltipLine>
-              <TooltipDot $color="#01514b" />
+              <TooltipDot $color="var(--color-primary)" />
               <span>Revenue</span>
               <TooltipVal>{formatCurrency(chartData[hoveredIdx].rev, currency)}</TooltipVal>
             </TooltipLine>
@@ -499,7 +498,7 @@ const BgPattern = styled.div`
   right: 0;
   width: 220px;
   height: 220px;
-  background: radial-gradient(circle at 100% 0%, rgba(1, 81, 75, 0.03) 0%, transparent 60%);
+  background: radial-gradient(circle at 100% 0%, var(--color-primary-50) 0%, transparent 60%);
   pointer-events: none;
 `;
 
@@ -528,7 +527,7 @@ const ChartIcon = styled.div`
   width: 36px;
   height: 36px;
   border-radius: 10px;
-  background: rgba(1, 81, 75, 0.08);
+  background: var(--color-primary-50);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -560,7 +559,7 @@ const ViewSelector = styled.div`
 
 const ViewBtn = styled.button`
   border: none;
-  background: ${({ $active }) => ($active ? "#01514b" : "transparent")};
+  background: ${({ $active }) => ($active ? "var(--color-primary)" : "transparent")};
   color: ${({ $active }) => ($active ? "#ffffff" : "#64748b")};
   font-size: 12px;
   font-weight: 600;
@@ -571,11 +570,11 @@ const ViewBtn = styled.button`
 
   ${({ $active }) =>
     $active &&
-    `box-shadow: 0 2px 8px rgba(1, 81, 75, 0.25);`}
+    `box-shadow: 0 2px 8px var(--color-primary-100);`}
 
   &:hover {
-    color: ${({ $active }) => ($active ? "#ffffff" : "#0f172a")};
-    background: ${({ $active }) => ($active ? "#01514b" : "rgba(1, 81, 75, 0.06)")};
+    color: ${({ $active }) => ($active ? "#ffffff" : "var(--color-primary)")};
+    background: ${({ $active }) => ($active ? "var(--color-primary)" : "var(--color-primary-50)")};
   }
 `;
 

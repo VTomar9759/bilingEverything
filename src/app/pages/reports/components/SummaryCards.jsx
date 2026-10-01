@@ -44,8 +44,8 @@ const SummaryCards = ({ summaryData, currency = "₹", loading = false }) => {
           <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
         </svg>
       ),
-      color: "#01514b",
-      bgColor: "rgba(1, 81, 75, 0.08)",
+      color: "var(--color-primary)",
+      bgColor: "var(--color-primary-50)",
     },
     {
       label: "Total Orders",
@@ -177,9 +177,9 @@ const Card = styled.div`
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 
   &:hover {
-    box-shadow: 0 4px 12px rgba(1, 81, 75, 0.08);
+    box-shadow: 0 4px 12px var(--color-primary-50);
     transform: translateY(-1px);
-    border-color: rgba(1, 81, 75, 0.2);
+    border-color: var(--color-primary-100);
   }
 `;
 

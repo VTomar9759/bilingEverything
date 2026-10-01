@@ -126,7 +126,7 @@ const ProfitLossStatement = ({ orders = [], expenses = [], itemsCatalog = [], cu
             <TableLabelSub>Less: Refunds</TableLabelSub>
             <TableValueSub>-{formatCurrency(pnlData.totalRefunds, currency)}</TableValueSub>
           </TableRow>
-          <HighlightRow $color="#01514b">
+          <HighlightRow $color="var(--color-primary)">
             <TableLabelBold>Net Revenue</TableLabelBold>
             <TableValueBold>{formatCurrency(pnlData.netRevenue, currency)}</TableValueBold>
           </HighlightRow>
@@ -189,7 +189,7 @@ const ProfitLossStatement = ({ orders = [], expenses = [], itemsCatalog = [], cu
       <PnlGrid>
         <MiniSummaryCard>
           <MiniLabel>Revenue</MiniLabel>
-          <MiniVal $color="#01514b">{formatCurrency(pnlData.netRevenue, currency)}</MiniVal>
+          <MiniVal $color="var(--color-primary)">{formatCurrency(pnlData.netRevenue, currency)}</MiniVal>
         </MiniSummaryCard>
         <MiniSummaryCard>
           <MiniLabel>Expenses</MiniLabel>

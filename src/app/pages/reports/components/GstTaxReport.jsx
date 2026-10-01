@@ -146,7 +146,7 @@ const GstTaxReport = ({ orders = [], currency = "₹", gstin = "" }) => {
           <Button icon={<DownloadOutlined />} onClick={handleExportCSV}>
             Export GST Report
           </Button>
-          <Button icon={<PrinterOutlined />} type="primary" onClick={handlePrint} style={{ background: "#01514b" }}>
+          <Button icon={<PrinterOutlined />} type="primary" onClick={handlePrint}>
             Print GST Report
           </Button>
         </ActionButtons>

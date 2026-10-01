@@ -332,9 +332,9 @@ const HamburgerBtn = styled.button`
   width: 28px;
   height: 28px;
   border-radius: 6px;
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
-  color: var(--color-text-secondary);
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
   padding: 0;
   cursor: pointer;
   display: flex;
@@ -343,9 +343,14 @@ const HamburgerBtn = styled.button`
   transition: all var(--transition-fast);
 
   &:hover {
-    background: var(--color-primary-50);
-    border-color: var(--color-primary-100);
-    color: var(--color-primary);
+    background: rgba(255, 255, 255, 0.22);
+    border-color: rgba(255, 255, 255, 0.35);
+    color: #ffffff;
+    transform: scale(1.05);
+  }
+
+  &:active {
+    transform: scale(0.95);
   }
 `;
 
@@ -367,7 +372,7 @@ const UserChip = styled.div`
   border-radius: var(--radius-full);
   cursor: pointer;
   transition: all var(--transition-fast);
-  color: var(--color-text-primary);
+  color: #ffffff;
 `;
 
 const UserAvatar = styled.div`
@@ -378,12 +383,12 @@ const UserAvatar = styled.div`
   background: ${({ $hasImage }) =>
     $hasImage
       ? "transparent"
-      : "linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%)"};
+      : "linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.1) 100%)"};
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  border: 1.5px solid var(--color-primary-100);
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
 
   img {
     width: 100%;
@@ -432,10 +437,7 @@ const SidebarContainer = styled.div`
   width: ${({ $isOpen }) =>
     $isOpen ? `${SIDEBAR_OPEN_WIDTH}px` : `${SIDEBAR_CLOSED_WIDTH}px`};
   height: 100vh;
-  background: ${({ theme }) =>
-    theme?.colors?.bg === "#0f172a"
-      ? theme.colors.surface /* dark mode → dark slate surface */
-      : "linear-gradient(165deg, #01514b 0%, #013d38 100%)"}; /* light mode → green */
+  background: linear-gradient(165deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
   display: flex;
   flex-direction: column;
   position: fixed;
@@ -446,7 +448,7 @@ const SidebarContainer = styled.div`
     background 0.3s ease;
   overflow: hidden;
   z-index: var(--z-sidebar);
-  box-shadow: 3px 0 16px rgba(1, 81, 75, 0.15);
+  box-shadow: 3px 0 16px rgba(0, 0, 0, 0.15);
 
   @media (max-width: 720px) {
     width: ${({ $isOpen }) => ($isOpen ? "210px" : "0")};
@@ -459,11 +461,7 @@ const TopSection = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid
-    ${({ theme }) =>
-      theme?.colors?.bg === "#0f172a"
-        ? "rgba(255,255,255,0.06)"
-        : "rgba(255,255,255,0.08)"};
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 `;
 
 const NavSection = styled.div`
@@ -487,29 +485,15 @@ const NavItem = styled.div`
   position: relative;
   transition: all var(--transition-fast);
   justify-content: ${({ $isOpen }) => ($isOpen ? "flex-start" : "center")};
-  background: ${({ $active, theme }) =>
-    $active
-      ? theme?.colors?.bg === "#0f172a"
-        ? "rgba(1,122,113,0.25)"
-        : "rgba(255,255,255,0.12)"
-      : "transparent"};
+  background: ${({ $active }) =>
+    $active ? "rgba(255, 255, 255, 0.18)" : "transparent"};
   border: 1px solid
-    ${({ $active, theme }) =>
-      $active
-        ? theme?.colors?.bg === "#0f172a"
-          ? "rgba(1,122,113,0.4)"
-          : "rgba(255,255,255,0.15)"
-        : "transparent"};
+    ${({ $active }) =>
+      $active ? "rgba(255, 255, 255, 0.25)" : "transparent"};
 
   &:hover {
-    background: ${({ theme }) =>
-      theme?.colors?.bg === "#0f172a"
-        ? "rgba(1,122,113,0.15)"
-        : "rgba(255,255,255,0.1)"};
-    border-color: ${({ theme }) =>
-      theme?.colors?.bg === "#0f172a"
-        ? "rgba(1,122,113,0.3)"
-        : "rgba(255,255,255,0.1)"};
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.15);
   }
 `;
 
@@ -521,29 +505,13 @@ const NavIconWrap = styled.div`
   justify-content: center;
   border-radius: 5px;
   flex-shrink: 0;
-  color: ${({ $active, $danger, theme }) =>
-    $danger
-      ? "red"
-      : $active
-        ? theme?.colors?.bg === "#ffffff"
-          ? "#ffffff"
-          : "white"
-        : "white"};
-  background: ${({ $active, theme }) =>
-    $active
-      ? theme?.colors?.bg === "#0f172a"
-        ? "rgba(1,122,113,0.2)"
-        : "rgba(255,255,255,0.1)"
-      : "transparent"};
+  color: ${({ $danger }) => ($danger ? "#ef4444" : "white")};
+  background: ${({ $active }) =>
+    $active ? "rgba(255, 255, 255, 0.15)" : "transparent"};
   transition: all var(--transition-fast);
 
   ${NavItem}:hover & {
-    color: ${({ $danger, theme }) =>
-      $danger
-        ? "#ef4444"
-        : theme?.colors?.bg === "#ffffff"
-          ? "#4ade80"
-          : "white"};
+    color: ${({ $danger }) => ($danger ? "#ef4444" : "white")};
   }
 `;
 
@@ -580,11 +548,7 @@ const WatermarkContainer = styled.div`
   gap: 5px;
   padding: ${({ $isOpen }) => ($isOpen ? "0px 8px" : "8px 0")};
   margin: 0;
-  border-top: 1px solid
-    ${({ theme }) =>
-      theme?.colors?.bg === "#0f172a"
-        ? "rgba(255, 255, 255, 0.06)"
-        : "rgba(255, 255, 255, 0.1)"};
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
   &:hover {
     opacity: 0.9;
   }

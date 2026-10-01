@@ -416,6 +416,9 @@ const OrderEditPage = () => {
                   checked={show_customer_details}
                   onChange={(checked) => dispatch(setShowCustomerDetails(checked))}
                   size="small"
+                  style={{
+                    backgroundColor: show_customer_details ? "var(--color-primary)" : undefined,
+                  }}
                 />
               </Space>
             </HeaderBoxCustomerDetails>

@@ -289,7 +289,6 @@ const ReportsDashboard = () => {
             type="primary"
             icon={<PrinterOutlined />}
             onClick={handlePrint}
-            style={{ background: "#01514b" }}
           >
             Print
           </Button>
@@ -457,7 +456,7 @@ const TabsBar = styled.div`
 
 const TabBtn = styled.button`
   border: none;
-  background: ${({ $active }) => ($active ? "#01514b" : "transparent")};
+  background: ${({ $active }) => ($active ? "var(--color-primary)" : "transparent")};
   color: ${({ $active }) => ($active ? "#ffffff" : "#475569")};
   font-size: 12px;
   font-weight: ${({ $active }) => ($active ? "700" : "500")};
@@ -468,8 +467,8 @@ const TabBtn = styled.button`
   transition: all 0.15s ease;
 
   &:hover {
-    color: ${({ $active }) => ($active ? "#ffffff" : "#0f172a")};
-    background: ${({ $active }) => ($active ? "#01514b" : "rgba(1, 81, 75, 0.08)")};
+    color: ${({ $active }) => ($active ? "#ffffff" : "var(--color-primary)")};
+    background: ${({ $active }) => ($active ? "var(--color-primary)" : "var(--color-primary-50)")};
   }
 `;
 

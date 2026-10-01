@@ -110,10 +110,10 @@ const TableAssignmentSection = ({
                       <TableOutlined
                         style={{
                           color: isAssignedToCurrent
-                            ? "#16a34a"
+                            ? "var(--color-primary)"
                             : otherAssignedAdmin
-                            ? "#15803d"
-                            : "#64748b",
+                            ? "var(--color-text-secondary)"
+                            : "var(--color-text-muted)",
                         }}
                       />
                       <TableNameText>{tableName}</TableNameText>
@@ -142,13 +142,13 @@ const TableAssignmentSection = ({
                       <UpdatingText>Updating...</UpdatingText>
                     ) : isAssignedToCurrent ? (
                       <AssignedBadge>
-                        <CheckCircleFilled style={{ color: "#16a34a" }} />
+                        <CheckCircleFilled style={{ color: "var(--color-primary)" }} />
                         <span>Assigned to {currentAdmin.name}</span>
                       </AssignedBadge>
                     ) : otherAssignedAdmin ? (
                       <Tooltip title={`Click to reassign to ${currentAdmin.name}`}>
                         <OtherAdminBadge>
-                          <CheckCircleFilled style={{ color: "#16a34a" }} />
+                          <CheckCircleFilled style={{ color: "var(--color-text-secondary)" }} />
                           <span>Assigned to {otherAssignedAdmin.name}</span>
                         </OtherAdminBadge>
                       </Tooltip>
@@ -281,16 +281,16 @@ const TableCardItem = styled.div`
   border: 1.5px solid
     ${(props) =>
       props.$assigned
-        ? "#16a34a"
+        ? "var(--color-primary)"
         : props.$otherAssigned
-        ? "#bbf7d0"
-        : "#e2e8f0"};
+        ? "var(--color-border)"
+        : "var(--color-border-light)"};
   background: ${(props) =>
     props.$assigned
-      ? "#f0fdf4"
+      ? "var(--color-primary-50)"
       : props.$otherAssigned
-      ? "#f8fafc"
-      : "#ffffff"};
+      ? "var(--color-bg)"
+      : "var(--color-surface)"};
   border-radius: 10px;
   padding: 12px;
   display: flex;
@@ -300,8 +300,8 @@ const TableCardItem = styled.div`
   transition: all 0.2s ease;
 
   &:hover {
-    border-color: #16a34a;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    border-color: var(--color-primary);
+    box-shadow: 0 2px 8px var(--color-primary-50);
     transform: translateY(-1px);
   }
 `;
@@ -353,11 +353,11 @@ const AssignedBadge = styled.div`
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  color: #15803d;
+  color: var(--color-primary);
   font-weight: 700;
   font-size: 11.5px;
-  background: #ecfdf5;
-  border: 1px solid #a7f3d0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-primary-100);
   border-radius: 6px;
   padding: 3px 8px;
   width: fit-content;
@@ -367,11 +367,11 @@ const OtherAdminBadge = styled.div`
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  color: #15803d;
-  font-weight: 700;
+  color: var(--color-text-secondary);
+  font-weight: 600;
   font-size: 11.5px;
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
   border-radius: 6px;
   padding: 3px 8px;
   width: fit-content;

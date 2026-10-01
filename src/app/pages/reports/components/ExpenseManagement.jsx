@@ -221,7 +221,6 @@ const ExpenseManagement = ({ expenses = [], onRefresh, org_id, created_by, curre
               type="primary"
               icon={<PlusOutlined />}
               onClick={() => handleOpenModal()}
-              style={{ background: "#01514b" }}
             >
               Add Expense
             </Button>
@@ -312,7 +311,7 @@ const ExpenseManagement = ({ expenses = [], onRefresh, org_id, created_by, curre
 
           <FormActions>
             <Button onClick={() => setModalVisible(false)}>Cancel</Button>
-            <Button type="primary" htmlType="submit" loading={loading} style={{ background: "#01514b" }}>
+            <Button type="primary" htmlType="submit" loading={loading}>
               {editingExpense ? "Update Expense" : "Save Expense"}
             </Button>
           </FormActions>
@@ -389,13 +388,13 @@ const ActionGroup = styled.div`
 const IconButton = styled.button`
   border: none;
   background: transparent;
-  color: ${({ $danger }) => ($danger ? "#ef4444" : "#01514b")};
+  color: ${({ $danger }) => ($danger ? "#ef4444" : "var(--color-primary)")};
   cursor: pointer;
   padding: 4px;
   border-radius: 4px;
 
   &:hover {
-    background: ${({ $danger }) => ($danger ? "#fef2f2" : "#f0fdf4")};
+    background: ${({ $danger }) => ($danger ? "#fef2f2" : "var(--color-primary-50)")};
   }
 `;
 

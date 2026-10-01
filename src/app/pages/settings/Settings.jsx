@@ -10,7 +10,7 @@ import {
 } from "@ant-design/icons";
 import useOrgData from "../../hooks/useOrgData";
 import InstallPWA from "../../../components/InstallPWA";
-import ThemeToggle from "../../../components/ThemeToggle";
+import ThemeChanger from "../../../components/ThemeChanger";
 import LogoutButton from "./componests/logout";
 import {
   PATH_ADMINS,
@@ -54,9 +54,9 @@ const settingsTabs = [
 ];
 
 const SettingsLayout = () => {
-  const { userData,permission } = useOrgData();
+  const { userData, permission } = useOrgData();
   const location = useLocation();
-   const canView = permission?.settings?.view || false;
+  const canView = permission?.settings?.view || false;
   return (
     <LayoutWrapper>
       {/* Header Banner */}
@@ -81,9 +81,7 @@ const SettingsLayout = () => {
         </HeaderLeft>
 
         <HeaderActions>
-          <ControlWidget>
-            <ThemeToggle showLabel={true} />
-          </ControlWidget>
+          <ThemeChanger />
 
           <InstallPWA alwaysShow={true} />
 
@@ -237,23 +235,7 @@ const HeaderActions = styled.div`
   flex-wrap: wrap;
 `;
 
-const ControlWidget = styled.div`
-  background: var(--color-bg, #f8fafc);
-  border: 1px solid var(--color-border, #e2e8f0);
-  border-radius: 8px;
-  padding: 4px 8px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-`;
 
-const ControlLabel = styled.span`
-  font-size: 10.5px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
-  color: var(--color-text-muted, #64748b);
-`;
 
 const TabsNavigationContainer = styled.nav`
   background: var(--color-surface, #ffffff);

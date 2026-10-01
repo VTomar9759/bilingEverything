@@ -155,9 +155,9 @@ const AdminTag = styled.div`
   gap: 6px;
   padding: 3px 10px;
   border-radius: 6px;
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
-  color: #16a34a;
+  background: var(--color-primary-50);
+  border: 1px solid var(--color-primary-100);
+  color: var(--color-primary);
   font-size: 12px;
   font-weight: 600;
   width: fit-content;

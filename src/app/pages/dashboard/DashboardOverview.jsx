@@ -13,7 +13,6 @@ import DashboardStats from "./components/DashboardStats";
 import {
   SalesSplineChart,
   BusyHoursChart,
-  OrderStatusDonut,
   TopSellingItems,
 } from "./components/AnalyticsCharts";
 import * as service from "../../../services";
@@ -124,7 +123,6 @@ const DashboardOverview = () => {
 
           {/* Secondary Analytics Row */}
           <ChartLayout>
-            <OrderStatusDonut orders={ordersList} />
             <TopSellingItems orders={ordersList} />
           </ChartLayout>
         </>

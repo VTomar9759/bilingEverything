@@ -217,7 +217,7 @@ const ItemPerformance = ({ orders = [], itemsCatalog = [], categories = [], curr
             </HighlightRow>
           ))}
         </HighlightCard>
-        <HighlightCard $color="#01514b">
+        <HighlightCard $color="var(--color-primary)">
           <HighlightTitle>💰 Top Revenue Items</HighlightTitle>
           {topRevenue.map((it, idx) => (
             <HighlightRow key={idx}>
