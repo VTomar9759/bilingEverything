@@ -24,6 +24,7 @@ import {
   NumberOutlined,
   AuditOutlined,
   SettingOutlined,
+  QrcodeOutlined,
 } from "@ant-design/icons";
 import { useDispatch } from "react-redux";
 import useOrgData from "../../../hooks/useOrgData";
@@ -45,6 +46,7 @@ const BusinessDetails = () => {
       form.setFieldsValue({
         business_name: userData?.business_name || "",
         legal_name: userData?.legal_name || "",
+        upi_id: userData?.upi_id || "",
         full_name: userData?.full_name || "",
         email: userData?.email || "",
         phone: userData?.phone || "",
@@ -75,6 +77,7 @@ const BusinessDetails = () => {
       const updatedData = {
         business_name: values.business_name,
         legal_name: values.legal_name,
+        upi_id: values.upi_id || "",
         full_name: values.full_name,
         email: values.email,
         phone: values.phone,
@@ -155,6 +158,16 @@ const BusinessDetails = () => {
                   />
                 }
                 placeholder="e.g. Gourmet Hospitality Pvt Ltd"
+              />
+            </FormItem>
+          </Col>
+          <Col xs={24} sm={12} md={12}>
+            <FormItem name="upi_id" label="Business UPI ID (Optional)">
+              <Input
+                prefix={
+                  <QrcodeOutlined style={{ color: "var(--color-text-muted)" }} />
+                }
+                placeholder="e.g. gourmetbistro@upi"
               />
             </FormItem>
           </Col>

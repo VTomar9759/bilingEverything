@@ -7,6 +7,7 @@ import {
 } from "@ant-design/icons";
 import { printInvoiceSilent, getItemColWidths } from "./printService";
 import useOrgData from "../hooks/useOrgData";
+import { usePaymentQR } from "../qrcode/QrCode.jsx";
 import { PRINT_TYPE, PRINT_SIZE } from "../utils/constant";
 import { useSelector } from "react-redux";
 import { selectPrintSettings } from "../store/slices/printSettingSlice";
@@ -142,8 +143,14 @@ const PrintGlobalStyles = createGlobalStyle`
 const OrderInvoiceModal = ({ visible, onClose, order, settings }) => {
   const receiptRef = useRef();
   const [loadingPrint, setLoadingPrint] = useState(false);
-  const { userData, hasGst: orgHasGst } = useOrgData();
+  const { userData, hasGst: orgHasGst, upi_id } = useOrgData();
   const ps = useSelector(selectPrintSettings);
+
+  // Generate UPI QR code for the order total (runs whenever order.total changes)
+  const { dataUrl: qrDataUrl } = usePaymentQR(
+    order?.total || 0,
+    `Order #${order?.order_number || order?.id || ""}`
+  );
 
   if (!order) return null;
 
@@ -235,6 +242,7 @@ const OrderInvoiceModal = ({ visible, onClose, order, settings }) => {
       settings: {
         ...settings,
         restaurant_name: businessName,
+        business_name: businessName,
         address,
         gstin: hasGst ? gstNumber : "",
         currency,
@@ -242,6 +250,7 @@ const OrderInvoiceModal = ({ visible, onClose, order, settings }) => {
         print_type: printType,
         logo_image: logoImage,
         phone,
+        upi_id: upi_id || "",
         printSettings: ps,
       },
       copies: ps?.number_of_copies || 2,
@@ -545,6 +554,40 @@ const OrderInvoiceModal = ({ visible, onClose, order, settings }) => {
             </TotalsTable>
 
             <DottedDivider className="dotted-divider" />
+
+            {/* ─── PAYMENT QR CODE ─── */}
+            {ps?.qr_code_visible && upi_id && qrDataUrl && (
+              <>
+                <div
+                  className="qr-block"
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    margin: "8px auto 4px auto",
+                    width: "100%",
+                    pageBreakInside: "avoid",
+                    breakInside: "avoid",
+                  }}
+                >
+                  <img
+                    src={qrDataUrl}
+                    alt="Scan to Pay via UPI"
+                    width={110}
+                    height={110}
+                    style={{ display: "block", margin: "0 auto" }}
+                  />
+                  <span style={{ fontSize: 10, color: "#475569", textAlign: "center", marginTop: 3 }}>
+                    Scan to Pay via UPI
+                  </span>
+                  <span style={{ fontSize: 9, color: "#94a3b8", textAlign: "center" }}>
+                    {upi_id}
+                  </span>
+                </div>
+                <DottedDivider className="dotted-divider" style={{ margin: "4px 0 6px 0" }} />
+              </>
+            )}
 
             {/* ─── FOOTER ─── */}
             {ps?.footer_visible !== false && (

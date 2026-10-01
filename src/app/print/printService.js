@@ -1,6 +1,25 @@
 import qz from "qz-tray";
 import { message } from "antd";
 import { PRINT_TYPE, PRINT_SIZE } from "../utils/constant";
+import { buildUPIString, generateQRDataURL } from "../qrcode/QrCode.jsx";
+
+/**
+ * Build a UPI QR PNG data URL for use in print HTML.
+ * Call this before generateReceiptHTML and pass the result as settings.qrDataUrl.
+ *
+ * @param {object} param0  { upi_id, business_name, amount, note }
+ * @param {number}  size   Pixel size for the QR image (default 180)
+ * @returns {Promise<string|null>}
+ */
+export const generatePaymentQRHTMLBlock = async (
+  { upi_id, business_name, amount, note = "Order Payment" },
+  size = 180
+) => {
+  const upiStr = buildUPIString({ upi_id, business_name, amount, note });
+  if (!upiStr) return null;
+  const dataUrl = await generateQRDataURL(upiStr, { width: size });
+  return dataUrl;
+};
 
 /**
  * Connect to QZ Tray WebSocket if inactive
@@ -103,6 +122,10 @@ export const getItemColWidths = (ps) => {
  */
 export const generateReceiptHTML = (order, settings = {}) => {
   if (!order) return "";
+
+  // qrDataUrl: pre-generated base64 PNG from generatePaymentQRHTMLBlock()
+  // Pass it in settings.qrDataUrl when qr_code_visible is enabled
+  const qrDataUrl = settings?.qrDataUrl || null;
 
   const ps = settings?.printSettings || {};
   const printType = ps?.print_size || settings?.print_type || order?.print_type || PRINT_TYPE.MODERN;
@@ -336,6 +359,26 @@ export const generateReceiptHTML = (order, settings = {}) => {
             text-align: center !important;
             width: 100% !important;
           }
+          .qr-block {
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: center !important;
+            margin: 8px auto 4px auto !important;
+            width: 100% !important;
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
+          }
+          .qr-block img {
+            display: block !important;
+            margin: 0 auto !important;
+          }
+          .qr-label {
+            font-size: 10px !important;
+            color: #475569 !important;
+            text-align: center !important;
+            margin-top: 3px !important;
+          }
           tr, .receipt-header, .receipt-meta, .totals-table, .receipt-footer, .dotted-divider {
             break-inside: avoid !important;
             page-break-inside: avoid !important;
@@ -438,6 +481,13 @@ export const generateReceiptHTML = (order, settings = {}) => {
 
             <div class="dotted-divider"></div>
 
+            ${ps?.qr_code_visible && qrDataUrl ? `
+            <div class="qr-block">
+              <img src="${qrDataUrl}" alt="Pay via UPI" width="120" height="120" />
+              <div class="qr-label">Scan to Pay via UPI</div>
+            </div>
+            <div class="dotted-divider" style="margin: 4px 0 6px 0;"></div>` : ""}
+
             ${ps?.footer_visible !== false ? `
             <div class="receipt-footer" style="text-align: center; width: 100%;">
               <p style="text-align: center; width: 100%; margin: 2px 0; font-weight: 600; font-style: italic; color: #d97706;">${footerNote}</p>
@@ -538,6 +588,17 @@ export const printInvoiceSilent = async ({ order, settings = {}, copies = 2, rec
       </html>
     `;
   } else {
+    // Auto-generate QR data URL if qr_code_visible is enabled and upi_id is available
+    const ps = settings?.printSettings || {};
+    if (ps?.qr_code_visible && settings?.upi_id && !settings?.qrDataUrl) {
+      const business_name = settings?.business_name || settings?.restaurant_name || "";
+      const amount = order?.total || 0;
+      const qrDataUrl = await generatePaymentQRHTMLBlock(
+        { upi_id: settings.upi_id, business_name, amount },
+        180
+      );
+      settings = { ...settings, qrDataUrl };
+    }
     receiptData = generateReceiptHTML(order, settings);
   }
 
