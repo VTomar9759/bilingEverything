@@ -80,6 +80,24 @@ export const updateItem = async (org_id, id, updates) => {
   return data?.[0] || null;
 };
 
+export const addItemDiscount = async (id, discount) => {
+  const { data, error } = await supabase
+    .from("items")
+    .update({ item_discount: discount })
+    .eq("id", id)
+    .select();
+
+  if (error) {
+    console.error(`Error updating item discount with id ${id}:`, error.message);
+    throw error;
+  }
+
+  return data?.[0] || null;
+};
+
+export const addIemDiscount = addItemDiscount;
+
+
 export const updateItemStatus = async (id, status) => {
   const { data, error } = await supabase
     .from("items")

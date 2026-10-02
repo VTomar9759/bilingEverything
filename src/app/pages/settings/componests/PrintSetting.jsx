@@ -108,6 +108,7 @@ const PrintSetting = () => {
   };
 
   const isThermal = formValues.print_size !== "A4";
+  const isSmallThermal = formValues.print_size === "58mm_A" || formValues.print_size === "58mm_B";
   const currency = userData?.currency || "₹";
 
   return (
@@ -712,12 +713,13 @@ const PrintSetting = () => {
             <PreviewStickyWrap>
               <PreviewCardHeader>
                 <PreviewTitle>
+                  <LiveIndicatorDot />
                   <EyeOutlined /> Live Receipt Preview
                 </PreviewTitle>
                 <FormatTag>{formValues.print_size || "Modern"}</FormatTag>
               </PreviewCardHeader>
 
-              <ReceiptPaper $isThermal={isThermal}>
+              <ReceiptPaper $isThermal={isThermal} $isSmallThermal={isSmallThermal}>
                 {/* Header Logo & Info */}
                 {formValues.logo_visible && (
                   <ReceiptLogoWrap>
@@ -1031,9 +1033,10 @@ const LoadingWrap = styled.div`
 
 const ContentLayout = styled.div`
   display: grid;
-  grid-template-columns: 1fr 340px;
+  grid-template-columns: minmax(0, 1fr) 350px;
   gap: 20px;
   align-items: start;
+  position: relative;
 
   @media (max-width: 1024px) {
     grid-template-columns: 1fr;
@@ -1044,6 +1047,33 @@ const FormColumn = styled.div`
   display: flex;
   flex-direction: column;
   gap: 16px;
+  max-height: calc(100vh - 50px);
+  min-height: 480px;
+  overflow-y: auto;
+  padding-right: 10px;
+
+  /* Custom sleek scrollbar */
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.02);
+    border-radius: 4px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: var(--color-border, #cbd5e1);
+    border-radius: 4px;
+  }
+  &::-webkit-scrollbar-thumb:hover {
+    background: var(--color-primary, #01514b);
+  }
+
+  @media (max-width: 1024px) {
+    max-height: none;
+    min-height: unset;
+    overflow-y: visible;
+    padding-right: 0;
+  }
 `;
 
 const SettingsGroupCard = styled.div`
@@ -1108,22 +1138,33 @@ const SwitchDesc = styled.span`
 `;
 
 const BottomActionBar = styled.div`
+  position: sticky;
+  bottom: 0;
   display: flex;
   justify-content: flex-end;
   gap: 12px;
-  padding: 14px 0 6px 0;
-  border-top: 1px dashed var(--color-border, #e5e7eb);
+  padding: 12px 14px;
+  background: var(--color-surface, #ffffff);
+  border-top: 1px solid var(--color-border, #e5e7eb);
+  border-radius: 8px;
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.04);
+  z-index: 10;
+  margin-top: 8px;
 `;
 
 /* Preview Styles */
 
 const PreviewColumn = styled.div`
-  position: relative;
+  position: sticky;
+  top: 0;
+  height: fit-content;
+
+  @media (max-width: 1024px) {
+    position: static;
+  }
 `;
 
 const PreviewStickyWrap = styled.div`
-  position: sticky;
-  top: 16px;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -1139,13 +1180,38 @@ const PreviewCardHeader = styled.div`
   padding: 8px 12px;
 `;
 
+const LiveIndicatorDot = styled.span`
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  animation: livePulse 2s infinite;
+  display: inline-block;
+
+  @keyframes livePulse {
+    0% {
+      transform: scale(0.95);
+      box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    }
+    70% {
+      transform: scale(1);
+      box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+    }
+    100% {
+      transform: scale(0.95);
+      box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+    }
+  }
+`;
+
 const PreviewTitle = styled.span`
   font-size: 12px;
   font-weight: 700;
   color: var(--color-text-primary, #1e293b);
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 `;
 
 const FormatTag = styled.span`
@@ -1163,15 +1229,16 @@ const ReceiptPaper = styled.div`
   color: #1e293b;
   border: 1px solid #cbd5e1;
   border-radius: 6px;
-  padding: 16px 14px;
+  padding: ${(props) => (props.$isSmallThermal ? "14px 10px" : "16px 14px")};
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
   font-family: ${(props) => (props.$isThermal ? "'Courier New', Courier, monospace" : "'Inter', sans-serif")};
-  font-size: 11px;
+  font-size: ${(props) => (props.$isSmallThermal ? "10px" : "11px")};
   line-height: 1.35;
   width: 100%;
-  max-width: 340px;
+  max-width: ${(props) => (props.$isSmallThermal ? "280px" : "340px")};
   margin: 0 auto;
   box-sizing: border-box;
+  transition: all 0.25s ease;
 `;
 
 const ReceiptLogoWrap = styled.div`

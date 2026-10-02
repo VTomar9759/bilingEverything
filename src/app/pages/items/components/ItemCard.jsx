@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled, { keyframes } from "styled-components";
 import { Tag, Tooltip, message } from "antd";
-import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import { EditOutlined, DeleteOutlined, PercentageOutlined } from "@ant-design/icons";
 import { useDispatch } from "react-redux";
 import useOrgData from "../../../hooks/useOrgData";
 import {
@@ -15,6 +15,7 @@ import {
   updateItemAction,
 } from "../../../store/slices/itemSlice";
 import ConfirmModal from "../../../modal/ConfirmModal";
+import AddDiscountModal from "./AddDiscountModal";
 import placeholderImg from "../../../../assets/no-image.png";
 import { PATH_EDIT_ITEM } from "../../../routes/pathname";
 
@@ -23,6 +24,7 @@ const ItemCard = ({ item, canUpdate: canUpdateProp, canDelete: canDeleteProp }) 
   const navigate = useNavigate();
   const { org_id, permission } = useOrgData();
   const itemsPerm = permission?.items_catalog;
+  const [discountOpen, setDiscountOpen] = useState(false);
 
   const canUpdate = canUpdateProp ?? (itemsPerm?.update ?? false);
   const canDelete = canDeleteProp ?? (itemsPerm?.delete ?? false);
@@ -80,11 +82,20 @@ const ItemCard = ({ item, canUpdate: canUpdateProp, canDelete: canDeleteProp }) 
       item.image.startsWith("/") ||
       item.image.startsWith("data:"));
 
-  const formattedPrice = new Intl.NumberFormat("en-IN", {
+  const hasDiscount = Number(item.item_discount) > 0;
+  const discountedPrice = Math.max(0, (item.price || 0) - (Number(item.item_discount) || 0));
+
+  const formattedOriginalPrice = new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency: "INR",
     maximumFractionDigits: 0,
   }).format(item.price || 0);
+
+  const formattedDiscountedPrice = new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    maximumFractionDigits: 0,
+  }).format(discountedPrice);
 
   const toggleStatus = async (id, status) => {
     try {
@@ -113,20 +124,33 @@ const ItemCard = ({ item, canUpdate: canUpdateProp, canDelete: canDeleteProp }) 
             </PlaceholderWrap>
           )}
 
-          {/* Overlay actions */}
+          {/* Overlay actions (Horizontal row on top-right) */}
           {(canUpdate || canDelete) && (
             <OverlayActions className="overlay-actions">
               {canUpdate && (
-                <Tooltip title="Edit item">
-                  <ActionBtn
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigate(PATH_EDIT_ITEM.replace(":id", item.id));
-                    }}
-                  >
-                    <EditOutlined />
-                  </ActionBtn>
-                </Tooltip>
+                <>
+                  <Tooltip title="Edit item">
+                    <ActionBtn
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(PATH_EDIT_ITEM.replace(":id", item.id));
+                      }}
+                    >
+                      <EditOutlined />
+                    </ActionBtn>
+                  </Tooltip>
+                  <Tooltip title={hasDiscount ? `Discount: ₹${item.item_discount}` : "Add discount"}>
+                    <ActionBtn
+                      $active={hasDiscount}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDiscountOpen(true);
+                      }}
+                    >
+                      <PercentageOutlined />
+                    </ActionBtn>
+                  </Tooltip>
+                </>
               )}
               {canDelete && (
                 <Tooltip title="Delete item">
@@ -139,7 +163,16 @@ const ItemCard = ({ item, canUpdate: canUpdateProp, canDelete: canDeleteProp }) 
           )}
 
           {/* Code badge */}
-          <CodeBadge>{item.code}</CodeBadge>
+          {item.code && <CodeBadge>{item.code}</CodeBadge>}
+
+          {/* Discount badge */}
+          {hasDiscount && (
+            <DiscountBadge title={`Discount: ₹${item.item_discount}`}>
+              ₹{item.item_discount} OFF
+            </DiscountBadge>
+          )}
+
+          {/* Availability Toggle */}
           <AvaibalityBox status={item?.status} onClick={(e) => toggleStatus(item.id, !item.status)}>
             {item.status ? "Available" : "Out of stock"}
           </AvaibalityBox>
@@ -153,7 +186,16 @@ const ItemCard = ({ item, canUpdate: canUpdateProp, canDelete: canDeleteProp }) 
                 {item.category}
               </CategoryPill>
             )}
-            <PriceTag>{formattedPrice}</PriceTag>
+            <PriceContainer>
+              {hasDiscount ? (
+                <>
+                  <OriginalPriceTag>{formattedOriginalPrice}</OriginalPriceTag>
+                  <DiscountedPriceTag>{formattedDiscountedPrice}</DiscountedPriceTag>
+                </>
+              ) : (
+                <PriceTag>{formattedOriginalPrice}</PriceTag>
+              )}
+            </PriceContainer>
           </ContentTop>
 
           <ItemName title={item.name}>{item.name}</ItemName>
@@ -165,6 +207,12 @@ const ItemCard = ({ item, canUpdate: canUpdateProp, canDelete: canDeleteProp }) 
           )}
         </Content>
       </Card>
+
+      <AddDiscountModal
+        visible={discountOpen}
+        item={item}
+        onClose={() => setDiscountOpen(false)}
+      />
 
       <ConfirmModal
         visible={modalVisible}
@@ -202,12 +250,12 @@ const fadeUp = keyframes`
 
 /* ─── Styled ─── */
 const Card = styled.div`
-  background: var(--color-surface);
-  border-radius: var(--radius-xl);
-  border: 1px solid var(--color-border-light);
-  box-shadow: var(--shadow-sm);
+  background: var(--color-surface, #ffffff);
+  border-radius: var(--radius-xl, 14px);
+  border: 1px solid var(--color-border-light, #e2e8f0);
+  box-shadow: var(--shadow-sm, 0 1px 2px rgba(0,0,0,0.05));
   overflow: hidden;
-  transition: all var(--transition-base);
+  transition: all var(--transition-base, 0.2s ease);
   cursor: default;
   display: flex;
   flex-direction: column;
@@ -215,10 +263,10 @@ const Card = styled.div`
   animation: ${fadeUp} 0.3s ease;
 
   &:hover {
-    border-color: var(--color-primary-100);
+    border-color: var(--color-primary-100, #99f6e4);
     box-shadow:
-      var(--shadow-md),
-      0 0 0 1px var(--color-primary-100);
+      var(--shadow-md, 0 4px 6px -1px rgba(0,0,0,0.1)),
+      0 0 0 1px var(--color-primary-100, #99f6e4);
 
     .overlay-actions {
       opacity: 1;
@@ -229,7 +277,7 @@ const Card = styled.div`
 
 const ImageArea = styled.div`
   position: relative;
-  height: 110px;
+  height: 118px;
   background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
   overflow: hidden;
   flex-shrink: 0;
@@ -264,57 +312,94 @@ const PlaceholderWrap = styled.div`
 
 const OverlayActions = styled.div`
   position: absolute;
-  top: 10px;
-  right: 10px;
+  top: 8px;
+  right: 8px;
   display: flex;
-  flex-direction: column;
-  gap: 6px;
+  flex-direction: row;
+  align-items: center;
+  gap: 4px;
   opacity: 0;
   transform: translateY(-4px);
-  transition: all var(--transition-base);
+  transition: all var(--transition-base, 0.2s ease);
+  z-index: 2;
 `;
 
 const ActionBtn = styled.button`
-  width: 24px;
-  height: 24px;
-  border-radius: 8px;
-  border: 1px solid var(--color-border);
-  color: ${({ $danger }) =>
-    $danger ? "#ef4444" : "var(--color-text-secondary)"};
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  border: 1px solid
+    ${({ $danger, $active }) =>
+      $danger
+        ? "#fecaca"
+        : $active
+        ? "#99f6e4"
+        : "var(--color-border, #cbd5e1)"};
+  color: ${({ $danger, $active }) =>
+    $danger
+      ? "#ef4444"
+      : $active
+      ? "#0d9488"
+      : "var(--color-text-secondary, #475569)"};
+  background: ${({ $danger, $active }) =>
+    $danger
+      ? "#ffffff"
+      : $active
+      ? "#f0fdfa"
+      : "rgba(255, 255, 255, 0.95)"};
+  backdrop-filter: blur(4px);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 11px;
-  box-shadow: var(--shadow-sm);
-  transition: all var(--transition-fast);
-  cursor:pointer ;
+  font-size: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all var(--transition-fast, 0.15s ease);
+
   &:hover {
-    background: ${({ $danger }) =>
-    $danger ? "#fff5f5" : "var(--color-primary-50)"};
-    border-color: ${({ $danger }) =>
-    $danger ? "#fecaca" : "var(--color-primary-100)"};
-    color: ${({ $danger }) => ($danger ? "#dc2626" : "var(--color-primary)")};
+    background: ${({ $danger }) => ($danger ? "#fee2e2" : "#ffffff")};
+    border-color: ${({ $danger }) => ($danger ? "#ef4444" : "var(--color-primary, #01514b)")};
+    color: ${({ $danger }) => ($danger ? "#dc2626" : "var(--color-primary, #01514b)")};
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
   }
 `;
+
 const CodeBadge = styled.div`
   position: absolute;
-  top: 10px;
-  left: 10px;
-  background: #000;
+  top: 8px;
+  left: 8px;
+  background: rgba(0, 0, 0, 0.82);
   backdrop-filter: blur(6px);
   color: white;
-  padding: 3px 8px;
+  padding: 2px 7px;
   border-radius: 6px;
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.5px;
   text-transform: uppercase;
+  z-index: 1;
 `;
+
+const DiscountBadge = styled.div`
+  position: absolute;
+  top: 32px;
+  left: 8px;
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 5px;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  box-shadow: 0 2px 6px rgba(22, 163, 74, 0.3);
+  z-index: 1;
+`;
+
 const AvaibalityBox = styled.div`
   position: absolute;
-  bottom: 10px;
-  right: 10px;
+  bottom: 8px;
+  right: 8px;
   display: inline-flex;
   align-items: center;
   gap: 5px;
@@ -329,11 +414,13 @@ const AvaibalityBox = styled.div`
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
   cursor: pointer;
   user-select: none;
-  background: #000;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(4px);
   transition: all 0.2s ease;
+  z-index: 1;
   &:hover {
     transform: translateY(-1px);
-    box-shadow: 0 5px 14px rgba(0, 0, 0, 0.2)
+    box-shadow: 0 5px 14px rgba(0, 0, 0, 0.2);
   }
 `;
 
@@ -364,19 +451,40 @@ const CategoryPill = styled(Tag)`
   border: none !important;
 `;
 
+const PriceContainer = styled.div`
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+`;
+
+const OriginalPriceTag = styled.span`
+  font-size: 10.5px;
+  font-weight: 500;
+  color: var(--color-text-muted, #94a3b8);
+  text-decoration: line-through;
+`;
+
+const DiscountedPriceTag = styled.span`
+  font-size: 12px;
+  font-weight: 700;
+  color: #16a34a;
+  white-space: nowrap;
+  letter-spacing: -0.3px;
+`;
+
 const PriceTag = styled.span`
   font-size: 12px;
   font-weight: 700;
-  color: var(--color-primary);
+  color: var(--color-primary, #01514b);
   white-space: nowrap;
   letter-spacing: -0.3px;
 `;
 
 const ItemName = styled.h3`
-  font-family: var(--font-display);
+  font-family: var(--font-display, inherit);
   font-size: 12px;
   font-weight: 700;
-  color: var(--color-text-primary);
+  color: var(--color-text-primary, #0f172a);
   margin: 0;
   white-space: nowrap;
   overflow: hidden;
@@ -386,7 +494,7 @@ const ItemName = styled.h3`
 
 const ItemSubtitle = styled.p`
   font-size: 10.5px;
-  color: var(--color-text-muted);
+  color: var(--color-text-muted, #94a3b8);
   margin: 0;
   font-weight: 500;
   white-space: nowrap;
@@ -396,7 +504,7 @@ const ItemSubtitle = styled.p`
 
 const ItemDescription = styled.p`
   font-size: 10.5px;
-  color: var(--color-text-secondary);
+  color: var(--color-text-secondary, #475569);
   line-height: 1.5;
   margin: 0;
   display: -webkit-box;

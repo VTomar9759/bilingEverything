@@ -9,10 +9,10 @@ const itemSlice = createSlice({
   reducers: {
     setItems: (_, action) => action.payload,
     updateItemAction: (state, action) => {
-      const { id, status } = action.payload;
+      const { id, ...updates } = action.payload;
       const idx = state.findIndex((i) => i.id === id);
       if (idx >= 0) {
-        state[idx] = { ...state[idx], status };
+        state[idx] = { ...state[idx], ...updates };
       }
     },
     clearItems: () => initialState,
