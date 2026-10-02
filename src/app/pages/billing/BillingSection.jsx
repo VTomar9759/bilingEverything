@@ -203,37 +203,71 @@ const BillingSection = () => {
       return;
     }
 
-    const subtotal = Number(activeOrder.subtotal || 0);
+    const items = activeOrder.items || [];
 
-    const discount = subtotal * (Number(discountPercent || 0) / 100);
+    // Calculate gross subtotal from items if available, else fallback to activeOrder.subtotal
+    const subtotal =
+      items.length > 0
+        ? items.reduce(
+            (acc, curr) =>
+              acc + Number(curr.price || 0) * Number(curr.quantity || 1),
+            0
+          )
+        : Number(activeOrder.subtotal || 0);
 
-    const netTotal = subtotal - discount;
+    // Calculate item discount sum from items or order.discount
+    const itemDiscountSum =
+      items.length > 0
+        ? items.reduce((acc, curr) => {
+            const itemDisc = Number(
+              curr.item_discount ??
+                (Number(curr.discount || 0) > 0
+                  ? Number(curr.discount) / Number(curr.quantity || 1)
+                  : 0)
+            );
+            return acc + itemDisc * Number(curr.quantity || 1);
+          }, 0)
+        : Number(activeOrder.discount || 0);
 
-
+    const netSubtotalAfterItemDisc = Math.max(0, subtotal - itemDiscountSum);
+    const billDiscount =
+      netSubtotalAfterItemDisc * (Number(discountPercent || 0) / 100);
+    const totalDiscount = itemDiscountSum + billDiscount;
+    const netTotal = Math.max(0, subtotal - totalDiscount);
 
     const discountFactor = 1 - Number(discountPercent || 0) / 100;
 
     const tax = hasGst
-      ? (activeOrder.items || []).reduce((sum, item) => {
-        const isItemGst =
-          item.gst_status !== false && String(item.gst_status) !== "false";
-        if (!isItemGst) return sum;
-        const itemAmount =
-          Number(item.price || 0) * Number(item.quantity || 0) * discountFactor;
-        return sum + itemAmount * 0.05;
-      }, 0)
+      ? items.reduce((sum, item) => {
+          const isItemGst =
+            item.gst_status !== false && String(item.gst_status) !== "false";
+          if (!isItemGst) return sum;
+          const itemDisc = Number(
+            item.item_discount ??
+              (Number(item.discount || 0) > 0
+                ? Number(item.discount) / Number(item.quantity || 1)
+                : 0)
+          );
+          const itemNetUnitPrice = Math.max(0, Number(item.price || 0) - itemDisc);
+          const itemAmount =
+            itemNetUnitPrice * Number(item.quantity || 1) * discountFactor;
+          return sum + itemAmount * 0.05;
+        }, 0)
       : 0;
 
     const total = netTotal + tax;
 
     setFinancials({
       subtotal,
-      discount,
+      itemDiscount: itemDiscountSum,
+      billDiscount,
+      discount: totalDiscount,
+      totalDiscount,
       tax,
       service_charge: 0,
       total,
     });
-  }, [activeOrder, discountPercent, settings, userData]);
+  }, [activeOrder, discountPercent, settings, userData, hasGst]);
 
   /**
    * Update payment mode immediately in DB when button is clicked
@@ -271,12 +305,15 @@ const BillingSection = () => {
     setSubmitting(true);
 
     const isPaid = paymentMode !== PAYMENT_MODE.unpaid;
+    const totalDiscount = Number(
+      financials.totalDiscount ?? financials.discount ?? activeOrder.discount ?? 0
+    );
     const updatePayload = {
-      subtotal: Number(financials.subtotal || 0),
-      discount: Number(financials.discount || 0),
-      tax: Number(financials.tax || 0),
+      subtotal: Number(financials.subtotal ?? activeOrder.subtotal ?? 0),
+      discount: totalDiscount,
+      tax: Number(financials.tax ?? activeOrder.tax ?? 0),
       service_charge: 0,
-      total: Number(financials.total || 0),
+      total: Number(financials.total ?? activeOrder.total ?? 0),
       status: "Served",
       payment_status: isPaid ? "Paid" : "Unpaid",
       payment_mode: isPaid ? paymentMode : PAYMENT_MODE.unpaid,
@@ -539,6 +576,20 @@ const BillingSection = () => {
                       hasGst &&
                       item?.gst_status !== false &&
                       String(item?.gst_status) !== "false";
+                    const itemDiscount = Number(
+                      item.item_discount ??
+                        (Number(item.discount || 0) > 0
+                          ? Number(item.discount) / Number(item.quantity || 1)
+                          : 0)
+                    );
+                    const hasItemDisc = itemDiscount > 0;
+                    const netUnitPrice = Math.max(
+                      0,
+                      Number(item.price || 0) - itemDiscount
+                    );
+                    const lineTotal = netUnitPrice * Number(item.quantity || 1);
+                    const totalLineDiscount =
+                      itemDiscount * Number(item.quantity || 1);
 
                     return (
                       <ItemInvoiceRow key={index}>
@@ -548,18 +599,31 @@ const BillingSection = () => {
                             {isItemGst && <GstText>(5% GST)</GstText>}
                           </ItemInvoiceNameRow>
 
-                          <ItemInvoicePrice>
-                            {currency} {item.price} each
-                          </ItemInvoicePrice>
+                          <ItemInvoicePriceRow>
+                            {hasItemDisc ? (
+                              <>
+                                <ItemOriginalPrice>
+                                  {currency} {item.price}
+                                </ItemOriginalPrice>
+                                <ItemNetPrice>
+                                  {currency} {netUnitPrice}
+                                </ItemNetPrice>
+                                <ItemDiscountTag>
+                                  -₹{totalLineDiscount}
+                                </ItemDiscountTag>
+                              </>
+                            ) : (
+                              <ItemInvoicePrice>
+                                {currency} {item.price} each
+                              </ItemInvoicePrice>
+                            )}
+                          </ItemInvoicePriceRow>
                         </ItemInvoiceDetails>
 
                         <ItemInvoiceQty>x{item.quantity}</ItemInvoiceQty>
 
                         <ItemInvoiceTotal>
-                          {currency}{" "}
-                          {(
-                            Number(item.price || 0) * Number(item.quantity || 0)
-                          ).toFixed(2)}
+                          {currency} {lineTotal.toFixed(2)}
                         </ItemInvoiceTotal>
                       </ItemInvoiceRow>
                     );
@@ -575,13 +639,30 @@ const BillingSection = () => {
                     <span>
                       {currency}{" "}
                       {Number(
-                        financials.subtotal ?? activeOrder.subtotal ?? 0,
+                        financials.subtotal ?? activeOrder.subtotal ?? 0
                       ).toFixed(2)}
                     </span>
                   </CalcRow>
 
-                  {/* DISCOUNT */}
-                  {financials.discount > 0 && (
+                  {/* ITEM DISCOUNT */}
+                  {Number(financials.itemDiscount || 0) > 0 && (
+                    <CalcRow
+                      style={{
+                        color: "#10b981",
+                        fontWeight: 700,
+                      }}
+                    >
+                      <span>Item Discount</span>
+
+                      <span>
+                        -{currency}{" "}
+                        {Number(financials.itemDiscount || 0).toFixed(2)}
+                      </span>
+                    </CalcRow>
+                  )}
+
+                  {/* BILL DISCOUNT */}
+                  {Number(financials.billDiscount || 0) > 0 && (
                     <CalcRow
                       style={{
                         color: "#10b981",
@@ -592,7 +673,7 @@ const BillingSection = () => {
 
                       <span>
                         -{currency}{" "}
-                        {Number(financials.discount || 0).toFixed(2)}
+                        {Number(financials.billDiscount || 0).toFixed(2)}
                       </span>
                     </CalcRow>
                   )}
@@ -605,7 +686,7 @@ const BillingSection = () => {
                       <span>
                         {currency}{" "}
                         {Number(
-                          financials.tax ?? activeOrder.tax ?? 0,
+                          financials.tax ?? activeOrder.tax ?? 0
                         ).toFixed(2)}
                       </span>
                     </CalcRow>
@@ -626,7 +707,7 @@ const BillingSection = () => {
                     <span>
                       {currency}{" "}
                       {Number(
-                        financials.total ?? activeOrder.total ?? 0,
+                        financials.total ?? activeOrder.total ?? 0
                       ).toFixed(2)}
                     </span>
                   </CalcRow>
@@ -815,9 +896,39 @@ const ItemInvoiceName = styled.div`
   text-overflow: ellipsis;
 `;
 
+const ItemInvoicePriceRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+`;
+
 const ItemInvoicePrice = styled.div`
   font-size: 10px;
   color: var(--color-text-secondary);
+`;
+
+const ItemOriginalPrice = styled.span`
+  font-size: 10px;
+  color: var(--color-text-muted, #94a3b8);
+  text-decoration: line-through;
+  font-weight: 500;
+`;
+
+const ItemNetPrice = styled.span`
+  font-size: 10px;
+  font-weight: 600;
+  color: #16a34a;
+`;
+
+const ItemDiscountTag = styled.span`
+  font-size: 9px;
+  font-weight: 700;
+  color: #16a34a;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 4px;
+  padding: 0px 3px;
 `;
 
 const ItemInvoiceQty = styled.div`

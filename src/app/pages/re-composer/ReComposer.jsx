@@ -93,6 +93,7 @@ const OrderEditPage = () => {
             id: item.id,
             name: item.name,
             price: item.price,
+            item_discount: Number(item.item_discount || 0),
             category: item.category,
             gst_status: item.gst_status,
             code: item.code || "",
@@ -165,14 +166,18 @@ const OrderEditPage = () => {
     }
 
     const itemsPayload = selectedPosItems.map((i) => {
+      const itemDiscount = Number(i.item.item_discount || 0);
+      const effectiveUnitPrice = Math.max(0, Number(i.item.price || 0) - itemDiscount);
+      const itemSubtotal = effectiveUnitPrice * i.quantity;
       const isItemGst =
         hasGst && i.item.gst_status !== false && String(i.item.gst_status) !== "false";
-      const itemSubtotal = Number(i.item.price || 0) * i.quantity;
       const itemTax = isItemGst ? itemSubtotal * 0.05 : 0;
       return {
         id: i.item.id,
         name: i.item.name,
         price: i.item.price,
+        item_discount: itemDiscount,
+        discount: itemDiscount * i.quantity,
         quantity: i.quantity,
         category: i.item.category || "Food",
         gst_status: i.item.gst_status ?? true,
@@ -180,12 +185,15 @@ const OrderEditPage = () => {
       };
     });
 
+    const totalDiscount = itemsPayload.reduce((acc, curr) => acc + (curr.discount || 0), 0);
+
     const isPaid = paymentMode && paymentMode !== PAYMENT_MODE.unpaid;
 
     const customerFields = {
       customer_name: customerName ? customerName.trim() : null,
       customer_phone: customerPhone ? customerPhone.trim() : null,
       customer_address: customerAddress ? customerAddress.trim() : null,
+      discount: totalDiscount,
       payment_status: isPaid ? "Paid" : "Unpaid",
       payment_mode: isPaid ? paymentMode : PAYMENT_MODE.unpaid,
       payment_method: isPaid ? paymentMode : PAYMENT_MODE.unpaid,
@@ -276,14 +284,23 @@ const OrderEditPage = () => {
     0,
   );
 
+  const itemDiscountSum = selectedPosItems.reduce(
+    (acc, curr) => acc + (Number(curr.item.item_discount || 0) * curr.quantity),
+    0,
+  );
+
+  const netSubtotalSum = Math.max(0, subtotalSum - itemDiscountSum);
+
   const taxSum = selectedPosItems.reduce((acc, curr) => {
     const isItemGst =
       hasGst && curr.item.gst_status !== false && String(curr.item.gst_status) !== "false";
-    const itemSubtotal = Number(curr.item.price || 0) * curr.quantity;
+    const itemDisc = Number(curr.item.item_discount || 0);
+    const itemNetUnitPrice = Math.max(0, Number(curr.item.price || 0) - itemDisc);
+    const itemSubtotal = itemNetUnitPrice * curr.quantity;
     return acc + (isItemGst ? itemSubtotal * 0.05 : 0);
   }, 0);
 
-  const grandTotal = subtotalSum + taxSum;
+  const grandTotal = netSubtotalSum + taxSum;
 
   const checkIsItemGst = (item) => {
     return (
@@ -377,7 +394,10 @@ const OrderEditPage = () => {
                 </div>
               ) : (
                 <MenuGrid>{
-                menuFilteredCatalog?.map((item) => (
+                menuFilteredCatalog?.map((item) => {
+                  const hasDiscount = Number(item.item_discount) > 0;
+                  const discountedPrice = Math.max(0, (item.price || 0) - (Number(item.item_discount) || 0));
+                  return (
                   <MenuItemCard
                     key={item.id}
                     onClick={() => handleAddPosItem(item)}
@@ -387,19 +407,35 @@ const OrderEditPage = () => {
                     ) : (
                       <MenuAvatar>{item.name[0]}</MenuAvatar>
                     )}
-                    <CodeBadge>{item.code}</CodeBadge>
+                    {item.code && <CodeBadge>{item.code}</CodeBadge>}
+                    {hasDiscount && (
+                      <MenuDiscountBadge title={`Discount: ₹${item.item_discount}`}>
+                        ₹{item.item_discount} OFF
+                      </MenuDiscountBadge>
+                    )}
 
                     <MenuCardContent>
                       <MenuMeta>
                         <MenuName>{item.name}</MenuName>
-
-                        <MenuPrice>
-                          {settings.currency || "Rs."} {item.price}
-                        </MenuPrice>
+                        {hasDiscount ? (
+                          <MenuPriceGroup>
+                            <MenuOriginalPrice>
+                              {settings.currency || "Rs."} {item.price}
+                            </MenuOriginalPrice>
+                            <MenuDiscountedPrice>
+                              {settings.currency || "Rs."} {discountedPrice}
+                            </MenuDiscountedPrice>
+                          </MenuPriceGroup>
+                        ) : (
+                          <MenuPrice>
+                            {settings.currency || "Rs."} {item.price}
+                          </MenuPrice>
+                        )}
                       </MenuMeta>
                     </MenuCardContent>
                   </MenuItemCard>
-                ))}
+                  );
+                })}
                 </MenuGrid>
               )}
           </PosLeftPanel>
@@ -474,19 +510,45 @@ const OrderEditPage = () => {
                   </p>
                 </ComposerEmpty>
               ) : (
-                selectedPosItems.map(({ item, quantity }) => (
+                selectedPosItems.map(({ item, quantity }) => {
+                  const hasItemDisc = Number(item.item_discount) > 0;
+                  const netUnitPrice = Math.max(
+                    0,
+                    Number(item.price || 0) - Number(item.item_discount || 0)
+                  );
+                  const lineTotal = netUnitPrice * quantity;
+                  return (
                   <ComposedItem key={item.id}>
-                    <div>
+                    <CompInfo>
                       <CompNameRow>
-                        <CompName>{item.name}</CompName>
+                        <CompName title={item.name}>{item.name}</CompName>
                         {hasGst && checkIsItemGst(item) && (
                           <GstText>(5% GST)</GstText>
                         )}
                       </CompNameRow>
-                      <CompPrice>
-                        {settings.currency || "Rs."} {item.price}
-                      </CompPrice>
-                    </div>
+                      <CompPriceRow>
+                        {hasItemDisc ? (
+                          <>
+                            <CompOriginalPrice>
+                              {settings.currency || "Rs."} {item.price}
+                            </CompOriginalPrice>
+                            <CompPrice style={{ color: "#16a34a" }}>
+                              {settings.currency || "Rs."} {netUnitPrice}
+                            </CompPrice>
+                            <CompDiscountTag>
+                              -₹{Number(item.item_discount) * quantity}
+                            </CompDiscountTag>
+                          </>
+                        ) : (
+                          <CompPrice>
+                            {settings.currency || "Rs."} {item.price}
+                          </CompPrice>
+                        )}
+                        <CompLineTotal>
+                          = {settings.currency || "Rs."} {lineTotal}
+                        </CompLineTotal>
+                      </CompPriceRow>
+                    </CompInfo>
                     <QtyControls>
                       <Button
                         size="small"
@@ -503,7 +565,8 @@ const OrderEditPage = () => {
                       </Button>
                     </QtyControls>
                   </ComposedItem>
-                ))
+                  );
+                })
               )}
             </ComposerList>
 
@@ -514,6 +577,14 @@ const OrderEditPage = () => {
                   {settings.currency || "Rs."} {subtotalSum.toFixed(2)}
                 </span>
               </SummaryRow>
+              {itemDiscountSum > 0 && (
+                <SummaryRow style={{ color: "#16a34a", fontWeight: 600 }}>
+                  <span>Item Discount</span>
+                  <span>
+                    - {settings.currency || "Rs."} {itemDiscountSum.toFixed(2)}
+                  </span>
+                </SummaryRow>
+              )}
               {hasGst && (
                 <SummaryRow>
                   <span>GST (5%)</span>
@@ -840,7 +911,7 @@ const MenuGrid = styled.div`
 
 const MenuItemCard = styled.div`
   position: relative;
-  height: 120px;
+  height: 125px;
   background: var(--color-bg);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
@@ -888,8 +959,9 @@ const MenuName = styled.div`
   font-size: 11px;
   font-weight: 700;
   color: var(--color-text-primary);
-  white-space: normal;
-  word-break: break-word;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   line-height: 1.2;
 `;
 
@@ -898,6 +970,7 @@ const MenuMeta = styled.div`
   flex-direction: column;
   justify-content: flex-start;
   align-items: flex-start;
+  gap: 2px;
 `;
 
 const MenuPrice = styled.strong`
@@ -960,10 +1033,11 @@ const ComposedItem = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 6px;
+  padding: 6px 8px;
   border-radius: 8px;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
+  gap: 8px;
 `;
 
 const CompNameRow = styled.div`
@@ -980,8 +1054,11 @@ const GstText = styled.span`
 
 const CompName = styled.div`
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 `;
 
 const CompPrice = styled.span`
@@ -994,9 +1071,12 @@ const QtyControls = styled.div`
   display: flex;
   align-items: center;
   gap: 6px;
+  flex-shrink: 0;
   span {
     font-size: 11.5px;
     font-weight: 700;
+    min-width: 14px;
+    text-align: center;
   }
   .ant-btn {
     width: 20px;
@@ -1065,4 +1145,76 @@ const PaymentOptionBtn = styled(Button)`
     color: #ffffff !important;
     box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);
   `}
+`;
+
+/* ─── Discount-related styled components ─── */
+const CompInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+`;
+
+const CompPriceRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+`;
+
+const CompOriginalPrice = styled.span`
+  font-size: 10px;
+  color: var(--color-text-muted, #94a3b8);
+  text-decoration: line-through;
+`;
+
+const CompLineTotal = styled.span`
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--color-primary, #01514b);
+`;
+
+const CompDiscountTag = styled.span`
+  font-size: 9px;
+  font-weight: 700;
+  color: #16a34a;
+  background: #f0fdf4;
+  padding: 1px 4px;
+  border-radius: 4px;
+  border: 1px solid #bbf7d0;
+`;
+
+const MenuDiscountBadge = styled.div`
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+  color: white;
+  padding: 2px 5px;
+  border-radius: 4px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  box-shadow: 0 2px 4px rgba(22, 163, 74, 0.3);
+  z-index: 1;
+`;
+
+const MenuPriceGroup = styled.div`
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+`;
+
+const MenuOriginalPrice = styled.span`
+  font-size: 9.5px;
+  color: var(--color-text-muted, #94a3b8);
+  text-decoration: line-through;
+  font-weight: 500;
+`;
+
+const MenuDiscountedPrice = styled.strong`
+  font-size: 10.5px;
+  color: #16a34a;
+  font-weight: 700;
 `;

@@ -74,10 +74,14 @@ const OrderDetailDrawer = ({
               hasGst &&
               item?.gst_status !== false &&
               String(item?.gst_status) !== "false";
+            const itemDiscount = Number(item.item_discount || 0);
+            const hasItemDisc = itemDiscount > 0;
+            const netUnitPrice = Math.max(0, Number(item.price || 0) - itemDiscount);
+            const lineTotal = netUnitPrice * Number(item.quantity || 1);
 
             return (
               <DishRow key={idx}>
-                <div>
+                <DishInfo>
                   <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                     <DishName>{item.name}</DishName>
                     {isItemGst && (
@@ -86,14 +90,28 @@ const OrderDetailDrawer = ({
                       </span>
                     )}
                   </div>
-                  <DishPrice>
-                    {settings.currency || "Rs."} {item.price} each
-                  </DishPrice>
-                </div>
+                  <DishPriceRow>
+                    {hasItemDisc ? (
+                      <>
+                        <DishOriginalPrice>
+                          {settings.currency || "Rs."} {item.price}
+                        </DishOriginalPrice>
+                        <DishNetPrice>
+                          {settings.currency || "Rs."} {netUnitPrice}
+                        </DishNetPrice>
+                        <DishDiscountTag>-₹{itemDiscount}</DishDiscountTag>
+                      </>
+                    ) : (
+                      <DishPrice>
+                        {settings.currency || "Rs."} {item.price} each
+                      </DishPrice>
+                    )}
+                  </DishPriceRow>
+                </DishInfo>
                 <DishQty>x{item.quantity}</DishQty>
                 <DishTotal>
                   {settings.currency || "Rs."}{" "}
-                  {(item.price * item.quantity).toFixed(2)}
+                  {lineTotal.toFixed(2)}
                 </DishTotal>
               </DishRow>
             );
@@ -105,9 +123,18 @@ const OrderDetailDrawer = ({
           <MetaRow>
             <span>Subtotal</span>
             <span>
-              {settings.currency || "Rs."} {order.subtotal?.toFixed(2)}
+              {settings.currency || "Rs."} {Number(order.subtotal || 0).toFixed(2)}
             </span>
           </MetaRow>
+          {Number(order.discount || 0) > 0 && (
+            <MetaRow style={{ color: "#16a34a", fontWeight: 600 }}>
+              <span>Item Discount</span>
+              <span>
+                - {settings.currency || "Rs."}{" "}
+                {Number(order.discount).toFixed(2)}
+              </span>
+            </MetaRow>
+          )}
           {hasGst && (
             <MetaRow>
               <span>CGST (2.5%) + SGST (2.5%)</span>
@@ -127,7 +154,7 @@ const OrderDetailDrawer = ({
           >
             <span>Grand Total</span>
             <span>
-              {settings.currency || "Rs."} {order.total?.toFixed(2)}
+              {settings.currency || "Rs."} {Number(order.total || 0).toFixed(2)}
             </span>
           </MetaRow>
         </DetailSection>
@@ -254,13 +281,32 @@ const DashedLine = styled.div`
 const DishRow = styled.div`
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   font-size: 11.5px;
+  gap: 8px;
+`;
+
+const DishInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
 `;
 
 const DishName = styled.div`
   font-weight: 700;
   color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+const DishPriceRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
 `;
 
 const DishPrice = styled.div`
@@ -268,14 +314,39 @@ const DishPrice = styled.div`
   color: var(--color-text-secondary);
 `;
 
+const DishOriginalPrice = styled.span`
+  font-size: 10px;
+  color: var(--color-text-muted, #94a3b8);
+  text-decoration: line-through;
+`;
+
+const DishNetPrice = styled.span`
+  font-size: 10px;
+  font-weight: 600;
+  color: #16a34a;
+`;
+
+const DishDiscountTag = styled.span`
+  font-size: 9px;
+  font-weight: 700;
+  color: #16a34a;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 4px;
+  padding: 0px 3px;
+`;
+
 const DishQty = styled.div`
   font-weight: 600;
   color: var(--color-text-secondary);
+  flex-shrink: 0;
 `;
 
 const DishTotal = styled.div`
   font-weight: 700;
   color: var(--color-text-primary);
+  flex-shrink: 0;
+  white-space: nowrap;
 `;
 
 const StyledPaymentTag = styled.span`
