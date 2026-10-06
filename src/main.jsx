@@ -5,6 +5,7 @@ import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
 import { store, persistor } from "./app/store";
 import { registerSW } from "virtual:pwa-register";
+import { HelmetProvider } from "react-helmet-async";
 
 // Capture PWA install prompt globally
 window.addEventListener("beforeinstallprompt", (e) => {
@@ -17,9 +18,11 @@ window.addEventListener("beforeinstallprompt", (e) => {
 registerSW({ immediate: true });
 
 ReactDOM.createRoot(document.getElementById("root")).render(
-  <Provider store={store}>
-    <PersistGate loading={null} persistor={persistor}>
-      <App />
-    </PersistGate>
-  </Provider>,
+  <HelmetProvider>
+    <Provider store={store}>
+      <PersistGate loading={null} persistor={persistor}>
+        <App />
+      </PersistGate>
+    </Provider>
+  </HelmetProvider>,
 );

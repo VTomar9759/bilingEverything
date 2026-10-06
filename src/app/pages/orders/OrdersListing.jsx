@@ -18,6 +18,7 @@ import { PATH_BILLING, PATH_ORDER_COMPOSER, PATH_ORDER_EDIT } from "../../routes
 import TabHeader from "../../../components/TabHeader";
 import { PageWrapper } from "../../styles/commonstyle";
 import useOrders from "../../hooks/useOrders";
+import PageSEO from "../../../components/SEO/PageSEO";
 import OrderDetailDrawer from "./components/OrderDetailDrawer";
 import { getStatusBadge, getPaymentStatusBadge, getPaymentModeBadge } from "../../utils/common_function";
 import { ORDER_STATUS } from "../../utils/constant";
@@ -238,6 +239,7 @@ const OrdersListing = () => {
 
   return (
     <PageWrapper>
+      <PageSEO />
       {/* Page Header */}
       <HeaderBox>
         <TabHeader breadcrumb={["Composer", "Orders"]} />

@@ -22,6 +22,7 @@ import { generateOrderNumber } from "../../../services/orderService";
 import useItemStore from "../../hooks/useItemStore";
 import TabHeader from "../../../components/TabHeader";
 import { PageWrapper } from "../../styles/commonstyle";
+import PageSEO from "../../../components/SEO/PageSEO";
 import { TABLE_STATUS, PAYMENT_MODE } from "../../utils/constant";
 import { PATH_ORDERS, PATH_BILLING } from "../../routes/pathname";
 import CategorySelecter from "../../../components/CategorySelecter";
@@ -294,6 +295,7 @@ const PosOrderComposer = () => {
 
   return (
     <PageWrapper>
+      <PageSEO />
       <HeaderBox>
         <TabHeader title="POS New Order Composer" />
         <Button

@@ -7,6 +7,7 @@ import { PageSpinner, EmptyPlaceholder } from "../../../loader/PageSpinner";
 
 import TabHeader from "../../../components/TabHeader";
 import { PageWrapper } from "../../styles/commonstyle";
+import PageSEO from "../../../components/SEO/PageSEO";
 import useQueue from "../../hooks/useQueue";
 import QueueCard from "./components/QueueCard";
 import { PATH_ONLY_QUEUE, PATH_ORDER_QUEUE } from "../../routes/pathname";
@@ -31,6 +32,7 @@ const Queue = ({ hideCustomerNav = false, showExitNav = false }) => {
 
   return (
     <PageWrapper>
+      <PageSEO />
       {/* Page Header */}
       <HeaderBox>
         <TabHeader title="Order Queue" />

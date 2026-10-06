@@ -10,6 +10,7 @@ import { PageSpinner, EmptyPlaceholder } from "../../../loader/PageSpinner";
 import TabHeader from "../../../components/TabHeader";
 import { PageWrapper } from "../../styles/commonstyle";
 import * as service from "../../../services";
+import PageSEO from "../../../components/SEO/PageSEO";
 import OrderInvoiceModal from "../../print/OrderInvoiceModal";
 import { PATH_ORDERS, PATH_ORDER_EDIT } from "../../routes/pathname";
 import {
@@ -354,6 +355,7 @@ const BillingSection = () => {
 
   return (
     <PageWrapper>
+      <PageSEO />
       {/* Header */}
       <HeaderBox>
         <TabHeader

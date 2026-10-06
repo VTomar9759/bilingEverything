@@ -6,6 +6,7 @@ import { PageSpinner, EmptyPlaceholder } from "../../../loader/PageSpinner";
 
 import TabHeader from "../../../components/TabHeader";
 import { PageWrapper } from "../../styles/commonstyle";
+import PageSEO from "../../../components/SEO/PageSEO";
 import useCategories from "../../hooks/useCategories";
 import useOrgData from "../../hooks/useOrgData";
 import CategoryCard from "./components/CategoryCard";
@@ -95,6 +96,7 @@ const CategoriesListing = () => {
 
   return (
     <PageWrapper>
+      <PageSEO />
       {/* Page Header */}
       <HeaderBox>
         <TabHeader

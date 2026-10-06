@@ -6,6 +6,7 @@ import { PlusOutlined } from "@ant-design/icons";
 import { PATH_ADD_ITEM } from "../../routes/pathname";
 import TabHeader from "../../../components/TabHeader";
 import { PageWrapper } from "../../styles/commonstyle";
+import PageSEO from "../../../components/SEO/PageSEO";
 import ItemCard from "./components/ItemCard";
 import useItemStore from "../../hooks/useItemStore";
 import InputSearch from "../../../components/SearchInput";
@@ -65,6 +66,7 @@ const ItemListing = () => {
 
   return (
     <PageWrapper>
+      <PageSEO />
       {/* Page header */}
       <PageHead>
         <TabHeader

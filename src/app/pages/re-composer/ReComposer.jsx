@@ -22,6 +22,7 @@ import useOrderEdit from "../../hooks/useOrderEdit";
 import useItemStore from "../../hooks/useItemStore";
 import TabHeader from "../../../components/TabHeader";
 import { PageWrapper } from "../../styles/commonstyle";
+import PageSEO from "../../../components/SEO/PageSEO";
 import { PATH_BILLING } from "../../routes/pathname";
 import { PAYMENT_MODE } from "../../utils/constant";
 import CategorySelecter from "../../../components/CategorySelecter";
@@ -349,6 +350,7 @@ const OrderEditPage = () => {
 
   return (
     <PageWrapper>
+      <PageSEO />
       <HeaderBox>
         <TabHeader title={orderTitle} />
         <Button

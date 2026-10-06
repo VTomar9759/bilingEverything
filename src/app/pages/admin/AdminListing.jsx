@@ -6,6 +6,7 @@ import { PageSpinner, EmptyPlaceholder } from "../../../loader/PageSpinner";
 
 import TabHeader from "../../../components/TabHeader";
 import { PageWrapper } from "../../styles/commonstyle";
+import PageSEO from "../../../components/SEO/PageSEO";
 import useAdmins from "../../hooks/useAdmins";
 import useOrgData from "../../hooks/useOrgData";
 import useTables from "../../hooks/useTables";
@@ -131,6 +132,7 @@ const AdminListing = () => {
 
   return (
     <PageWrapper>
+      <PageSEO />
       {/* Page Header */}
       <HeaderBox>
         <TabHeader

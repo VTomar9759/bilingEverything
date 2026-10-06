@@ -29,6 +29,7 @@ import {
 
 import TabHeader from "../../../components/TabHeader";
 import { PageWrapper } from "../../styles/commonstyle";
+import PageSEO from "../../../components/SEO/PageSEO";
 import { PATH_BILLING, PATH_ORDERS, PATH_ORDER_EDIT } from "../../routes/pathname";
 import useTables from "../../hooks/useTables";
 import TableCard from "./components/TableCard";
@@ -199,6 +200,7 @@ const TablesListing = () => {
 
   return (
     <PageWrapper>
+      <PageSEO />
       {/* Page Header */}
       <HeaderBox>
         <TabHeader title="Floor Dine-in Tables" />

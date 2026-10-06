@@ -12,6 +12,7 @@ import dayjs from "dayjs";
 import useOrgData from "../../hooks/useOrgData";
 import TabHeader from "../../../components/TabHeader";
 import { PageWrapper } from "../../styles/commonstyle";
+import PageSEO from "../../../components/SEO/PageSEO";
 import * as service from "../../../services";
 
 import SummaryCards from "./components/SummaryCards";
@@ -258,6 +259,7 @@ const ReportsDashboard = () => {
 
   return (
     <PageWrapper>
+      <PageSEO />
       {/* Top Header */}
       <HeaderRow>
         <TabHeader

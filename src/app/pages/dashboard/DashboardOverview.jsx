@@ -6,6 +6,7 @@ import { useSelector } from "react-redux";
 import { PlusOutlined, FileSyncOutlined } from "@ant-design/icons";
 import useOrgData from "../../hooks/useOrgData";
 import { PageSpinner } from "../../../loader/PageSpinner";
+import PageSEO from "../../../components/SEO/PageSEO";
 
 import TabHeader from "../../../components/TabHeader";
 import { PageWrapper } from "../../styles/commonstyle";
@@ -85,7 +86,7 @@ const DashboardOverview = () => {
 
   return (
     <PageWrapper>
-      {/* Top dashboard header */}
+      <PageSEO />
       <HeaderSection>
         <TabHeader
           title={userData?.business_name || "Restaurant Cockpit"}
