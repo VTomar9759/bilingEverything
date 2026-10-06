@@ -41,6 +41,7 @@ const TablesListing = () => {
   const navigate = useNavigate();
   const { permission } = useOrgData();
   const tablesPerm = permission?.tables;
+  console.log(tablesPerm,'ssssssssssssssss')
 
   const canCreate = tablesPerm?.create ?? false;
   const canUpdate = tablesPerm?.update ?? false;
@@ -379,7 +380,7 @@ const TablesListing = () => {
             )}
 
             <ActionsArea>
-              {canCreate || canDelete && <ActionsTitleHeader>
+              {(canCreate || canDelete) && <ActionsTitleHeader>
                 <ActionsTitle>Table Operations</ActionsTitle>
                 <Space>
                   {canCreate && <Tooltip title="Modify Details">

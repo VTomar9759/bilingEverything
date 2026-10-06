@@ -834,8 +834,8 @@ export const printKOTSilent = async ({
               background: #ffffff;
               color: #000000;
               font-family: 'Courier New', Courier, monospace;
-              font-size: 11px;
-              line-height: 1.3;
+              font-size: 14px;
+              line-height: 1.5;
               -webkit-print-color-adjust: exact;
               print-color-adjust: exact;
             }
@@ -861,7 +861,7 @@ export const printKOTSilent = async ({
             table {
               width: 100% !important;
               border-collapse: collapse !important;
-              font-size: 11px !important;
+              font-size: 14px !important;
               table-layout: fixed !important;
             }
             td, th {

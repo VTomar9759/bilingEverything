@@ -83,7 +83,7 @@ const PrintGlobalStyles = createGlobalStyle`
     .printable-receipt-container .items-table,
     .printable-receipt-container .items-table th,
     .printable-receipt-container .items-table td {
-      font-size: 11px !important;
+      font-size: 14px !important;
       color: #000000 !important;
       word-break: break-word !important;
     }
@@ -479,7 +479,7 @@ const KOT = ({ visible, onClose, order, settings, isCombined = true }) => {
             {/* ─── BOTTOM SECTION: KOT ─── */}
             {businessName && (
               <ReceiptHeader className="receipt-header" style={{ textAlign: "center", width: "100%" }}>
-                <p style={{ fontWeight: 700, textAlign: "center", width: "100%", fontSize: "13px", margin: "0 0 4px 0", textTransform: "uppercase" }}>
+                <p style={{ fontWeight: 700, textAlign: "center", width: "100%", fontSize: "16px", margin: "0 0 4px 0", textTransform: "uppercase" }}>
                   {businessName}
                 </p>
               </ReceiptHeader>
@@ -518,7 +518,7 @@ const KOT = ({ visible, onClose, order, settings, isCombined = true }) => {
                     <td style={{ fontWeight: 600 }}>{item.name}</td>
                     <td
                       align="center"
-                      style={{ fontWeight: 700, fontSize: "12px" }}
+                      style={{ fontWeight: 700, fontSize: "15px" }}
                     >
                       x{item.quantity}
                     </td>
@@ -528,7 +528,7 @@ const KOT = ({ visible, onClose, order, settings, isCombined = true }) => {
             </KotItemsTable>
 
             <DottedDivider className="dotted-divider" style={{ margin: "8px 0 4px 0" }} />
-            <p style={{ textAlign: "center", fontWeight: 700, fontSize: "12px", margin: "4px 0 6px 0", color: "#000", textTransform: "uppercase" }}>
+            <p style={{ textAlign: "center", fontWeight: 700, fontSize: "15px", margin: "4px 0 6px 0", color: "#000", textTransform: "uppercase" }}>
               -- Order Completed --
             </p>
             <DottedDivider className="dotted-divider" style={{ margin: "4px 0 4px 0" }} />
@@ -586,22 +586,22 @@ const ReceiptPaper = styled.div`
   border-radius: 4px;
   position: relative;
   box-sizing: border-box;
-  font-size: 11px;
-  line-height: 1.4;
+  font-size: 14px;
+  line-height: 1.5;
 `;
 
 const ReceiptHeader = styled.div`
   text-align: center;
   h3 {
     font-family: 'Segoe UI', 'Inter', 'Helvetica Neue', Arial, sans-serif;
-    font-size: 15px;
+    font-size: 17px;
     font-weight: 800;
     color: #0f172a;
     margin: 0 0 2px;
     text-transform: uppercase;
   }
   p {
-    font-size: 10.5px;
+    font-size: 13px;
     margin: 1px 0;
     color: #64748b;
     word-wrap: break-word;
@@ -633,7 +633,7 @@ const CutDivider = styled.div`
 `;
 
 const ReceiptMeta = styled.div`
-  font-size: 11px;
+  font-size: 14px;
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -647,13 +647,13 @@ const ReceiptMeta = styled.div`
 const ItemsTable = styled.table`
   width: 100%;
   border-collapse: collapse;
-  font-size: 11px;
+  font-size: 14px;
   table-layout: fixed;
   th {
     font-weight: 700;
     padding-bottom: 4px;
     color: #0f172a;
-    font-size: 11px;
+    font-size: 14px;
     border-bottom: 1.5px dashed #94a3b8;
   }
   td {
@@ -661,20 +661,20 @@ const ItemsTable = styled.table`
     color: #1e293b;
     vertical-align: top;
     word-break: break-word;
-    font-size: 11px;
+    font-size: 14px;
   }
 `;
 
 const KotItemsTable = styled.table`
   width: 100%;
   border-collapse: collapse;
-  font-size: 11px;
+  font-size: 14px;
   table-layout: fixed;
   th {
     font-weight: 700;
     padding-bottom: 4px;
     color: #0f172a;
-    font-size: 11px;
+    font-size: 14px;
     border-bottom: 1.5px dashed #94a3b8;
   }
   td {
@@ -682,14 +682,14 @@ const KotItemsTable = styled.table`
     color: #1e293b;
     vertical-align: top;
     word-break: break-word;
-    font-size: 11px;
+    font-size: 14px;
   }
 `;
 
 const TotalsTable = styled.table`
   width: 100%;
   border-collapse: collapse;
-  font-size: 11px;
+  font-size: 14px;
   color: #1e293b;
 
   td {
@@ -699,7 +699,7 @@ const TotalsTable = styled.table`
 
 const ReceiptFooter = styled.div`
   text-align: center;
-  font-size: 10.5px;
+  font-size: 13px;
   color: #d97706;
   p {
     margin: 2px 0;
