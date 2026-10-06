@@ -111,8 +111,8 @@ const BrandLink = styled.div`
 `;
 
 const LogoImg = styled.img`
-  width: 32px;
-  height: 32px;
+  width: 50px;
+  height: 50px;
   object-fit: contain;
 `;
 
