@@ -5,11 +5,14 @@ import {
   Outlet,
 } from "react-router-dom";
 import { Suspense } from "react";
+import { useDispatch } from "react-redux";
 import useOrgData from "../hooks/useOrgData";
 import Loading from "../../loader/Loading";
 import { PublicLayout, PrivateLayout } from "../layout";
 import PageNotFound from "../utils/pagenotFound";
 import { privateChildren, publicChildren, withoutSidenave } from "./Children";
+import BuySubscription from "../subscription/BuySubscription";
+import { emptyStore } from "../store/actions";
 import {
   PATH_DASHBOARD,
   PATH_LOGIN,
@@ -60,9 +63,28 @@ const PrivateRoute = ({ children, isAuthenticated }) => {
   return children;
 };
 
+/**
+ * SubscriptionRoute
+ * Sits between PrivateRoute and PrivateLayout.
+ * If the user has no active subscription it renders BuySubscription
+ * (a standalone full-page wall with no sidebar/nav).
+ */
+const SubscriptionRoute = ({ children, hasSubscription, onLogout }) => {
+  if (!hasSubscription) {
+    return <BuySubscription onLogout={onLogout} />;
+  }
+  return children;
+};
+
 const AppRouter = () => {
-  const { token, userData, permission } = useOrgData();
+  const dispatch = useDispatch();
+  const { token, userData, permission, user_subscription } = useOrgData();
   const isAuthenticated = !!token && !!userData;
+  const hasSubscription = user_subscription?.subscription?.is_active === true;
+
+  const handleLogout = () => {
+    dispatch(emptyStore());
+  };
 
   const filteredPrivateChildren = privateChildren.filter((item) => {
     if (!permission) return true;
@@ -94,7 +116,12 @@ const AppRouter = () => {
           isAuthenticated={isAuthenticated}
           permissionDashboard={permission?.dashboard?.view}
         >
-          <PrivateLayout />
+          <SubscriptionRoute
+            hasSubscription={hasSubscription}
+            onLogout={handleLogout}
+          >
+            <PrivateLayout />
+          </SubscriptionRoute>
         </PrivateRoute>
       ),
       children: filteredPrivateChildren,

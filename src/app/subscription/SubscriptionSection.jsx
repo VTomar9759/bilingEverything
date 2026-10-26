@@ -1,16 +1,48 @@
-import React, { useState } from "react";
-import styled from "styled-components";
+import React, { useState, useEffect, useCallback } from "react";
+import styled, { keyframes } from "styled-components";
 import { useNavigate } from "react-router-dom";
 import SubscriptionCard from "./SubscriptionCard";
-import { SUBSCRIPTION_PLANS } from "./subscriptionData";
+import { fetchSubscriptionPlans } from "./subscription-plan";
 import { PATH_SIGNUP } from "../routes/pathname";
 
 const SubscriptionSection = ({ id = "pricing" }) => {
   const navigate = useNavigate();
-  const [billingCycle, setBillingCycle] = useState("yearly"); // "monthly" | "yearly"
+  const [plans, setPlans] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const loadPlans = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await fetchSubscriptionPlans();
+      if (Array.isArray(data)) {
+        setPlans(data);
+      } else {
+        setPlans([]);
+      }
+    } catch (err) {
+      console.error("Error loading plans from database table:", err);
+      setError("Unable to load subscription plans from database.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadPlans();
+  }, [loadPlans]);
 
   const handleSelectPlan = (plan) => {
-    navigate(PATH_SIGNUP, { state: { selectedPlan: plan.id, billingCycle } });
+    navigate(PATH_SIGNUP, {
+      state: {
+        selectedPlan: plan.id,
+        planName: plan.plan_name || plan.name,
+        durationMonths: plan.duration_months,
+        price: plan.price,
+        isFreeTrial: plan.is_free_trial,
+      },
+    });
   };
 
   return (
@@ -19,46 +51,57 @@ const SubscriptionSection = ({ id = "pricing" }) => {
         <HeaderArea>
           <EyebrowTag>SUBSCRIPTION PLANS</EyebrowTag>
           <MainTitle>Simple, Transparent Pricing</MainTitle>
-          <SubTitle>Choose the perfect plan to power your restaurant operations.</SubTitle>
-
-          {/* Billing Cycle Toggle */}
-          <ToggleContainer>
-            <ToggleOption
-              $active={billingCycle === "monthly"}
-              onClick={() => setBillingCycle("monthly")}
-            >
-              Monthly Billing
-            </ToggleOption>
-
-            <SwitchButton
-              onClick={() =>
-                setBillingCycle(billingCycle === "monthly" ? "yearly" : "monthly")
-              }
-            >
-              <SwitchKnob $active={billingCycle === "yearly"} />
-            </SwitchButton>
-
-            <ToggleOption
-              $active={billingCycle === "yearly"}
-              onClick={() => setBillingCycle("yearly")}
-            >
-              Annual Billing
-              <DiscountPill>Save 20%</DiscountPill>
-            </ToggleOption>
-          </ToggleContainer>
+          <SubTitle>
+            Choose the right plan to power your restaurant operations. No hidden fees.
+          </SubTitle>
         </HeaderArea>
 
+        {/* Loading Skeletons */}
+        {loading && (
+          <CardsGrid>
+            {[1, 2, 3, 4].map((i) => (
+              <SkeletonCard key={i}>
+                <SkeletonBadge />
+                <SkeletonTitle />
+                <SkeletonSubtitle />
+                <SkeletonPrice />
+                <SkeletonFeatures>
+                  <SkeletonLine $width="90%" />
+                  <SkeletonLine $width="80%" />
+                  <SkeletonLine $width="85%" />
+                  <SkeletonLine $width="75%" />
+                </SkeletonFeatures>
+                <SkeletonButton />
+              </SkeletonCard>
+            ))}
+          </CardsGrid>
+        )}
+
+        {/* Empty / Error State */}
+        {!loading && plans.length === 0 && (
+          <EmptyContainer>
+            <EmptyIcon>📋</EmptyIcon>
+            <EmptyTitle>No Subscription Plans Available</EmptyTitle>
+            <EmptyText>
+              {error ||
+                "No active plans found in the subscription_plan database table. Check your database or RLS permissions."}
+            </EmptyText>
+            <RetryButton onClick={loadPlans}>Refresh Plans</RetryButton>
+          </EmptyContainer>
+        )}
+
         {/* Cards Grid */}
-        <CardsGrid>
-          {SUBSCRIPTION_PLANS.map((plan) => (
-            <SubscriptionCard
-              key={plan.id}
-              plan={plan}
-              billingCycle={billingCycle}
-              onSelectPlan={handleSelectPlan}
-            />
-          ))}
-        </CardsGrid>
+        {!loading && plans.length > 0 && (
+          <CardsGrid>
+            {plans.map((plan) => (
+              <SubscriptionCard
+                key={plan.id}
+                plan={plan}
+                onSelectPlan={handleSelectPlan}
+              />
+            ))}
+          </CardsGrid>
+        )}
       </Container>
     </SectionWrapper>
   );
@@ -81,7 +124,7 @@ const SectionWrapper = styled.section`
 `;
 
 const Container = styled.div`
-  max-width: 1280px;
+  max-width: 1320px;
   margin: 0 auto;
   padding: 0 24px;
 
@@ -92,8 +135,8 @@ const Container = styled.div`
 
 const HeaderArea = styled.div`
   text-align: center;
-  max-width: 600px;
-  margin: 0 auto 48px auto;
+  max-width: 640px;
+  margin: 0 auto 52px auto;
 `;
 
 const EyebrowTag = styled.div`
@@ -128,64 +171,140 @@ const SubTitle = styled.p`
   line-height: 1.6;
 `;
 
-const ToggleContainer = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  margin-top: 24px;
-`;
-
-const ToggleOption = styled.span`
-  font-size: 14px;
-  font-weight: 700;
-  color: ${({ $active }) => ($active ? "#0f172a" : "#94a3b8")};
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  transition: color 0.2s ease;
-`;
-
-const SwitchButton = styled.button`
-  width: 54px;
-  height: 28px;
-  border-radius: 999px;
-  background: #01514b;
-  padding: 3px;
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-`;
-
-const SwitchKnob = styled.div`
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: #ffffff;
-  transition: transform 0.2s ease;
-  transform: ${({ $active }) => ($active ? "translateX(26px)" : "translateX(0)")};
-`;
-
-const DiscountPill = styled.span`
-  font-size: 10px;
-  font-weight: 800;
-  background: #d1fae5;
-  color: #065f46;
-  padding: 2px 8px;
-  border-radius: 999px;
-`;
-
 const CardsGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 28px;
-  max-width: 1140px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+  max-width: 1280px;
   margin: 0 auto;
 
-  @media (max-width: 960px) {
+  @media (max-width: 1150px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (max-width: 640px) {
     grid-template-columns: 1fr;
-    max-width: 480px;
+    max-width: 440px;
+  }
+`;
+
+const LoadingHint = styled.p`
+  text-align: center;
+  font-size: 12px;
+  color: #94a3b8;
+  margin-top: 20px;
+`;
+
+const pulse = keyframes`
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+`;
+
+const SkeletonCard = styled.div`
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 32px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  animation: ${pulse} 1.8s ease-in-out infinite;
+`;
+
+const SkeletonBadge = styled.div`
+  width: 70px;
+  height: 18px;
+  background: #e2e8f0;
+  border-radius: 999px;
+`;
+
+const SkeletonTitle = styled.div`
+  width: 60%;
+  height: 24px;
+  background: #e2e8f0;
+  border-radius: 6px;
+`;
+
+const SkeletonSubtitle = styled.div`
+  width: 85%;
+  height: 14px;
+  background: #f1f5f9;
+  border-radius: 4px;
+`;
+
+const SkeletonPrice = styled.div`
+  width: 50%;
+  height: 38px;
+  background: #e2e8f0;
+  border-radius: 8px;
+  margin: 12px 0;
+`;
+
+const SkeletonFeatures = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+  flex: 1;
+`;
+
+const SkeletonLine = styled.div`
+  width: ${({ $width }) => $width || "100%"};
+  height: 12px;
+  background: #f1f5f9;
+  border-radius: 4px;
+`;
+
+const SkeletonButton = styled.div`
+  width: 100%;
+  height: 44px;
+  background: #e2e8f0;
+  border-radius: 12px;
+  margin-top: 16px;
+`;
+
+const EmptyContainer = styled.div`
+  text-align: center;
+  padding: 60px 24px;
+  background: #ffffff;
+  border-radius: 20px;
+  border: 1px dashed #cbd5e1;
+  max-width: 540px;
+  margin: 0 auto;
+`;
+
+const EmptyIcon = styled.div`
+  font-size: 40px;
+  margin-bottom: 12px;
+`;
+
+const EmptyTitle = styled.h3`
+  font-size: 20px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 8px 0;
+`;
+
+const EmptyText = styled.p`
+  font-size: 14px;
+  color: #64748b;
+  line-height: 1.5;
+  margin: 0 0 20px 0;
+`;
+
+const RetryButton = styled.button`
+  background: #01514b;
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 14px;
+  padding: 10px 24px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: #023834;
+    transform: translateY(-1px);
   }
 `;

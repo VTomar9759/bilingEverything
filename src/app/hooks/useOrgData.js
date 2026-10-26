@@ -5,7 +5,7 @@ import { selectPrintSettings, selectPrintSettingsFetched } from "../store/slices
 
 const useOrgData = () => {
   const authState = useSelector((state) => state?.authSlice) || {};
-  const { org_id, created_by, gst_number, gst_status, token, refreshToken, userData } = authState;
+  const { org_id, created_by, gst_number, gst_status, token, refreshToken, userData, user_subscription } = authState;
 
   const printSettings = useSelector(selectPrintSettings);
   const printSettingsFetched = useSelector(selectPrintSettingsFetched);
@@ -98,6 +98,7 @@ const useOrgData = () => {
     show_customer_details: authState?.show_customer_details ?? false,
     printSettings,
     printSettingsFetched,
+    user_subscription: user_subscription ?? null,
   };
 };
 

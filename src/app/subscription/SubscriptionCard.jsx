@@ -1,41 +1,77 @@
 import React from "react";
 import styled from "styled-components";
 
-const SubscriptionCard = ({ plan, billingCycle, onSelectPlan }) => {
+const SubscriptionCard = ({ plan, billingCycle = "monthly", onSelectPlan }) => {
   const isYearly = billingCycle === "yearly";
-  const price = isYearly ? plan.priceYearly : plan.priceMonthly;
+
+  // Check if plan comes from the database table schema
+  const isDbPlan = plan.duration_months !== undefined || plan.durationMonths !== undefined;
+  const isFreeTrial = Boolean(plan.is_free_trial);
+
+  let price = 0;
+  let billingPeriodText = " / month";
+  let subNote = null;
+
+  if (isDbPlan) {
+    price = Number(plan.price || 0);
+    const durationText =
+      plan.durationText ||
+      (plan.duration_months === 12
+        ? "1 Year"
+        : `${plan.duration_months} ${plan.duration_months === 1 ? "Month" : "Months"}`);
+
+    billingPeriodText = isFreeTrial ? ` / ${durationText}` : ` / ${durationText}`;
+
+    if (isFreeTrial) {
+      subNote = "100% Free • No credit card required";
+    } else if (plan.monthlyEquivalent && plan.duration_months > 1) {
+      subNote = `Effective ₹${plan.monthlyEquivalent.toLocaleString("en-IN")}/month`;
+    }
+  } else {
+    price = isYearly ? plan.priceYearly || 0 : plan.priceMonthly || 0;
+    billingPeriodText = " / month";
+    if (isYearly) {
+      subNote = "Billed annually (Save 20%)";
+    }
+  }
+
+  const planName = plan.name || plan.plan_name || "Subscription Plan";
+  const buttonLabel =
+    plan.buttonText || (isFreeTrial ? "Start Free Trial" : "Get Started Now");
 
   return (
     <CardContainer $popular={plan.popular}>
       {plan.badge && <PopularBadge $popular={plan.popular}>{plan.badge}</PopularBadge>}
 
       <CardHeader>
-        <PlanName>{plan.name}</PlanName>
-        <PlanTagline>{plan.tagline}</PlanTagline>
+        <PlanName>{planName}</PlanName>
+        {plan.tagline && <PlanTagline>{plan.tagline}</PlanTagline>}
       </CardHeader>
 
       <PriceSection>
         <CurrencySymbol>₹</CurrencySymbol>
-        <PriceValue>{price.toLocaleString()}</PriceValue>
-        <PriceBillingPeriod> / month</PriceBillingPeriod>
-        {isYearly && <BilledYearlyNote>Billed annually (Save 20%)</BilledYearlyNote>}
+        <PriceValue>{price.toLocaleString("en-IN")}</PriceValue>
+        <PriceBillingPeriod>{billingPeriodText}</PriceBillingPeriod>
+        {subNote && <BilledYearlyNote>{subNote}</BilledYearlyNote>}
       </PriceSection>
 
-      <FeatureList>
-        {plan.features.map((feat, idx) => (
-          <FeatureItem key={idx}>
-            <CheckCircleIcon>✓</CheckCircleIcon>
-            <span>{feat}</span>
-          </FeatureItem>
-        ))}
-      </FeatureList>
+      {Array.isArray(plan.features) && (
+        <FeatureList>
+          {plan.features.map((feat, idx) => (
+            <FeatureItem key={idx}>
+              <CheckCircleIcon>✓</CheckCircleIcon>
+              <span>{feat}</span>
+            </FeatureItem>
+          ))}
+        </FeatureList>
+      )}
 
       <CardFooter>
         <ActionButton
           $popular={plan.popular}
           onClick={() => onSelectPlan && onSelectPlan(plan)}
         >
-          {plan.buttonText}
+          {buttonLabel}
         </ActionButton>
       </CardFooter>
     </CardContainer>
@@ -51,7 +87,7 @@ const CardContainer = styled.div`
   background: #ffffff;
   border: ${({ $popular }) => ($popular ? "2px solid #01514b" : "1px solid #e2e8f0")};
   border-radius: 20px;
-  padding: 32px 28px;
+  padding: 32px 24px;
   position: relative;
   display: flex;
   flex-direction: column;
@@ -82,15 +118,16 @@ const PopularBadge = styled.div`
   border-radius: 999px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  white-space: nowrap;
   box-shadow: 0 4px 10px rgba(1, 81, 75, 0.2);
 `;
 
 const CardHeader = styled.div`
-  margin-bottom: 20px;
+  margin-bottom: 18px;
 `;
 
 const PlanName = styled.h3`
-  font-size: 22px;
+  font-size: 21px;
   font-weight: 800;
   color: #0f172a;
   margin: 0 0 6px 0;
@@ -101,23 +138,24 @@ const PlanTagline = styled.p`
   color: #64748b;
   margin: 0;
   line-height: 1.5;
+  min-height: 36px;
 `;
 
 const PriceSection = styled.div`
-  margin-bottom: 24px;
-  padding-bottom: 20px;
+  margin-bottom: 20px;
+  padding-bottom: 18px;
   border-bottom: 1px solid #f1f5f9;
 `;
 
 const CurrencySymbol = styled.span`
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 800;
   color: #0f172a;
   vertical-align: top;
 `;
 
 const PriceValue = styled.span`
-  font-size: 44px;
+  font-size: 40px;
   font-weight: 800;
   color: #0f172a;
   letter-spacing: -0.03em;
@@ -139,19 +177,21 @@ const BilledYearlyNote = styled.div`
 const FeatureList = styled.ul`
   list-style: none;
   padding: 0;
-  margin: 0 0 32px 0;
+  margin: 0 0 28px 0;
   display: flex;
   flex-direction: column;
   gap: 12px;
+  flex-grow: 1;
 `;
 
 const FeatureItem = styled.li`
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 10px;
   font-size: 13px;
   font-weight: 600;
   color: #334155;
+  line-height: 1.4;
 `;
 
 const CheckCircleIcon = styled.span`
@@ -166,6 +206,7 @@ const CheckCircleIcon = styled.span`
   font-size: 10px;
   font-weight: 800;
   flex-shrink: 0;
+  margin-top: 1px;
 `;
 
 const CardFooter = styled.div`
@@ -174,7 +215,7 @@ const CardFooter = styled.div`
 
 const ActionButton = styled.button`
   width: 100%;
-  padding: 14px;
+  padding: 13px;
   border-radius: 999px;
   font-size: 14px;
   font-weight: 800;

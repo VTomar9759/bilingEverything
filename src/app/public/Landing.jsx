@@ -2354,8 +2354,8 @@ const Landing = () => {
       {/* --------------------------------------------------
           SUBSCRIPTION PRICING CARDS
       -------------------------------------------------- */}
-      {/* <SubscriptionSection id="pricing" /> */}
-      {/* <SubscriptionSection/> */}
+       
+       <SubscriptionSection/> 
 
       {/* --------------------------------------------------
           5. FREQUENTLY ASKED QUESTIONS (FAQ) SECTION
