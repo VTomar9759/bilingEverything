@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import styled from "styled-components";
 import { Select, DatePicker, Dropdown, Button, Space, message, Spin } from "antd";
 import {
@@ -7,6 +7,7 @@ import {
   FileExcelOutlined,
   FilePdfOutlined,
   FileTextOutlined,
+  ReloadOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import useOrgData from "../../hooks/useOrgData";
@@ -30,6 +31,7 @@ import StaffPerformance from "./components/StaffPerformance";
 
 import {
   DATE_RANGES,
+  getDateRangeBounds,
   filterByDateRange,
   exportToCSV,
   triggerPrintReport,
@@ -66,46 +68,153 @@ const ReportsDashboard = () => {
   const [tablesList, setTablesList] = useState([]);
   const [adminsList, setAdminsList] = useState([]);
 
+  // In-memory caches to prevent repeated API calls when toggling between tabs
+  const ordersCacheRef = useRef({});
+  const expensesCacheRef = useRef({});
+
   const currency = userData?.currency || "₹";
 
-  const loadData = async () => {
-    if (!org_id) return;
-    setLoading(true);
-    try {
-      const [ordersRes, expensesRes, itemsRes, catRes, tablesRes, adminsRes] = await Promise.all([
-        service.getOrders(org_id),
-        service.getExpenses(org_id),
-        service.getItems(org_id).catch(() => []),
-        service.getCategories(org_id).catch(() => []),
-        service.getTables(org_id).catch(() => []),
-        service.getAdmins(org_id).catch(() => []),
-      ]);
+  // Calculate start/end date bounds based on selected filter
+  const dateBounds = useMemo(() => {
+    const customStart = customRange?.[0] ? (customRange[0].toDate ? customRange[0].toDate() : customRange[0]) : null;
+    const customEnd = customRange?.[1] ? (customRange[1].toDate ? customRange[1].toDate() : customRange[1]) : null;
+    return getDateRangeBounds(dateRange, customStart, customEnd);
+  }, [dateRange, customRange]);
 
-      setAllOrders(ordersRes || []);
-      setAllExpenses(expensesRes || []);
+  const dateKey = useMemo(() => {
+    return `${dateRange}_${dateBounds.startDate}_${dateBounds.endDate}`;
+  }, [dateRange, dateBounds]);
+
+  // Determine what dataset the active tab needs
+  const tabNeedsOrders = activeTab !== "Expenses";
+  const tabNeedsExpenses = activeTab === "Sales" || activeTab === "Profit & Loss" || activeTab === "Expenses";
+
+  // 1. Fetch metadata catalogs once per organization (items, categories, tables, admins)
+  useEffect(() => {
+    if (!org_id) return;
+    let isMounted = true;
+    Promise.all([
+      service.getItems(org_id).catch(() => []),
+      service.getCategories(org_id).catch(() => []),
+      service.getTables(org_id).catch(() => []),
+      service.getAdmins(org_id).catch(() => []),
+    ]).then(([itemsRes, catRes, tablesRes, adminsRes]) => {
+      if (!isMounted) return;
       setItemsCatalog(itemsRes || []);
       setCategories(catRes || []);
       setTablesList(tablesRes || []);
       setAdminsList(adminsRes || []);
-    } catch (err) {
-      console.error("ReportsDashboard data load error:", err);
-      message.error("Failed to load analytics data.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadData();
+    });
+    return () => {
+      isMounted = false;
+    };
   }, [org_id]);
 
-  // Filtered dataset according to selected Date Range
+  // 2. Fetch tab-specific data when active tab or date filter changes
+  const fetchTabData = useCallback(
+    async (forceRefresh = false) => {
+      if (!org_id) return;
+      if (dateRange === DATE_RANGES.CUSTOM && (!customRange?.[0] || !customRange?.[1])) {
+        return;
+      }
+
+      if (forceRefresh) {
+        delete ordersCacheRef.current[dateKey];
+        delete expensesCacheRef.current[dateKey];
+      }
+
+      const needOrders = tabNeedsOrders;
+      const needExpenses = tabNeedsExpenses;
+
+      const hasCachedOrders = !forceRefresh && ordersCacheRef.current[dateKey] !== undefined;
+      const hasCachedExpenses = !forceRefresh && expensesCacheRef.current[dateKey] !== undefined;
+
+      // If needed data is already in cache, use it immediately without loading spinner
+      if ((!needOrders || hasCachedOrders) && (!needExpenses || hasCachedExpenses)) {
+        if (needOrders) setAllOrders(ordersCacheRef.current[dateKey]);
+        if (needExpenses) setAllExpenses(expensesCacheRef.current[dateKey]);
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+
+      const promises = [];
+
+      // Fetch orders only if this tab needs them and they're not yet cached
+      if (needOrders && !hasCachedOrders) {
+        promises.push(
+          service
+            .getOrders({
+              org_id,
+              startDate: dateBounds.startDate,
+              endDate: dateBounds.endDate,
+            })
+            .then((data) => {
+              const list = Array.isArray(data) ? data : data?.data || [];
+              ordersCacheRef.current[dateKey] = list;
+              return { type: "orders", data: list };
+            })
+            .catch((err) => {
+              console.error("[ReportsDashboard] getOrders error:", err);
+              return { type: "orders", data: [] };
+            })
+        );
+      }
+
+      // Fetch expenses only if this tab needs them and they're not yet cached
+      if (needExpenses && !hasCachedExpenses) {
+        promises.push(
+          service
+            .getExpenses(org_id, {
+              startDate: dateBounds.startDate,
+              endDate: dateBounds.endDate,
+            })
+            .then((data) => {
+              const list = Array.isArray(data) ? data : [];
+              expensesCacheRef.current[dateKey] = list;
+              return { type: "expenses", data: list };
+            })
+            .catch((err) => {
+              console.error("[ReportsDashboard] getExpenses error:", err);
+              return { type: "expenses", data: [] };
+            })
+        );
+      }
+
+      try {
+        const results = await Promise.all(promises);
+        results.forEach((res) => {
+          if (res.type === "orders") setAllOrders(res.data);
+          if (res.type === "expenses") setAllExpenses(res.data);
+        });
+        if (needOrders && hasCachedOrders) setAllOrders(ordersCacheRef.current[dateKey]);
+        if (needExpenses && hasCachedExpenses) setAllExpenses(expensesCacheRef.current[dateKey]);
+      } catch (err) {
+        console.error("[ReportsDashboard] data load error:", err);
+        message.error("Failed to load reports data.");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [org_id, dateKey, dateRange, customRange, dateBounds, tabNeedsOrders, tabNeedsExpenses]
+  );
+
+  useEffect(() => {
+    fetchTabData();
+  }, [fetchTabData]);
+
+  const handleRefresh = () => {
+    fetchTabData(true);
+  };
+
+  // Filtered dataset according to selected Date Range (safety check)
   const filteredOrders = useMemo(() => {
     return filterByDateRange(
       allOrders,
       dateRange,
-      customRange?.[0]?.toISOString(),
-      customRange?.[1]?.toISOString(),
+      customRange?.[0]?.toISOString ? customRange[0].toISOString() : customRange?.[0],
+      customRange?.[1]?.toISOString ? customRange[1].toISOString() : customRange?.[1],
       "created_at"
     );
   }, [allOrders, dateRange, customRange]);
@@ -114,8 +223,8 @@ const ReportsDashboard = () => {
     return filterByDateRange(
       allExpenses,
       dateRange,
-      customRange?.[0]?.toISOString(),
-      customRange?.[1]?.toISOString(),
+      customRange?.[0]?.toISOString ? customRange[0].toISOString() : customRange?.[0],
+      customRange?.[1]?.toISOString ? customRange[1].toISOString() : customRange?.[1],
       "expense_date"
     );
   }, [allExpenses, dateRange, customRange]);
@@ -283,6 +392,15 @@ const ReportsDashboard = () => {
             />
           )}
 
+          <Button
+            icon={<ReloadOutlined />}
+            onClick={handleRefresh}
+            loading={loading}
+            title="Refresh current report data"
+          >
+            Refresh
+          </Button>
+
           <Dropdown menu={{ items: exportMenuItems }} placement="bottomRight">
             <Button icon={<DownloadOutlined />}>Export</Button>
           </Dropdown>
@@ -316,7 +434,11 @@ const ReportsDashboard = () => {
           <SpinnerContainer>
             <Spin size="large" tip="Loading analytics..." />
           </SpinnerContainer>
-        ) : filteredOrders.length === 0 && filteredExpenses.length === 0 ? (
+        ) : (activeTab === "Expenses"
+            ? filteredExpenses.length === 0
+            : activeTab === "Sales" || activeTab === "Profit & Loss"
+            ? filteredOrders.length === 0 && filteredExpenses.length === 0
+            : filteredOrders.length === 0) ? (
           <EmptyContainer>
             <EmptyIcon>📊</EmptyIcon>
             <EmptyTitle>No data available for this period</EmptyTitle>
@@ -351,7 +473,7 @@ const ReportsDashboard = () => {
                 <ExpenseBreakdownCard expenses={filteredExpenses} currency={currency} />
                 <ExpenseManagement
                   expenses={filteredExpenses}
-                  onRefresh={loadData}
+                  onRefresh={handleRefresh}
                   org_id={org_id}
                   created_by={created_by}
                   currency={currency}

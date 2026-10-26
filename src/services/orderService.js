@@ -16,24 +16,99 @@ const formatEndDate = (endDate) => {
 };
 
 export const getOrders = async (params) => {
-  let org_id, page, limit, startDate, endDate, status, orderId, user_id, user_role;
+  let org_id, page, limit, startDate, endDate, status, orderId, user_id, user_role, columns;
+  // isPaginated = true only when an explicit page number is provided
   let isPaginated = false;
 
   if (typeof params === "string") {
+    // Called as getOrders(org_id) — full-fetch for reports
     org_id = params;
   } else if (params && typeof params === "object") {
-    org_id = params.org_id;
-    page = params.page ?? 1;
-    limit = params.limit ?? 30;
+    org_id    = params.org_id;
     startDate = params.startDate;
-    endDate = params.endDate;
-    status = params.status;
-    orderId = params.orderId || params.orderId;
-    user_id = params.user_id;
+    endDate   = params.endDate;
+    status    = params.status;
+    orderId   = params.orderId;
+    user_id   = params.user_id;
     user_role = params.user_role;
-    isPaginated = true;
+    // columns: specific fields to fetch (omit heavy fields like `items` when not needed)
+    columns   = params.columns || "*";
+
+    if (params.page != null) {
+      // Explicit page → paginated mode (Billing, order lists)
+      page  = params.page;
+      limit = params.limit ?? 30;
+      isPaginated = true;
+    }
+    // If no page is given → full-fetch mode (Reports with date filter)
   }
 
+  // ── Full-fetch mode (Reports) ──────────────────────────────────────────────
+  // Fetches ALL rows page by page (1000 per page) until a page returns
+  // fewer than 1000 rows — meaning we have reached the end.
+  // Does NOT rely on `count` (which can be null with column-specific selects).
+  if (!isPaginated) {
+    const BATCH    = 1000;
+    const selectCols = columns || "*";
+
+    // Inline builder with date / status filters applied
+    const buildPage = (col, from) => {
+      let q = supabase
+        .from("orders")
+        .select(selectCols)
+        .eq(col, org_id)
+        .order("created_at", { ascending: false })
+        .range(from, from + BATCH - 1);
+
+      if (startDate) q = q.gte("created_at", formatStartDate(startDate));
+      if (endDate)   q = q.lte("created_at", formatEndDate(endDate));
+      if (status && status !== "All") q = q.eq("status", status);
+      return q;
+    };
+
+    // Detect which column name the DB uses for org identity
+    let orgCol = "org_id";
+    const probe = await supabase.from("orders").select("id").eq("org_id", org_id).limit(1);
+    if (probe.error) orgCol = "user_id";
+
+    try {
+      let allData = [];
+      let from    = 0;
+      let pageNum = 1;
+
+      while (true) {
+        const { data, error } = await buildPage(orgCol, from);
+
+        if (error) throw error;
+
+        const rows = data || [];
+        allData = allData.concat(rows);
+
+        console.log(`[getOrders] page ${pageNum}: fetched ${rows.length} rows (total so far: ${allData.length})`);
+
+        // If this page is smaller than a full batch → last page, stop
+        if (rows.length < BATCH) break;
+
+        from += BATCH;
+        pageNum++;
+      }
+
+      console.log(`[getOrders] DONE — ${allData.length} total rows fetched across ${pageNum} page(s)`);
+
+      const result      = allData;
+      result.total      = allData.length;
+      result.page       = 1;
+      result.limit      = allData.length;
+      result.totalPages = 1;
+      return result;
+
+    } catch (err) {
+      console.error("Supabase getOrders (full-fetch) failed:", err);
+      throw err;
+    }
+  }
+
+  // ── Paginated mode — called from Billing / Order list pages ──────────────────
   try {
     let query = supabase
       .from("orders")
@@ -46,11 +121,9 @@ export const getOrders = async (params) => {
 
     query = query.order("created_at", { ascending: false });
 
-    if (isPaginated) {
-      const from = (page - 1) * limit;
-      const to = from + limit - 1;
-      query = query.range(from, to);
-    }
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+    query = query.range(from, to);
 
     // Filter by start date
     if (startDate) {
@@ -89,11 +162,10 @@ export const getOrders = async (params) => {
 
       fallbackQuery = fallbackQuery.order("created_at", { ascending: false });
 
-      if (isPaginated) {
-        const from = (page - 1) * limit;
-        const to = from + limit - 1;
-        fallbackQuery = fallbackQuery.range(from, to);
-      }
+      const from = (page - 1) * limit;
+      const to = from + limit - 1;
+      fallbackQuery = fallbackQuery.range(from, to);
+
       if (startDate) {
         const formattedStartDate = formatStartDate(startDate);
         fallbackQuery = fallbackQuery.gte("created_at", formattedStartDate);
