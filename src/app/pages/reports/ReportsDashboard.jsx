@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import { useSelector } from "react-redux";
 import styled from "styled-components";
 import { Select, DatePicker, Dropdown, Button, Space, message, Spin } from "antd";
 import {
@@ -8,6 +9,7 @@ import {
   FilePdfOutlined,
   FileTextOutlined,
   ReloadOutlined,
+  PlusOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import useOrgData from "../../hooks/useOrgData";
@@ -63,10 +65,11 @@ const ReportsDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [allOrders, setAllOrders] = useState([]);
   const [allExpenses, setAllExpenses] = useState([]);
-  const [itemsCatalog, setItemsCatalog] = useState([]);
-  const [categories, setCategories] = useState([]);
+  const itemsCatalog = useSelector((state) => state?.itemSlice || []);
+  const categories = useSelector((state) => state?.itemsCategorySlices || []);
   const [tablesList, setTablesList] = useState([]);
   const [adminsList, setAdminsList] = useState([]);
+  const [externalAddExpense, setExternalAddExpense] = useState(false);
 
   // In-memory caches to prevent repeated API calls when toggling between tabs
   const ordersCacheRef = useRef({});
@@ -89,19 +92,15 @@ const ReportsDashboard = () => {
   const tabNeedsOrders = activeTab !== "Expenses";
   const tabNeedsExpenses = activeTab === "Sales" || activeTab === "Profit & Loss" || activeTab === "Expenses";
 
-  // 1. Fetch metadata catalogs once per organization (items, categories, tables, admins)
+  // 1. Fetch metadata catalogs once per organization (tables, admins only; items & categories come from Redux)
   useEffect(() => {
     if (!org_id) return;
     let isMounted = true;
     Promise.all([
-      service.getItems(org_id).catch(() => []),
-      service.getCategories(org_id).catch(() => []),
       service.getTables(org_id).catch(() => []),
       service.getAdmins(org_id).catch(() => []),
-    ]).then(([itemsRes, catRes, tablesRes, adminsRes]) => {
+    ]).then(([tablesRes, adminsRes]) => {
       if (!isMounted) return;
-      setItemsCatalog(itemsRes || []);
-      setCategories(catRes || []);
       setTablesList(tablesRes || []);
       setAdminsList(adminsRes || []);
     });
@@ -412,6 +411,16 @@ const ReportsDashboard = () => {
           >
             Print
           </Button>
+
+          {activeTab === "Expenses" && (
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() => setExternalAddExpense(true)}
+            >
+              Add Expense
+            </Button>
+          )}
         </TopControls>
       </HeaderRow>
 
@@ -435,14 +444,32 @@ const ReportsDashboard = () => {
             <Spin size="large" tip="Loading analytics..." />
           </SpinnerContainer>
         ) : (activeTab === "Expenses"
-            ? filteredExpenses.length === 0
+            ? false
             : activeTab === "Sales" || activeTab === "Profit & Loss"
             ? filteredOrders.length === 0 && filteredExpenses.length === 0
             : filteredOrders.length === 0) ? (
           <EmptyContainer>
             <EmptyIcon>📊</EmptyIcon>
-            <EmptyTitle>No data available for this period</EmptyTitle>
-            <EmptySub>Try selecting a broader date range to inspect sales and expense performance.</EmptySub>
+            <EmptyTitle>
+              {activeTab === "Expenses"
+                ? "No expenses recorded for this period"
+                : "No data available for this period"}
+            </EmptyTitle>
+            <EmptySub>
+              {activeTab === "Expenses"
+                ? "Get started by recording operational expenses for your restaurant."
+                : "Try selecting a broader date range to inspect sales and expense performance."}
+            </EmptySub>
+            {activeTab === "Expenses" && (
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                style={{ marginTop: 16 }}
+                onClick={() => setExternalAddExpense(true)}
+              >
+                Add New Expense
+              </Button>
+            )}
           </EmptyContainer>
         ) : (
           <TabContentWrapper>
@@ -477,7 +504,10 @@ const ReportsDashboard = () => {
                   org_id={org_id}
                   created_by={created_by}
                   currency={currency}
-                  permission={permission}
+                  permission={permission?.reports || permission}
+                  user_role={user_role}
+                  externalAddTrigger={externalAddExpense}
+                  onResetExternalTrigger={() => setExternalAddExpense(false)}
                 />
               </ContentColumn>
             )}

@@ -15,12 +15,17 @@ import SEO from "./SEO";
  * Usage (override specific values dynamically):
  *   <PageSEO title={`Edit Order #${orderId}`} />
  */
-const PageSEO = (overrides) => {
+const PageSEO = (overrides = {}) => {
   const { pathname } = useLocation();
   const config = resolveSEO(pathname);
 
+  // Clean undefined override props so they don't erase resolved config
+  const cleanOverrides = Object.fromEntries(
+    Object.entries(overrides || {}).filter(([, v]) => v !== undefined)
+  );
+
   // Merge config with any explicit overrides passed as props
-  const merged = { ...config, ...overrides };
+  const merged = { ...config, ...cleanOverrides };
 
   return (
     <SEO
@@ -30,6 +35,7 @@ const PageSEO = (overrides) => {
       robots={merged.robots}
       author={merged.author}
       themeColor={merged.themeColor}
+      canonical={merged.canonical}
       ogTitle={merged.ogTitle}
       ogDescription={merged.ogDescription}
       ogImage={merged.ogImage}
