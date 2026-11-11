@@ -2,7 +2,7 @@ import { Outlet } from "react-router-dom";
 import { useState } from "react";
 import Sidebar from "../../components/Sidebar";
 import styled from "styled-components";
-import logo from "../../assets/logo.png";
+import logo from "../../assets/logo.webp";
 import useOrgData from "../hooks/useOrgData";
 import PageSEO from "../../components/SEO/PageSEO";
 

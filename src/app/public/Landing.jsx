@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import styled, { keyframes, css } from "styled-components";
-import logo from "../../assets/logo.png";
+import logo from "../../assets/logo.webp";
 import {
   PATH_LOGIN,
   PATH_SIGNUP,
@@ -11,7 +11,6 @@ import {
   PATH_BILLING,
   PATH_SETTINGS_PRINT,
 } from "../routes/pathname";
-import SubscriptionSection from "../subscription/SubscriptionSection";
 import PageSEO from "../../components/SEO/PageSEO";
 
 /* --------------------------------------------------

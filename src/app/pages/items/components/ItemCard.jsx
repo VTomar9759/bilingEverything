@@ -16,7 +16,7 @@ import {
 } from "../../../store/slices/itemSlice";
 import ConfirmModal from "../../../modal/ConfirmModal";
 import AddDiscountModal from "./AddDiscountModal";
-import placeholderImg from "../../../../assets/no-image.png";
+import placeholderImg from "../../../../assets/no-image.webp";
 import { PATH_EDIT_ITEM } from "../../../routes/pathname";
 
 const ItemCard = ({ item, canUpdate: canUpdateProp, canDelete: canDeleteProp }) => {
