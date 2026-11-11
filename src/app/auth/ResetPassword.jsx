@@ -4,7 +4,7 @@ import { Input, Button, Form, message } from "antd";
 import { useNavigate } from "react-router-dom";
 import { PATH_LOGIN, PATH_LANDING } from "../routes/pathname";
 import { supabase } from "../../lib/supabaseClients";
-import logo from "../../assets/logo.png";
+import logo from "../../assets/logo.webp";
 import { BrandTitle } from "../utils/commons_style";
 
 const ResetPassword = () => {

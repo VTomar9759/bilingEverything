@@ -7,7 +7,7 @@ import { supabase } from "../../lib/supabaseClients";
 import { useDispatch } from "react-redux";
 import { logingAuth } from "../store/slices/authSlices";
 import { fetchPrintSettings } from "../store/slices/printSettingSlice";
-import logo from "../../assets/logo.png";
+import logo from "../../assets/logo.webp";
 import { BrandTitle } from "../utils/commons_style";
 
 const Login = () => {

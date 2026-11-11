@@ -4,7 +4,7 @@ import { useNavigate, useLocation } from "react-router";
 import styled, { css, keyframes } from "styled-components";
 import useOrgData from "../app/hooks/useOrgData";
 import { navItems } from "../app/routes/pathname";
-import logo from "../assets/logo.png";
+import logo from "../assets/logo.webp";
 import { SIDEBAR_CLOSED_WIDTH, SIDEBAR_OPEN_WIDTH } from "../app/layout";
 import { BrandTitle } from "../app/utils/commons_style";
 
