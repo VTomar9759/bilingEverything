@@ -162,6 +162,15 @@ export const PAGE_SEO = {
     ogType: "website",
   },
 
+  "/items/edit": {
+    title: "Edit Menu Item — Bill Everything",
+    description:
+      "Update details, price, category, and availability for your restaurant menu item.",
+    keywords: "edit menu item, update food item, restaurant menu edit",
+    robots: "noindex,nofollow",
+    ogType: "website",
+  },
+
   "/categories": {
     title: "Categories — Bill Everything",
     description:
@@ -263,12 +272,37 @@ export const PAGE_SEO = {
 
 /**
  * Resolves the SEO config for a given pathname.
- * Falls back to DEFAULT_SEO for unknown routes.
+ * Falls back to DEFAULT_SEO for unknown routes. Supports trailing slashes
+ * and prefix matching for dynamic subroutes (e.g. /items/edit/123).
  *
  * @param {string} pathname - The current window.location.pathname
  * @returns {object} Merged SEO config object
  */
 export function resolveSEO(pathname) {
-  const pageSeo = PAGE_SEO[pathname] || {};
-  return { ...DEFAULT_SEO, ...pageSeo };
+  if (!pathname) return { ...DEFAULT_SEO };
+
+  // 1. Direct match
+  if (PAGE_SEO[pathname]) {
+    return { ...DEFAULT_SEO, ...PAGE_SEO[pathname] };
+  }
+
+  // 2. Normalized without trailing slash
+  const cleanPath =
+    pathname.length > 1 && pathname.endsWith("/")
+      ? pathname.slice(0, -1)
+      : pathname;
+  if (PAGE_SEO[cleanPath]) {
+    return { ...DEFAULT_SEO, ...PAGE_SEO[cleanPath] };
+  }
+
+  // 3. Prefix matching for parameterized routes (e.g. /items/edit/123 -> /items/edit)
+  const prefixMatch = Object.keys(PAGE_SEO)
+    .filter((route) => route !== "/" && cleanPath.startsWith(route))
+    .sort((a, b) => b.length - a.length)[0];
+
+  if (prefixMatch) {
+    return { ...DEFAULT_SEO, ...PAGE_SEO[prefixMatch] };
+  }
+
+  return { ...DEFAULT_SEO };
 }

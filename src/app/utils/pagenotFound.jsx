@@ -1,6 +1,7 @@
 import React from "react";
 import styled from "styled-components";
 import { Link } from "react-router-dom";
+import SEO from "../../components/SEO/SEO";
 
 const Wrapper = styled.div`
   display: flex;
@@ -43,6 +44,11 @@ const HomeLink = styled(Link)`
 const PageNotFound = () => {
   return (
     <Wrapper>
+      <SEO
+        title="404 — Page Not Found | Bill Everything"
+        description="The page you are looking for does not exist on Bill Everything."
+        robots="noindex,nofollow"
+      />
       <ErrorCode>404</ErrorCode>
       <Message>Oops! The page you are looking for does not exist.</Message>
       <HomeLink to="/">Return </HomeLink>

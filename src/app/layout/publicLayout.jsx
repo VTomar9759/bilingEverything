@@ -3,6 +3,7 @@ import styled from "styled-components";
 import publicBackground from "../../assets/pubicbackground.jpg";
 import logo from "../../assets/logo.png";
 import { PATH_LANDING } from "../routes/pathname";
+import PageSEO from "../../components/SEO/PageSEO";
 
 const PublicLayout = () => {
   const location = useLocation();
@@ -14,6 +15,7 @@ const PublicLayout = () => {
 
   return (
     <PublicLayoutStyle>
+      <PageSEO />
       {/* Top Floating Nav to return to Landing Page */}
       <TopAuthNav>
         <NavBrand onClick={() => navigate(PATH_LANDING)}>

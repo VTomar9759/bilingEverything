@@ -1,9 +1,11 @@
 import styled from "styled-components";
 import Queue from "../pages/order-queue/Queue";
+import PageSEO from "../../components/SEO/PageSEO";
 
 const OnlyQueue = () => {
   return (
     <OnlyQueueWrapper>
+      <PageSEO />
       <Queue hideCustomerNav={true} showExitNav={true} />
     </OnlyQueueWrapper>
   );
