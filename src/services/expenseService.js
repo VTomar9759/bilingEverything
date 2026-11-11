@@ -22,28 +22,39 @@ export const getExpenses = async (org_id, params = {}) => {
   const { startDate, endDate, category } = params;
 
   try {
-    let query = supabase
-      .from("expenses")
-      .select("*")
-      .eq("org_id", org_id)
-      .order("expense_date", { ascending: false });
+    const BATCH = 1000;
+    let allData = [];
+    let from = 0;
 
-    if (startDate) {
-      query = query.gte("expense_date", formatStartDate(startDate));
-    }
-    if (endDate) {
-      query = query.lte("expense_date", formatEndDate(endDate));
-    }
-    if (category && category !== "All") {
-      query = query.eq("category", category);
-    }
+    while (true) {
+      let query = supabase
+        .from("expenses")
+        .select("*")
+        .eq("org_id", org_id)
+        .order("expense_date", { ascending: false })
+        .range(from, from + BATCH - 1);
 
-    const { data, error } = await query;
-    if (error) {
-      console.warn("Expenses table fetch warning (checking fallback):", error.message);
-      return [];
+      if (startDate) {
+        query = query.gte("expense_date", formatStartDate(startDate));
+      }
+      if (endDate) {
+        query = query.lte("expense_date", formatEndDate(endDate));
+      }
+      if (category && category !== "All") {
+        query = query.eq("category", category);
+      }
+
+      const { data, error } = await query;
+      if (error) {
+        console.warn("Expenses table fetch warning (checking fallback):", error.message);
+        break;
+      }
+      const rows = data || [];
+      allData = allData.concat(rows);
+      if (rows.length < BATCH) break;
+      from += BATCH;
     }
-    return data || [];
+    return allData;
   } catch (err) {
     console.error("getExpenses error:", err);
     return [];

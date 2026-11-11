@@ -14,15 +14,15 @@ export const DATE_RANGES = {
 };
 
 /**
- * Filter items by date range string or custom dates
+ * Calculate start and end date bounds for a given range
  */
-export const filterByDateRange = (items = [], range = DATE_RANGES.THIS_MONTH, customStart = null, customEnd = null, dateKey = "created_at") => {
+export const getDateRangeBounds = (range = DATE_RANGES.THIS_MONTH, customStart = null, customEnd = null) => {
   const now = new Date();
   const startOfDay = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0);
   const endOfDay = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999);
 
   let start = new Date(0);
-  let end = new Date(8640000000000000);
+  let end = new Date();
 
   if (range === DATE_RANGES.TODAY) {
     start = startOfDay(now);
@@ -58,9 +58,25 @@ export const filterByDateRange = (items = [], range = DATE_RANGES.THIS_MONTH, cu
     start = new Date(now.getFullYear(), 0, 1, 0, 0, 0, 0);
     end = endOfDay(now);
   } else if (range === DATE_RANGES.CUSTOM && customStart && customEnd) {
-    start = startOfDay(new Date(customStart));
-    end = endOfDay(new Date(customEnd));
+    const s = customStart?.$d ? customStart.$d : (customStart instanceof Date ? customStart : new Date(customStart));
+    const e = customEnd?.$d ? customEnd.$d : (customEnd instanceof Date ? customEnd : new Date(customEnd));
+    start = startOfDay(s);
+    end = endOfDay(e);
   }
+
+  return {
+    startDate: start.toISOString(),
+    endDate: end.toISOString(),
+    start,
+    end,
+  };
+};
+
+/**
+ * Filter items by date range string or custom dates
+ */
+export const filterByDateRange = (items = [], range = DATE_RANGES.THIS_MONTH, customStart = null, customEnd = null, dateKey = "created_at") => {
+  const { start, end } = getDateRangeBounds(range, customStart, customEnd);
 
   return items.filter((item) => {
     const raw = item[dateKey] || item.expense_date || item.date;

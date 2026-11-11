@@ -206,7 +206,7 @@ const OrdersListing = () => {
                 navigate(PATH_BILLING, { state: { orderId: record.id } })
               }
             >
-              Generate Invoice
+              Print
             </Button>
           )}
    

@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
-import { Modal, Button, Form, Input, Select, DatePicker, message, Table } from "antd";
+import { Modal, Button, Form, Input, Select, DatePicker, message, Table, Empty } from "antd";
 import { PlusOutlined, EditOutlined, DeleteOutlined, PaperClipOutlined, ExclamationCircleOutlined } from "@ant-design/icons";
 import { addExpense, updateExpense, deleteExpense } from "../../../../services/expenseService";
 import { formatCurrency } from "../utils/reportUtils";
@@ -29,14 +29,35 @@ const EXPENSE_CATEGORIES = [
 
 const PAYMENT_METHODS = ["Cash", "Card", "UPI", "Bank Transfer", "Net Banking"];
 
-const ExpenseManagement = ({ expenses = [], onRefresh, org_id, created_by, currency = "₹", permission = {} }) => {
+const ExpenseManagement = ({
+  expenses = [],
+  onRefresh,
+  org_id,
+  created_by,
+  currency = "₹",
+  permission = {},
+  user_role = "",
+  externalAddTrigger = false,
+  onResetExternalTrigger,
+}) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [editingExpense, setEditingExpense] = useState(null);
   const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
   const [categoryFilter, setCategoryFilter] = useState(undefined);
 
-  const canEdit = permission.update !== false && permission.create !== false;
+  const canEdit =
+    user_role === "owner" ||
+    user_role === "admin" ||
+    user_role === "super_admin" ||
+    (permission?.update !== false && permission?.create !== false);
+
+  useEffect(() => {
+    if (externalAddTrigger) {
+      handleOpenModal();
+      if (onResetExternalTrigger) onResetExternalTrigger();
+    }
+  }, [externalAddTrigger]);
 
   const handleOpenModal = (expense = null) => {
     setEditingExpense(expense);
@@ -133,12 +154,14 @@ const ExpenseManagement = ({ expenses = [], onRefresh, org_id, created_by, curre
       title: "Date",
       dataIndex: "expense_date",
       key: "expense_date",
+      width: 110,
       render: (d) => (d ? new Date(d).toLocaleDateString() : "-"),
     },
     {
       title: "Category",
       dataIndex: "category",
       key: "category",
+      width: 150,
       render: (cat) => <CategoryBadge>{cat || "Other"}</CategoryBadge>,
     },
     {
@@ -151,6 +174,7 @@ const ExpenseManagement = ({ expenses = [], onRefresh, org_id, created_by, curre
       title: "Payment Method",
       dataIndex: "payment_method",
       key: "payment_method",
+      width: 140,
       render: (pm) => pm || "Cash",
     },
     {
@@ -158,6 +182,7 @@ const ExpenseManagement = ({ expenses = [], onRefresh, org_id, created_by, curre
       dataIndex: "amount",
       key: "amount",
       align: "right",
+      width: 130,
       render: (amt) => (
         <AmountText>{formatCurrency(amt, currency)}</AmountText>
       ),
@@ -166,6 +191,7 @@ const ExpenseManagement = ({ expenses = [], onRefresh, org_id, created_by, curre
       title: "Actions",
       key: "actions",
       align: "center",
+      width: 100,
       render: (_, record) => (
         <ActionGroup>
           {record.receipt_url && (
@@ -234,7 +260,25 @@ const ExpenseManagement = ({ expenses = [], onRefresh, org_id, created_by, curre
         rowKey="id"
         pagination={{ pageSize: 8 }}
         size="small"
-        scroll={{ x: "max-content" }}
+        scroll={filteredExpenses.length > 0 ? { x: 720 } : undefined}
+        locale={{
+          emptyText: (
+            <Empty
+              description="No expenses recorded for this period"
+              image={Empty.PRESENTED_IMAGE_SIMPLE}
+            >
+              {canEdit && (
+                <Button
+                  type="primary"
+                  icon={<PlusOutlined />}
+                  onClick={() => handleOpenModal()}
+                >
+                  Add New Expense
+                </Button>
+              )}
+            </Empty>
+          ),
+        }}
       />
 
       {/* Add / Edit Expense Modal */}
@@ -329,6 +373,14 @@ const CardContainer = styled.div`
   border-radius: 12px;
   padding: 20px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+
+  .ant-table-wrapper {
+    width: 100%;
+  }
+
+  .ant-table-placeholder {
+    overflow: hidden;
+  }
 
   @media (max-width: 720px) {
     padding: 12px 10px;

@@ -34,6 +34,27 @@ export default defineConfig({
   ],
   build: {
     chunkSizeWarningLimit: 3000,
+    // Optimize chunk splitting to reduce main bundle TBT
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Router
+          "vendor-router": ["react-router", "react-router-dom"],
+          // Redux
+          "vendor-redux": ["react-redux", "@reduxjs/toolkit", "redux-persist"],
+          // Ant Design (heavy — split out so it caches independently)
+          "vendor-antd": ["antd", "@ant-design/icons"],
+          // Supabase
+          "vendor-supabase": ["@supabase/supabase-js"],
+          // Styled components
+          "vendor-styled": ["styled-components"],
+        },
+      },
+    },
+    // Enable minification optimizations
+    minify: "esbuild",
+    target: "es2015",
+    cssMinify: true,
   },
   server: {
     host: "0.0.0.0", // Accept connections from any IP

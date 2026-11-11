@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import styled, { keyframes, css } from "styled-components";
-import logo from "../../assets/logo.png";
+import logo from "../../assets/logo.webp";
 import {
   PATH_LOGIN,
   PATH_SIGNUP,
@@ -11,7 +11,7 @@ import {
   PATH_BILLING,
   PATH_SETTINGS_PRINT,
 } from "../routes/pathname";
-import SubscriptionSection from "../subscription/SubscriptionSection";
+import PageSEO from "../../components/SEO/PageSEO";
 
 /* --------------------------------------------------
     KEYFRAME ANIMATIONS
@@ -142,17 +142,21 @@ const NavLinkBtn = styled.button`
   border: none;
   font-size: 13.5px;
   font-weight: 600;
-  color: #475569;
+  color: #334155;
   cursor: pointer;
   transition: color 0.2s ease;
   position: relative;
-  padding-bottom: 2px;
+  padding: 8px 12px;
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
 
   &::after {
     content: "";
     position: absolute;
-    bottom: -2px;
-    left: 0;
+    bottom: 2px;
+    left: 12px;
+    right: 12px;
     width: 0;
     height: 2px;
     background: linear-gradient(90deg, #01514b, #00a389);
@@ -162,7 +166,7 @@ const NavLinkBtn = styled.button`
 
   &:hover {
     color: #01514b;
-    &::after { width: 100%; }
+    &::after { width: calc(100% - 24px); }
   }
 `;
 
@@ -183,6 +187,7 @@ const SignInBtn = styled.button`
   font-weight: 700;
   color: #334155;
   padding: 8px 18px;
+  min-height: 40px;
   border-radius: 999px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -199,6 +204,7 @@ const GetStartedBtn = styled.button`
   font-size: 13px;
   font-weight: 700;
   padding: 9px 20px;
+  min-height: 40px;
   border-radius: 999px;
   border: none;
   cursor: pointer;
@@ -222,7 +228,11 @@ const HamburgerBtn = styled.button`
   border: none;
   color: #0f172a;
   cursor: pointer;
-  padding: 4px;
+  padding: 8px;
+  min-width: 44px;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
 
   @media (max-width: 900px) {
     display: flex;
@@ -515,7 +525,7 @@ const MetricVal = styled.div`
 const MetricLabel = styled.div`
   font-size: 10px;
   font-weight: 600;
-  color: #94a3b8;
+  color: #475569;
   text-transform: uppercase;
   letter-spacing: 0.04em;
 `;
@@ -636,7 +646,7 @@ const DashStatCard = styled.div`
   .label-wrap {
     font-size: 9px;
     font-weight: 700;
-    color: #94a3b8;
+    color: #475569;
     display: flex;
     align-items: center;
     gap: 4px;
@@ -694,7 +704,7 @@ const TrendDaysRow = styled.div`
   display: flex;
   justify-content: space-between;
   font-size: 8px;
-  color: #94a3b8;
+  color: #475569;
   margin-top: 4px;
 `;
 
@@ -764,8 +774,9 @@ const DonutCenter = styled.div`
   }
 
   .lbl {
-    font-size: 7px;
-    color: #94a3b8;
+    font-size: 8px;
+    font-weight: 600;
+    color: #475569;
   }
 `;
 
@@ -1527,16 +1538,19 @@ const FooterLinkList = styled.ul`
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
 
   a, button {
     background: none;
     border: none;
-    color: #94a3b8;
-    font-size: 12px;
+    color: #cbd5e1;
+    font-size: 13px;
     cursor: pointer;
     text-align: left;
-    padding: 0;
+    padding: 6px 0;
+    min-height: 32px;
+    display: inline-flex;
+    align-items: center;
     text-decoration: none;
     transition: color 0.2s ease;
 
@@ -1562,10 +1576,14 @@ const SocialLinksRow = styled.div`
   gap: 12px;
 
   span {
-    color: #94a3b8;
+    color: #cbd5e1;
     font-weight: 700;
-    font-size: 12px;
+    font-size: 13px;
     cursor: pointer;
+    padding: 6px 8px;
+    min-height: 32px;
+    display: inline-flex;
+    align-items: center;
 
     &:hover {
       color: #ffffff;
@@ -1708,6 +1726,7 @@ const Landing = () => {
 
   return (
     <LandingWrapper>
+      <PageSEO />
       {/* --------------------------------------------------
           NAVBAR
       -------------------------------------------------- */}
@@ -1738,7 +1757,10 @@ const Landing = () => {
           </NavActions>
 
           {/* Mobile Hamburger */}
-          <HamburgerBtn onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+          <HamburgerBtn
+            aria-label="Toggle navigation menu"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          >
             <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               {mobileMenuOpen ? (
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1770,9 +1792,10 @@ const Landing = () => {
         )}
       </Nav>
 
-      {/* --------------------------------------------------
-          1. HERO SECTION
-      -------------------------------------------------- */}
+      <main id="main-content" role="main">
+        {/* --------------------------------------------------
+            1. HERO SECTION
+        -------------------------------------------------- */}
       <HeroSection>
         <Container>
           <HeroGrid>
@@ -2461,6 +2484,7 @@ const Landing = () => {
           </PreFooterGrid>
         </Container>
       </DarkTealPreFooter>
+      </main>
 
       {/* --------------------------------------------------
           6. FOOTER
