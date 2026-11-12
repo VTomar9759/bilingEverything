@@ -1,7 +1,27 @@
 import React, { useState, useEffect, useCallback } from "react";
 import styled, { keyframes } from "styled-components";
+import { message } from "antd";
+import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import SubscriptionCard from "./SubscriptionCard";
 import { fetchSubscriptionPlans } from "./subscription-plan";
+import {
+  createSubscriptionOrder,
+  verifySubscriptionPayment,
+  cancelPendingSubscription,
+} from "../../services/paymentService";
+import { updateSubscription } from "../store/slices/authSlices";
+import { PATH_DASHBOARD } from "../routes/pathname";
+
+const loadRazorpayScript = () => {
+  if (window.Razorpay) return Promise.resolve();
+  return new Promise((resolve) => {
+    const s = document.createElement("script");
+    s.src = "https://checkout.razorpay.com/v1/checkout.js";
+    s.onload = resolve;
+    document.body.appendChild(s);
+  });
+};
 
 /**
  * BuySubscription
@@ -13,6 +33,10 @@ const BuySubscription = ({ onLogout }) => {
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [paying, setPaying] = useState(false);
+
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const loadPlans = useCallback(async () => {
     try {
@@ -32,10 +56,79 @@ const BuySubscription = ({ onLogout }) => {
     loadPlans();
   }, [loadPlans]);
 
-  const handleSelectPlan = (plan) => {
-    // TODO: wire up your purchase / payment flow here
-    console.log("Selected plan:", plan);
-    alert(`Selected: ${plan.plan_name || plan.name} – payment flow coming soon!`);
+  const handleSelectPlan = async (plan) => {
+    if (paying) return;
+
+    setPaying(true);
+    let subscription_id = null;
+
+    try {
+      const orderData = await createSubscriptionOrder(plan.id);
+
+      // Handle Free Trial (activated immediately without Razorpay checkout)
+      if (orderData.is_free_trial) {
+        dispatch(
+          updateSubscription(
+            orderData.subscription ?? { status: "active", is_active: true }
+          )
+        );
+        message.success(`🎉 Free trial for ${plan.plan_name} activated successfully!`);
+        navigate(PATH_DASHBOARD);
+        return;
+      }
+
+      const { order_id, amount, currency, key_id } = orderData;
+      subscription_id = orderData.subscription_id;
+
+      await loadRazorpayScript();
+
+      await new Promise((resolve, reject) => {
+        const rzp = new window.Razorpay({
+          key: key_id,
+          amount,
+          currency,
+          name: "Bill Everything",
+          description: plan.plan_name,
+          order_id,
+          handler: async (response) => {
+            try {
+              const result = await verifySubscriptionPayment({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                subscription_id,
+              });
+              dispatch(updateSubscription(result?.subscription ?? { status: "active" }));
+              message.success(`🎉 Subscribed to ${plan.plan_name} successfully!`);
+              navigate(PATH_DASHBOARD);
+              resolve();
+            } catch (err) {
+              message.error(err.message || "Payment verification failed.");
+              reject(err);
+            }
+          },
+          modal: {
+            ondismiss: async () => {
+              if (subscription_id) {
+                try {
+                  await cancelPendingSubscription(subscription_id);
+                } catch (_) {
+                  // best-effort
+                }
+              }
+              setPaying(false);
+              resolve();
+            },
+          },
+          theme: { color: "#01514b" },
+        });
+        rzp.open();
+      });
+    } catch (err) {
+      message.error(err.message || "Failed to initiate payment. Please try again.");
+    } finally {
+      setPaying(false);
+    }
   };
 
   return (
@@ -112,6 +205,7 @@ const BuySubscription = ({ onLogout }) => {
                 key={plan.id}
                 plan={plan}
                 onSelectPlan={handleSelectPlan}
+                disabled={paying}
               />
             ))}
           </CardsGrid>

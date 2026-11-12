@@ -31,6 +31,9 @@ export const PATH_SETTINGS_BUSINESS = "/settings/business-details";
 export const PATH_SETTINGS_PRINT = "/settings/print-settings";
 export const PATH_CHANGE_PASSWORD = "/settings/change-password";
 
+// Payment / Plan paths
+export const PATH_PLANE = "/settings/my-plan";
+
 // Sidebar paths (navItems)
 export const navItems = [
   {
@@ -93,6 +96,7 @@ export const navItems = [
       PATH_SETTINGS_BUSINESS,
       PATH_SETTINGS_PRINT,
       PATH_ADMINS,
+      PATH_PLANE,
     ],
     path: PATH_SETTINGS_PROFILE,
   },

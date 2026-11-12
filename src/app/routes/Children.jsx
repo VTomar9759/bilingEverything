@@ -25,6 +25,7 @@ import {
   PATH_CHANGE_PASSWORD,
   PATH_SETTINGS_BUSINESS,
   PATH_SETTINGS_PRINT,
+  PATH_PLANE,
 } from "./pathname";
 
 import Login from "../auth/Login";
@@ -53,6 +54,7 @@ import ProfileUpdate from "../pages/settings/componests/profileUpdate";
 import ChangePassword from "../pages/settings/componests/changePassword";
 import BusinessDetails from "../pages/settings/componests/BusinessDetails";
 import PrintSetting from "../pages/settings/componests/PrintSetting";
+import MyPlanes from "../pages/settings/componests/MyPlanes";
 import Landing from "../public/Landing";
 
 export const publicChildren = [
@@ -161,6 +163,10 @@ export const privateChildren = [
       {
         path: PATH_ADMINS,
         element: <AdminListing />,
+      },
+      {
+        path: PATH_PLANE,
+        element: <MyPlanes />,
       },
     ],
   },

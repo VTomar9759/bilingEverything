@@ -11,6 +11,7 @@ import {
   PATH_BILLING,
   PATH_SETTINGS_PRINT,
 } from "../routes/pathname";
+import SubscriptionSection from "../subscription/SubscriptionSection";
 import PageSEO from "../../components/SEO/PageSEO";
 
 /* --------------------------------------------------

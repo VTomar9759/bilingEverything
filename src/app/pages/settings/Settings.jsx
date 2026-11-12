@@ -7,6 +7,7 @@ import {
   ShopOutlined,
   SettingOutlined,
   PrinterOutlined,
+  CrownOutlined,
 } from "@ant-design/icons";
 import useOrgData from "../../hooks/useOrgData";
 import InstallPWA from "../../../components/InstallPWA";
@@ -18,6 +19,7 @@ import {
   PATH_SETTINGS_BUSINESS,
   PATH_SETTINGS_PROFILE,
   PATH_SETTINGS_PRINT,
+  PATH_PLANE,
 } from "../../routes/pathname";
 
 const settingsTabs = [
@@ -50,6 +52,12 @@ const settingsTabs = [
     label: "Admins",
     icon: <UserOutlined />,
     badge: "Admins",
+  },
+  {
+    path: PATH_PLANE,
+    label: "My Plane",
+    icon: <CrownOutlined />,
+    badge: "My Plane",
   },
 ];
 
